@@ -25,9 +25,9 @@
     #center-column { display: flex; flex-direction: column; align-items: center; gap: 10px; }
     #center {
       display: grid;
-      grid-template-columns: repeat(9, 1fr);
+      grid-template-columns: repeat(9, 50px);
       gap: 4px;
-      width: 482px; /* (50px * 9) + (4px * 8) */
+      width: fit-content;
       background: rgba(20, 19, 15, 0.7);
       border-radius:10px;
       padding: 10px;
@@ -41,8 +41,8 @@
     
     .cell { 
       position: relative;
-      width: 100%;
-      padding-top: 100%; /* Aspect ratio 1:1 */
+      width: 50px;
+      height: 50px;
       border:2px solid #666; 
       border-radius:6px; 
       background:linear-gradient(145deg, rgba(74, 73, 63, 0.7), rgba(55, 55, 40, 0.7)); 
@@ -72,12 +72,12 @@
     .gem-door-marker { border: 3px solid deepskyblue !important; box-shadow: 0 0 15px deepskyblue; }
     
     #diceResult { width:80px; height:80px; font-size:48px; font-weight:bold; display:flex; align-items:center; justify-content:center; border:2px solid #a0d535; border-radius:10px; background:linear-gradient(145deg,#6e8547,#8fad6a); color:#d7f39b; }
-    #game-messages { width: 100%; max-width: 482px; }
+    #game-messages { width: 100%; }
     #enemyMessage, #blockedMessage, #visitedInfo { min-height:24px; font-weight:bold; text-align:center; background-color: rgba(0,0,0,0.4); border-radius: 5px; padding: 5px; width:100%; box-sizing: border-box; margin-bottom: 5px; }
     #enemyMessage { color:#ffcc00; }
     #blockedMessage { color:#ff5555; visibility:hidden; }
     #visitedInfo { opacity:0.9; }
-    #discoveriesLog { white-space: pre-line; background:rgba(58, 58, 43, 0.8); border-radius:8px; padding:10px; font-size:14px; min-height: 200px; width: 100%; max-width: 482px;}
+    #discoveriesLog { white-space: pre-line; background:rgba(58, 58, 43, 0.8); border-radius:8px; padding:10px; font-size:14px; min-height: 200px; width: 100%;}
     #playerInfo { 
         width:100%; 
         text-align:center; 
@@ -116,11 +116,16 @@
         align-items: center;
       }
       #right { order: 1; }
-      #center-column { order: 2; width: 100%; max-width: 482px; }
-      #left { order: 3; }
-      #left, #right {
+      #center-column { 
+        order: 2; 
         width: 100%;
-        max-width: 482px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      #left { order: 3; }
+      #left, #right, #center-column {
+        width: 100%;
+        max-width: 520px;
       }
       #right {
         flex-direction: row;
@@ -622,7 +627,7 @@
     const cellInfo = visitedCells.get(currentCell.dataset.cellNumber);
     let currentEnemyHP = cellInfo.hp > 0 ? cellInfo.hp : enemy.startHP;
     cellInfo.hp = currentEnemyHP;
-    if (!enemy.isBoss) { cellInfo.enemy.name = `Nemico #${enemiesDefeatedCount + 1}`; }
+    if (!enemy.isBoss) { cellInfo.enemy.name = `Orchetto ${enemiesDefeatedCount + 1}`; }
     
     battlePlayerName.textContent = character.name;
     battleEnemyName.textContent = cellInfo.enemy.name;
@@ -824,4 +829,3 @@
 </script>
 </body>
 </html>
-
