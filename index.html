@@ -308,7 +308,7 @@
   const messageModalOkBtn = document.getElementById('messageModalOkBtn');
   const stickyControls = document.getElementById('sticky-controls');
 
-  const COLS = 9, CELL_COUNT = 72, ENEMY_COUNT = 12, PRISONER_COUNT = 11, GAS_TRAP_COUNT = 2;
+  const COLS = 9, CELL_COUNT = 72, ENEMY_COUNT = 12, PRISONER_COUNT = 11, GAS_TRAP_COUNT = 2, GAS_EFFECT_DURATION_CELLS = 5;
   const BONUS_ITEMS = ["Elsa migliorata", "Guanti rinforzati", "Spallacci di cuoio"];
   const POTIONS = [ { name: "Pozione (+5 PF)", value: 5 }, { name: "Pozione (+10 PF)", value: 10 }, { name: "Pozione (+15 PF)", value: 15 } ];
   const GEMS = ["Gemma Blu", "Gemma Verde", "Gemma Viola"];
@@ -318,7 +318,7 @@
 
   let currentCell, character, maxHP, enemiesDefeatedCount, discoveryCounter, unvisitedCellsCounter;
   let visitedCells, enemyMap, bonusMap, potionMap, prisonerMap, gasTrapPositions, gasActivatedPositions;
-  let gasEffect = { active: false, turnsRemaining: 0 };
+  let gasEffect = { active: false, newCellsVisited: 0 };
   let messageQueue = [];
   
   function getAttackBonus() {
@@ -421,7 +421,8 @@
     }
 
     if (gasEffect.active) {
-        lines.push(`- Gas Debolezza (-1 Atk x ${gasEffect.turnsRemaining} turni)`);
+        const remainingCells = GAS_EFFECT_DURATION_CELLS - gasEffect.newCellsVisited;
+        lines.push(`- Gas Debolezza (-1 Atk per ${remainingCells} nuove celle)`);
     }
     
     if (character && GEMS.some(gem => character.bonuses.includes(gem))) {
@@ -453,7 +454,9 @@
     GEMS.forEach(gem => { bonusMap[availableCells.pop()] = gem; });
     bonusMap[availableCells.pop()] = GEM_DOOR;
     for (let i = 0; i < PRISONER_COUNT; i++) { prisonerMap[availableCells.pop()] = true; }
-    for (let i = 0; i < GAS_TRAP_COUNT; i++) { gasTrapPositions.add(availableCells.pop()); }
+    for (let i = 0; i < GAS_TRAP_COUNT; i++) { 
+        if (availableCells.length > 0) gasTrapPositions.add(availableCells.pop()); 
+    }
   }
 
   function placeBoss() {
@@ -569,16 +572,6 @@
       }
   }
 
-  function updateStatusEffects() {
-      if (gasEffect.active) {
-          gasEffect.turnsRemaining--;
-          if (gasEffect.turnsRemaining <= 0) {
-              gasEffect.active = false;
-              messageQueue.push("L'effetto del gas di debolezza è svanito! Il tuo attacco è tornato normale.");
-          }
-      }
-  }
-
   function setCurrent(cell) {
     if (currentCell) currentCell.classList.remove('current');
     currentCell = cell;
@@ -586,11 +579,20 @@
     
     const cellNum = parseInt(currentCell.dataset.cellNumber);
     resetMessages();
-    updateStatusEffects();
     const isNewVisit = !visitedCells.has(String(cellNum));
 
     if (isNewVisit) {
         unvisitedCellsCounter++;
+        
+        if (gasEffect.active) {
+            gasEffect.newCellsVisited++;
+            if (gasEffect.newCellsVisited >= GAS_EFFECT_DURATION_CELLS) {
+                gasEffect.active = false;
+                gasEffect.newCellsVisited = 0;
+                messageQueue.push("L'effetto del gas di debolezza è svanito! Il tuo attacco è tornato normale.");
+            }
+        }
+
         if (unvisitedCellsCounter > 0 && unvisitedCellsCounter % 7 === 0) {
             character.hp = Math.min(character.hp + 5, maxHP);
             messageQueue.push("Il riposo ti ha fatto guadagnare 5 PF.");
@@ -610,13 +612,16 @@
         });
         
         const info = visitedCells.get(String(cellNum));
-
+        
         if (gasTrapPositions.has(cellNum) && !gasActivatedPositions.has(cellNum)) {
-            messageQueue.push("Sei finito in una trappola a gas! Attacco -1 per 5 turni.");
+            messageQueue.push(`Sei finito in una trappola a gas! Attacco -1 finché non scopri ${GAS_EFFECT_DURATION_CELLS} nuove celle.`);
             gasEffect.active = true;
-            gasEffect.turnsRemaining = 5;
+            gasEffect.newCellsVisited = 0;
             gasActivatedPositions.add(cellNum);
-            cell.querySelector('.cell-content').appendChild(Object.assign(document.createElement('div'), {className: 'gas-marker'}));
+            const content = cell.querySelector('.cell-content');
+            if (content && !content.querySelector('.gas-marker')) {
+                content.appendChild(Object.assign(document.createElement('div'), {className: 'gas-marker'}));
+            }
         }
 
         if (info.bonus && !character.bonuses.includes(info.bonus)) {
@@ -652,7 +657,7 @@
         if(bonusLabel && !gasActivatedPositions.has(cellNum)) { contentDiv.appendChild(Object.assign(document.createElement('div'), {className: 'bonus-marker'})); }
         if(potionLabel) { contentDiv.appendChild(Object.assign(document.createElement('div'), {className: 'potion-marker'})); }
 
-    } else {
+    } else { // Cella già visitata
         const info = visitedCells.get(String(cellNum));
         if (info && info.bonus === GEM_DOOR) {
             const hasAllGems = GEMS.every(gem => character.bonuses.includes(gem));
@@ -929,7 +934,7 @@
     enemiesDefeatedCount = 0;
     discoveryCounter = 1;
     unvisitedCellsCounter = 0;
-    gasEffect = { active: false, turnsRemaining: 0 };
+    gasEffect = { active: false, newCellsVisited: 0 };
     
     placeDiscoveries();
     buildBoard();
