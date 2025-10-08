@@ -24,7 +24,6 @@
       box-sizing: border-box;
     }
     
-    /* Pannello di controllo sempre fisso in alto */
     #sticky-controls {
       position: fixed;
       top: 0;
@@ -97,10 +96,11 @@
     .current { background:linear-gradient(145deg, rgba(143, 173, 106, 0.8), rgba(110, 133, 71, 0.8)); border-color:#a0d535; color:#eff7d6; box-shadow:0 0 10px #a0d535; }
     .highlighted { border: 3px solid white !important; cursor: pointer; }
     
-    .enemy-marker, .bonus-marker, .potion-marker { position:absolute; width:8px; height:8px; border-radius:50%; border:1px solid #fff; }
+    .enemy-marker, .bonus-marker, .potion-marker, .gas-marker { position:absolute; width:10px; height:10px; border-radius:50%; border:1px solid #fff; }
     .enemy-marker { top:3px; right:3px; background:red; }
     .bonus-marker { bottom:3px; left:3px; background:gold; }
     .potion-marker { bottom:3px; right:3px; background:deepskyblue; }
+    .gas-marker { bottom:3px; left:3px; background:#808080;}
     .skull-marker, .prisoner-marker { 
         position:absolute; 
         top:50%; 
@@ -308,7 +308,7 @@
   const messageModalOkBtn = document.getElementById('messageModalOkBtn');
   const stickyControls = document.getElementById('sticky-controls');
 
-  const COLS = 9, CELL_COUNT = 72, ENEMY_COUNT = 12, PRISONER_COUNT = 11;
+  const COLS = 9, CELL_COUNT = 72, ENEMY_COUNT = 12, PRISONER_COUNT = 11, GAS_TRAP_COUNT = 2;
   const BONUS_ITEMS = ["Elsa migliorata", "Guanti rinforzati", "Spallacci di cuoio"];
   const POTIONS = [ { name: "Pozione (+5 PF)", value: 5 }, { name: "Pozione (+10 PF)", value: 10 }, { name: "Pozione (+15 PF)", value: 15 } ];
   const GEMS = ["Gemma Blu", "Gemma Verde", "Gemma Viola"];
@@ -317,12 +317,17 @@
   const PRISONER_ICON_URL = 'https://i.imgur.com/XW3fJxc.jpg';
 
   let currentCell, character, maxHP, enemiesDefeatedCount, discoveryCounter, unvisitedCellsCounter;
-  let visitedCells, enemyMap, bonusMap, potionMap, prisonerMap;
+  let visitedCells, enemyMap, bonusMap, potionMap, prisonerMap, gasTrapPositions, gasActivatedPositions;
+  let gasEffect = { active: false, turnsRemaining: 0 };
   let messageQueue = [];
   
   function getAttackBonus() {
       if (!character) return 0;
-      return character.bonuses.filter(b => !GEMS.includes(b) && b !== GEM_DOOR).length;
+      let bonus = character.bonuses.filter(b => !GEMS.includes(b) && b !== GEM_DOOR).length;
+      if (gasEffect.active) {
+          bonus -= 1;
+      }
+      return bonus;
   }
   
   function updateInventory() {
@@ -376,11 +381,13 @@
     let lines = ['Scoperte:'];
     const discoveries = [];
 
-    visitedCells.forEach((info, cellNum) => {
-        if (info.discoveryOrder !== null && info.discoveryOrder !== undefined) {
-            discoveries.push({ cellNum: Number(cellNum), info: info, discoveryOrder: info.discoveryOrder });
-        }
-    });
+    if(visitedCells) {
+        visitedCells.forEach((info, cellNum) => {
+            if (info.discoveryOrder !== null && info.discoveryOrder !== undefined) {
+                discoveries.push({ cellNum: Number(cellNum), info: info, discoveryOrder: info.discoveryOrder });
+            }
+        });
+    }
 
     const sortedDiscoveries = discoveries.sort((a, b) => a.discoveryOrder - b.discoveryOrder);
       
@@ -398,6 +405,8 @@
                 lines.push(`Cella ${cellNum}: ${info.potion.name}${collected}`);
             } else if (info.prisonerFreed) {
                 lines.push(`Cella ${cellNum}: Prigioniero liberato`);
+            } else if (gasActivatedPositions.has(cellNum)) {
+                lines.push(`Cella ${cellNum}: Trappola a Gas (attiva)`);
             }
         });
     } else {
@@ -409,6 +418,10 @@
         character.bonuses.forEach(b => {
              if (!GEMS.includes(b) && b !== GEM_DOOR) { lines.push(`- ${b} (+1)`); }
         });
+    }
+
+    if (gasEffect.active) {
+        lines.push(`- Gas Debolezza (-1 Atk x ${gasEffect.turnsRemaining} turni)`);
     }
     
     if (character && GEMS.some(gem => character.bonuses.includes(gem))) {
@@ -424,7 +437,8 @@
   }
   
   function placeDiscoveries() {
-    enemyMap = {}; bonusMap = {}; potionMap = {}; prisonerMap = {};
+    enemyMap = {}; bonusMap = {}; potionMap = {}; prisonerMap = {}; 
+    gasTrapPositions = new Set(); gasActivatedPositions = new Set();
     let availableCells = Array.from({length: CELL_COUNT}, (_, i) => i + 1);
     availableCells = availableCells.filter(cellNum => cellNum !== 1);
 
@@ -439,6 +453,7 @@
     GEMS.forEach(gem => { bonusMap[availableCells.pop()] = gem; });
     bonusMap[availableCells.pop()] = GEM_DOOR;
     for (let i = 0; i < PRISONER_COUNT; i++) { prisonerMap[availableCells.pop()] = true; }
+    for (let i = 0; i < GAS_TRAP_COUNT; i++) { gasTrapPositions.add(availableCells.pop()); }
   }
 
   function placeBoss() {
@@ -472,6 +487,10 @@
         content.textContent = i;
         cellDiv.appendChild(content);
         
+        if (gasActivatedPositions.has(i)) {
+             content.appendChild(Object.assign(document.createElement('div'), {className: 'gas-marker'}));
+        }
+
         if (visitedCells && visitedCells.has(String(i))) {
             cellDiv.classList.add('visited');
             const info = visitedCells.get(String(i));
@@ -544,9 +563,19 @@
 
   function setBattleMode(isBattle) {
       if (isBattle) {
-          stickyControls.style.top = '-150px';
+          stickyControls.style.top = '-200px';
       } else {
           stickyControls.style.top = '0';
+      }
+  }
+
+  function updateStatusEffects() {
+      if (gasEffect.active) {
+          gasEffect.turnsRemaining--;
+          if (gasEffect.turnsRemaining <= 0) {
+              gasEffect.active = false;
+              messageQueue.push("L'effetto del gas di debolezza è svanito! Il tuo attacco è tornato normale.");
+          }
       }
   }
 
@@ -555,9 +584,10 @@
     currentCell = cell;
     currentCell.classList.add('current', 'visited');
     
-    const cellNum = currentCell.dataset.cellNumber;
+    const cellNum = parseInt(currentCell.dataset.cellNumber);
     resetMessages();
-    const isNewVisit = !visitedCells.has(cellNum);
+    updateStatusEffects();
+    const isNewVisit = !visitedCells.has(String(cellNum));
 
     if (isNewVisit) {
         unvisitedCellsCounter++;
@@ -572,14 +602,22 @@
         const isPrisonerCell = prisonerMap[cellNum];
         
         let order = null;
-        if(enemyObj || bonusLabel || potionLabel || isPrisonerCell) { order = discoveryCounter++; }
+        if(enemyObj || bonusLabel || potionLabel || isPrisonerCell || gasTrapPositions.has(cellNum)) { order = discoveryCounter++; }
 
-        visitedCells.set(cellNum, { 
+        visitedCells.set(String(cellNum), { 
             enemy: enemyObj || null, bonus: bonusLabel || null, potion: potionLabel || null, 
             prisonerFreed: false, collected: false, defeated: false, hp: 0, discoveryOrder: order
         });
         
-        const info = visitedCells.get(cellNum);
+        const info = visitedCells.get(String(cellNum));
+
+        if (gasTrapPositions.has(cellNum) && !gasActivatedPositions.has(cellNum)) {
+            messageQueue.push("Sei finito in una trappola a gas! Attacco -1 per 5 turni.");
+            gasEffect.active = true;
+            gasEffect.turnsRemaining = 5;
+            gasActivatedPositions.add(cellNum);
+            cell.querySelector('.cell-content').appendChild(Object.assign(document.createElement('div'), {className: 'gas-marker'}));
+        }
 
         if (info.bonus && !character.bonuses.includes(info.bonus)) {
             character.bonuses.push(info.bonus);
@@ -611,12 +649,12 @@
         
         const contentDiv = cell.firstChild;
         if(enemyObj) { contentDiv.appendChild(Object.assign(document.createElement('div'), {className: 'enemy-marker'})); }
-        if(bonusLabel) { contentDiv.appendChild(Object.assign(document.createElement('div'), {className: 'bonus-marker'})); }
+        if(bonusLabel && !gasActivatedPositions.has(cellNum)) { contentDiv.appendChild(Object.assign(document.createElement('div'), {className: 'bonus-marker'})); }
         if(potionLabel) { contentDiv.appendChild(Object.assign(document.createElement('div'), {className: 'potion-marker'})); }
 
     } else {
-        const info = visitedCells.get(cellNum);
-        if (info.bonus === GEM_DOOR) {
+        const info = visitedCells.get(String(cellNum));
+        if (info && info.bonus === GEM_DOOR) {
             const hasAllGems = GEMS.every(gem => character.bonuses.includes(gem));
             if (hasAllGems && !character.hasSpecialSword) {
                 character.hasSpecialSword = true;
@@ -626,16 +664,16 @@
     }
     
     processMessageQueue();
-    const info = visitedCells.get(cellNum);
+    const info = visitedCells.get(String(cellNum));
 
-    if (info.enemy && !info.defeated) { handleEncounter(info.enemy); } else { diceBtn.disabled = false; }
+    if (info && info.enemy && !info.defeated) { handleEncounter(info.enemy); } else { diceBtn.disabled = false; }
     
-    if (info.enemy && info.defeated) {
+    if (info && info.enemy && info.defeated) {
         setMainMessage(`Qui giace un nemico sconfitto.`, '#a9a9a9');
         addSkullMarker(currentCell);
     } 
-    else if (!info.enemy && !info.bonus && !info.potion && !prisonerMap[cellNum]) {
-        if (isNewVisit || cellNum === '1') { setMainMessage("Procedi tranquillo", 'lightgreen'); } 
+    else if (info && !info.enemy && !info.bonus && !info.potion && !prisonerMap[cellNum]) {
+        if (isNewVisit || cellNum === 1) { setMainMessage("Procedi tranquillo", 'lightgreen'); } 
         else { setMainMessage('Cella già visitata', '#ffffff'); }
     }
 
@@ -746,8 +784,9 @@
     const playerAttackBonus = getAttackBonus();
     const playerAttackDie = character.hasSpecialSword ? 8 : 6;
     const swordBonus = character.hasSpecialSword ? 1 : 0;
+    let totalBonus = playerAttackBonus + swordBonus;
     
-    battlePlayerAttack.textContent = `Attacco: 1D${playerAttackDie}${playerAttackBonus + swordBonus > 0 ? ' + ' + (playerAttackBonus + swordBonus) : ''}`;
+    battlePlayerAttack.textContent = `Attacco: 1D${playerAttackDie}${totalBonus > 0 ? ' + ' + totalBonus : totalBonus < 0 ? ' ' + totalBonus : ''}`;
     battleEnemyAttack.textContent = `Attacco: 1D${enemy.attackDie}${enemy.attackBonus > 0 ? ' + ' + enemy.attackBonus : ''}`;
 
     window.updateBattleUI = function() {
@@ -778,9 +817,9 @@
       const timer = setInterval(() => {
         const basePlayerRoll = Math.floor(Math.random() * playerAttackDie) + 1;
         const enemyBaseRoll = Math.floor(Math.random() * enemy.attackDie) + 1;
-        playerRoll = basePlayerRoll + playerAttackBonus + swordBonus;
+        playerRoll = basePlayerRoll + totalBonus;
         enemyRoll = enemyBaseRoll + enemy.attackBonus;
-        battlePlayerDice.textContent = `${basePlayerRoll}${playerAttackBonus + swordBonus > 0 ? ' + ' + (playerAttackBonus + swordBonus) : ''}`;
+        battlePlayerDice.textContent = `${basePlayerRoll}${totalBonus > 0 ? ' + ' + totalBonus : totalBonus < 0 ? ' ' + totalBonus : ''}`;
         battleEnemyDice.textContent = `${enemyBaseRoll}${enemy.attackBonus > 0 ? ' + ' + enemy.attackBonus : ''}`;
 
         if (--flips <= 0) {
@@ -890,9 +929,11 @@
     enemiesDefeatedCount = 0;
     discoveryCounter = 1;
     unvisitedCellsCounter = 0;
+    gasEffect = { active: false, turnsRemaining: 0 };
     
     placeDiscoveries();
     buildBoard();
+    updateLayout();
     updateDiscoveriesLog();
     updatePlayerInfo();
     updateInventory();
@@ -933,6 +974,9 @@
       bonusMap,
       potionMap,
       prisonerMap,
+      gasTrapPositions: Array.from(gasTrapPositions),
+      gasActivatedPositions: Array.from(gasActivatedPositions),
+      gasEffect,
       currentCellNumber: currentCell.dataset.cellNumber
     };
     localStorage.setItem('dungeon72Save', JSON.stringify(gameState));
@@ -958,8 +1002,12 @@
     bonusMap = savedState.bonusMap;
     potionMap = savedState.potionMap;
     prisonerMap = savedState.prisonerMap;
+    gasTrapPositions = new Set(savedState.gasTrapPositions);
+    gasActivatedPositions = new Set(savedState.gasActivatedPositions);
+    gasEffect = savedState.gasEffect;
     
     buildBoard(); 
+    updateLayout();
     
     const lastCell = board.querySelector(`[data-cell-number="${savedState.currentCellNumber}"]`);
     if(lastCell) {
@@ -976,6 +1024,23 @@
     charForm.style.display = 'none';
     diceBtn.disabled = false;
     alert('Partita caricata!');
+  }
+
+  function updateLayout() {
+      const discoveriesLog = document.getElementById('discoveriesLog');
+      const leftColumn = document.getElementById('left');
+      const centerColumn = document.getElementById('center-column');
+      const isDesktop = window.innerWidth > 1024;
+
+      if (isDesktop) {
+          if (discoveriesLog.parentElement !== leftColumn) {
+              leftColumn.appendChild(discoveriesLog);
+          }
+      } else {
+          if (discoveriesLog.parentElement !== centerColumn) {
+              centerColumn.appendChild(discoveriesLog);
+          }
+      }
   }
 
   newGameBtn.addEventListener('click', promptForNewGame);
@@ -1013,6 +1078,8 @@
     if (localStorage.getItem('dungeon72Save')) {
         loadGameBtn.style.display = 'block';
     }
+    window.addEventListener('resize', updateLayout);
+    updateLayout();
     promptForNewGame(); 
   }
 
