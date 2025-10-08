@@ -75,11 +75,20 @@
     .enemy-marker { top:3px; right:3px; background:red; }
     .bonus-marker { bottom:3px; left:3px; background:gold; }
     .potion-marker { bottom:3px; right:3px; background:deepskyblue; }
-    .skull-marker, .prisoner-marker { position:absolute; top:50%; left:50%; transform: translate(-50%, -50%); width:50%; height:50%; pointer-events:none; opacity: 0.7; }
+    .skull-marker, .prisoner-marker { 
+        position:absolute; 
+        top:50%; 
+        left:50%; 
+        transform: translate(-50%, -50%); 
+        width:60%; 
+        height:60%; 
+        pointer-events:none; 
+        opacity: 0.8; 
+    }
     .gem-door-marker { border: 3px solid deepskyblue !important; box-shadow: 0 0 15px deepskyblue; }
     
     #diceResult { width:80px; height:80px; font-size:48px; font-weight:bold; display:flex; align-items:center; justify-content:center; border:2px solid #a0d535; border-radius:10px; background:linear-gradient(145deg,#6e8547,#8fad6a); color:#d7f39b; }
-    #main-message-display { min-height:24px; font-weight:bold; text-align:center; background-color: rgba(0,0,0,0.4); border-radius: 5px; padding: 5px; width:100%; box-sizing: border-box; }
+    #main-message-display { min-height:24px; font-weight:bold; text-align:center; background-color: rgba(0,0,0,0.4); border-radius: 5px; padding: 5px; width:100%; box-sizing: border-box; visibility: hidden; }
     
     #discoveriesLog { white-space: pre-line; background:rgba(58, 58, 43, 0.8); border-radius:8px; padding:10px; font-size:14px; min-height: 200px; width: 100%;}
     #playerInfo { 
@@ -146,6 +155,8 @@
 <body>
 
   <div id="left">
+    <button id="saveGameBtn">Salva</button>
+    <button id="loadGameBtn" style="display:none;">Carica Partita</button>
     <button id="newGameBtn">Nuova Partita</button>
   </div>
   
@@ -174,8 +185,8 @@
     <div>PF iniziali:</div>
     <input type="number" id="charHP" value="30" min="1">
     <div style="display:flex; gap:8px; margin-top:10px;">
-      <button id="saveCharBtn" style="width: auto; flex-grow: 1;">Inizia Avventura</button>
-      <button id="cancelCharBtn" style="width: auto; flex-grow: 1;">Annulla</button>
+      <button id="startAdventureBtn">Inizia Avventura</button>
+      <button id="cancelCharBtn">Annulla</button>
     </div>
   </div>
   
@@ -220,8 +231,10 @@
   const mainMessageDisplay = document.getElementById('main-message-display');
   const playerInfo = document.getElementById('playerInfo');
   const newGameBtn = document.getElementById('newGameBtn');
+  const saveGameBtn = document.getElementById('saveGameBtn');
+  const loadGameBtn = document.getElementById('loadGameBtn');
   const charForm = document.getElementById('charForm');
-  const saveCharBtn = document.getElementById('saveCharBtn');
+  const startAdventureBtn = document.getElementById('startAdventureBtn');
   const cancelCharBtn = document.getElementById('cancelCharBtn');
   const encounterModal = document.getElementById('encounterModal');
   const encounterMessage = document.getElementById('encounterMessage');
@@ -275,20 +288,38 @@
   }
 
   function addSkullMarker(cell) {
-    if (!cell.querySelector('.skull-marker')) {
+    const contentDiv = cell.querySelector('.cell-content');
+    if (!contentDiv) return;
+
+    Array.from(contentDiv.childNodes).forEach(node => {
+        if (node.nodeType === Node.TEXT_NODE) {
+            node.parentNode.removeChild(node);
+        }
+    });
+
+    if (!contentDiv.querySelector('.skull-marker')) {
         const img = document.createElement('img');
         img.src = NEW_SKULL_ICON_URL;
         img.className = 'skull-marker';
-        cell.firstChild.appendChild(img);
+        contentDiv.appendChild(img);
     }
   }
 
   function addPrisonerMarker(cell) {
-    if (!cell.querySelector('.prisoner-marker')) {
+    const contentDiv = cell.querySelector('.cell-content');
+    if (!contentDiv) return;
+
+    Array.from(contentDiv.childNodes).forEach(node => {
+        if (node.nodeType === Node.TEXT_NODE) {
+            node.parentNode.removeChild(node);
+        }
+    });
+      
+    if (!contentDiv.querySelector('.prisoner-marker')) {
         const img = document.createElement('img');
         img.src = PRISONER_ICON_URL;
         img.className = 'prisoner-marker';
-        cell.firstChild.appendChild(img);
+        contentDiv.appendChild(img);
     }
   }
 
@@ -391,6 +422,17 @@
         content.className = 'cell-content';
         content.textContent = i;
         cellDiv.appendChild(content);
+        
+        if (visitedCells && visitedCells.has(String(i))) {
+            cellDiv.classList.add('visited');
+            const info = visitedCells.get(String(i));
+            if (info.defeated) addSkullMarker(cellDiv);
+            if (info.prisonerFreed) addPrisonerMarker(cellDiv);
+            if(info.enemy && !info.defeated) { content.appendChild(Object.assign(document.createElement('div'), {className: 'enemy-marker'})); }
+            if(info.bonus) { content.appendChild(Object.assign(document.createElement('div'), {className: 'bonus-marker'})); }
+            if(info.potion) { content.appendChild(Object.assign(document.createElement('div'), {className: 'potion-marker'})); }
+            if (info.bonus === GEM_DOOR) cellDiv.classList.add('gem-door-marker');
+        }
 
         board.appendChild(cellDiv);
     }
@@ -749,14 +791,19 @@
   }
   
   function rollDice() {
-    diceBtn.disabled = true; resetMessages();
+    if (diceBtn.disabled) return;
+    diceBtn.disabled = true; 
+    resetMessages();
     let flips = 10;
     const timer = setInterval(() => {
       diceRes.textContent = Math.floor(Math.random() * 6) + 1;
       if (--flips <= 0) {
         clearInterval(timer);
         const moves = getValidMoves(Number(diceRes.textContent));
-        if (moves.length === 0) { setMainMessage("Tiro Bloccato", "#ff5555"); diceBtn.disabled = false; } 
+        if (moves.length === 0) { 
+          setMainMessage("Tiro Bloccato", "#ff5555"); 
+          diceBtn.disabled = false;
+        } 
         else { moves.forEach(cell => cell.classList.add('highlighted')); }
       }
     }, 100);
@@ -771,8 +818,6 @@
     enemiesDefeatedCount = 0;
     discoveryCounter = 1;
     unvisitedCellsCounter = 0;
-    newGameBtn.disabled = false;
-    messageQueue = [];
     
     placeDiscoveries();
     buildBoard();
@@ -783,6 +828,8 @@
     
     const startCell = board.querySelector('[data-cell-number="1"]');
     if (startCell) setCurrent(startCell);
+    charForm.style.display = 'none';
+    diceBtn.disabled = false;
   }
   
   function promptForNewGame() {
@@ -798,18 +845,80 @@
     charForm.style.display = 'block';
   }
 
+  function saveGame() {
+    if (!character) {
+      alert('Nessun gioco da salvare. Inizia una nuova partita prima.');
+      return;
+    }
+    const gameState = {
+      character,
+      maxHP,
+      enemiesDefeatedCount,
+      discoveryCounter,
+      unvisitedCellsCounter,
+      visitedCells: Array.from(visitedCells.entries()),
+      enemyMap,
+      bonusMap,
+      potionMap,
+      prisonerMap,
+      currentCellNumber: currentCell.dataset.cellNumber
+    };
+    localStorage.setItem('dungeon72Save', JSON.stringify(gameState));
+    alert('Partita salvata!');
+    loadGameBtn.style.display = 'block';
+  }
+  
+  function loadGame() {
+    const savedStateJSON = localStorage.getItem('dungeon72Save');
+    if (!savedStateJSON) {
+      alert('Nessun salvataggio trovato.');
+      return;
+    }
+    const savedState = JSON.parse(savedStateJSON);
+    
+    character = savedState.character;
+    maxHP = savedState.maxHP;
+    enemiesDefeatedCount = savedState.enemiesDefeatedCount;
+    discoveryCounter = savedState.discoveryCounter;
+    unvisitedCellsCounter = savedState.unvisitedCellsCounter;
+    visitedCells = new Map(savedState.visitedCells);
+    enemyMap = savedState.enemyMap;
+    bonusMap = savedState.bonusMap;
+    potionMap = savedState.potionMap;
+    prisonerMap = savedState.prisonerMap;
+    
+    buildBoard(); 
+    
+    const lastCell = board.querySelector(`[data-cell-number="${savedState.currentCellNumber}"]`);
+    if(lastCell) {
+        if(currentCell) currentCell.classList.remove('current');
+        currentCell = lastCell;
+        currentCell.classList.add('current');
+    }
+    
+    updatePlayerInfo();
+    updateInventory();
+    updateDiscoveriesLog();
+    resetMessages();
+    
+    charForm.style.display = 'none';
+    diceBtn.disabled = false;
+    alert('Partita caricata!');
+  }
+
   newGameBtn.addEventListener('click', promptForNewGame);
-  diceBtn.addEventListener('click', rollDice);
+  saveGameBtn.addEventListener('click', saveGame);
+  loadGameBtn.addEventListener('click', loadGame);
+  diceBtn.addEventListener('click', rollDice); 
   messageModalOkBtn.addEventListener('click', processMessageQueue);
   cancelCharBtn.addEventListener('click', () => { charForm.style.display = 'none'; });
 
-  saveCharBtn.addEventListener('click', () => {
+  startAdventureBtn.addEventListener('click', () => {
     const name = document.getElementById('charName').value.trim();
     const hp = parseInt(document.getElementById('charHP').value);
     if (name && hp > 0) {
       maxHP = hp;
       character = { name, hp, bonuses: [], inventory: [], hasSpecialSword: false, prisonersFreed: 0 };
-      charForm.style.display = 'none';
       startGame();
     } else { alert('Inserisci un nome valido e PF > 0.'); }
   });
@@ -827,7 +936,14 @@
     processMessageQueue();
   });
 
-  function init() { wireCellListeners(); promptForNewGame(); }
+  function init() {
+    wireCellListeners();
+    if (localStorage.getItem('dungeon72Save')) {
+        loadGameBtn.style.display = 'block';
+    }
+    promptForNewGame(); 
+  }
+
   init();
 </script>
 </body>
