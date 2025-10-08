@@ -130,7 +130,20 @@
         gap: 10px;
         align-items: stretch;
       }
-      #right { order: 1; }
+      #right { order: 1; align-items: stretch; }
+      #sticky-controls {
+          position: sticky;
+          top: 0;
+          z-index: 100;
+          background: #1a1915; /* Colore solido per leggibilità */
+          padding: 10px;
+          border-radius: 0 0 10px 10px;
+          display: flex;
+          flex-direction: row;
+          flex-wrap: wrap;
+          justify-content: space-around;
+          gap: 10px;
+      }
       #center-column { 
         order: 2;
         width: 100%;
@@ -140,11 +153,6 @@
       #left, #right {
         width: 100%;
         box-sizing: border-box;
-      }
-      #right {
-        flex-direction: row;
-        flex-wrap: wrap;
-        justify-content: space-around;
       }
       #diceRollBtn, #diceResult { flex-basis: 45%; }
       #playerInfo, #inventoryContainer { flex-basis: 100%; }
@@ -169,9 +177,11 @@
   </div>
 
   <div id="right">
-    <button id="diceRollBtn">Tira dado</button>
-    <div id="diceResult">-</div>
-    <div id="playerInfo"></div>
+    <div id="sticky-controls">
+        <button id="diceRollBtn">Tira dado</button>
+        <div id="diceResult">-</div>
+        <div id="playerInfo"></div>
+    </div>
     <div id="inventoryContainer">
         <div style="font-weight: bold; margin-bottom: 5px;">Inventario Pozioni</div>
         <select id="inventorySelect"></select>
