@@ -114,7 +114,7 @@
     @media (max-width: 1024px) {
       body {
         flex-direction: column;
-        align-items: center;
+        /* Rimosso align-items: center per evitare il centraggio che causa il bug di scroll */
       }
       #right { order: 1; }
       #center-column { 
@@ -124,9 +124,10 @@
         -webkit-overflow-scrolling: touch;
       }
       #left { order: 3; }
-      #left, #right {
+      #left, #right, #center-column {
         width: 100%;
-        max-width: 520px;
+        max-width: none; /* Rimosso max-width per permettere al contenitore di occupare tutto lo spazio */
+        box-sizing: border-box;
       }
       #right {
         flex-direction: row;
