@@ -114,7 +114,8 @@
     @media (max-width: 1024px) {
       body {
         flex-direction: column;
-        /* Rimosso align-items: center per evitare il centraggio che causa il bug di scroll */
+        padding: 10px;
+        gap: 10px;
       }
       #right { order: 1; }
       #center-column { 
@@ -122,11 +123,12 @@
         width: 100%;
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
+        /* QUESTA È LA CHIAVE: rimuovo l'allineamento al centro */
+        align-items: flex-start;
       }
       #left { order: 3; }
       #left, #right, #center-column {
         width: 100%;
-        max-width: none; /* Rimosso max-width per permettere al contenitore di occupare tutto lo spazio */
         box-sizing: border-box;
       }
       #right {
