@@ -3,19 +3,34 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dungeon 72 Celle - Log Scoperte</title>
+  <title>Dungeon 72 Celle - Responsive</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap" rel="stylesheet">
   <style>
-    body { background:#1e1d18; color:#e6e6e6; font-family:Arial, sans-serif; display:flex; gap:20px; padding:20px; }
+    body { 
+      background-image: url('https://i.imgur.com/HvMSTpG.jpg');
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      color:#e6e6e6; 
+      font-family:Arial, sans-serif; 
+      display:flex;
+      justify-content: center;
+      gap:20px; 
+      padding:20px;
+      align-items: flex-start;
+    }
     #left, #right { width:240px; display:flex; flex-direction:column; gap:10px; }
+    #center-column { display: flex; flex-direction: column; align-items: center; gap: 10px; }
     #center {
-      position:relative;
-      width: calc(9 * 50px + 8 * 4px);
-      height: calc(8 * 50px + 7 * 4px);
-      background:linear-gradient(135deg,#2f2e2a,#252420);
+      display: grid;
+      grid-template-columns: repeat(9, 1fr);
+      gap: 4px;
+      width: 482px; /* (50px * 9) + (4px * 8) */
+      background: rgba(20, 19, 15, 0.7);
       border-radius:10px;
+      padding: 10px;
       box-shadow:inset 0 0 12px #000;
     }
     #right { align-items:center; }
@@ -23,37 +38,59 @@
     #left button { min-width: 150px; }
     button:hover { background:#7cb673; }
     button:disabled { background:#555; cursor:not-allowed; }
-    #battleActionContainer button#escapeBtn { background-color: #a85d5d; }
-    #battleActionContainer button#escapeBtn:hover:not(:disabled) { background-color: #c97a7a; }
-    #battleActionContainer #battleRoundBtn { background-color: #5a8c56; }
-    #battleActionContainer #battleRoundBtn:hover:not(:disabled) { background-color: #7cb673; }
     
-    .cell { position:absolute; width:50px; height:50px; border:2px solid #666; border-radius:6px; display:flex; align-items:center; justify-content:center; font-weight:bold; color:#bfc5a7; background:linear-gradient(145deg,#4a493f,#373728); user-select:none; box-sizing: border-box; }
-    .visited { background:linear-gradient(145deg,#495f4f,#354437); border-color:#708665; color:#a4b999; }
-    .current { background:linear-gradient(145deg,#8fad6a,#6e8547); border-color:#a0d535; color:#eff7d6; box-shadow:0 0 10px #a0d535; }
-    .highlighted {
-      border: 3px solid white !important;
-      cursor: pointer;
+    .cell { 
+      position: relative;
+      width: 100%;
+      padding-top: 100%; /* Aspect ratio 1:1 */
+      border:2px solid #666; 
+      border-radius:6px; 
+      background:linear-gradient(145deg, rgba(74, 73, 63, 0.7), rgba(55, 55, 40, 0.7)); 
+      user-select:none; 
     }
-    .enemy-marker { position:absolute; top:3px; right:3px; width:8px; height:8px; background:red; border-radius:50%; border:1px solid #fff; }
-    .bonus-marker { position:absolute; bottom:3px; left:3px; width:8px; height:8px; background:gold; border-radius:50%; border:1px solid #fff; }
-    .potion-marker { position:absolute; bottom:3px; right:3px; width:8px; height:8px; background:deepskyblue; border-radius:50%; border:1px solid #fff; }
-    .skull-marker, .prisoner-marker { position:absolute; top:50%; left:50%; transform: translate(-50%, -50%); width:24px; height:24px; pointer-events:none; opacity: 0.7; }
+    .cell-content {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        color: #bfc5a7;
+    }
+    .visited { background:linear-gradient(145deg, rgba(73, 95, 79, 0.7), rgba(53, 68, 55, 0.7)); border-color:#708665; color:#a4b999; }
+    .current { background:linear-gradient(145deg, rgba(143, 173, 106, 0.8), rgba(110, 133, 71, 0.8)); border-color:#a0d535; color:#eff7d6; box-shadow:0 0 10px #a0d535; }
+    .highlighted { border: 3px solid white !important; cursor: pointer; }
+    
+    .enemy-marker, .bonus-marker, .potion-marker { position:absolute; width:8px; height:8px; border-radius:50%; border:1px solid #fff; }
+    .enemy-marker { top:3px; right:3px; background:red; }
+    .bonus-marker { bottom:3px; left:3px; background:gold; }
+    .potion-marker { bottom:3px; right:3px; background:deepskyblue; }
+    .skull-marker, .prisoner-marker { position:absolute; top:50%; left:50%; transform: translate(-50%, -50%); width:50%; height:50%; pointer-events:none; opacity: 0.7; }
     .gem-door-marker { border: 3px solid deepskyblue !important; box-shadow: 0 0 15px deepskyblue; }
     
     #diceResult { width:80px; height:80px; font-size:48px; font-weight:bold; display:flex; align-items:center; justify-content:center; border:2px solid #a0d535; border-radius:10px; background:linear-gradient(145deg,#6e8547,#8fad6a); color:#d7f39b; }
-    #enemyMessage, #blockedMessage, #visitedInfo { min-height:24px; font-weight:bold; text-align:center; }
+    #game-messages { width: 100%; max-width: 482px; }
+    #enemyMessage, #blockedMessage, #visitedInfo { min-height:24px; font-weight:bold; text-align:center; background-color: rgba(0,0,0,0.4); border-radius: 5px; padding: 5px; width:100%; box-sizing: border-box; margin-bottom: 5px; }
     #enemyMessage { color:#ffcc00; }
     #blockedMessage { color:#ff5555; visibility:hidden; }
     #visitedInfo { opacity:0.9; }
-    #discoveriesLog { white-space: pre-line; background:#3a3a2b; border-radius:8px; padding:10px; font-size:14px; min-height: 200px; }
-    #playerInfo { width:100%; text-align:center; padding:10px; border:2px solid #a0d535; border-radius:10px; background:linear-gradient(145deg,#6e8547,#8fad6a); color:#eff7d6; min-height:40px; }
-    #charForm, #encounterModal, #battleModal { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#2f2e2a; padding:20px; border-radius:10px; box-shadow:0 0 15px #000; z-index:100; text-align:center; width: 300px; }
-    #charForm input { width:220px; padding:8px; margin:8px 0; border:none; border-radius:6px; font-size:16px; }
-    #encounterModal p { font-size:18px; margin-bottom:15px; }
-    #encounterModal-diceResult { font-size:40px; font-weight:bold; margin:10px 0; color:#d7f39b; }
-    #encounterActionBtns button { display: block; width: 100%; margin-top: 10px; }
-
+    #discoveriesLog { white-space: pre-line; background:rgba(58, 58, 43, 0.8); border-radius:8px; padding:10px; font-size:14px; min-height: 200px; width: 100%; max-width: 482px;}
+    #playerInfo { 
+        width:100%; 
+        text-align:center; 
+        padding: 5px 10px; 
+        border:2px solid #a0d535; 
+        border-radius:10px; 
+        background:linear-gradient(145deg,#6e8547,#8fad6a); 
+        color:#eff7d6; 
+    }
+    
+    #charForm, #encounterModal, #battleModal, #messageModal { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background: #3a3a2b; padding:20px; border-radius:10px; box-shadow:0 0 15px #000; z-index:1001; text-align:center; width: 300px; }
+    #charForm input { width: calc(100% - 16px); padding:8px; margin:8px 0; border:none; border-radius:6px; font-size:16px; }
+    
     .battle-unit { margin: 15px 0; border: 1px solid #555; padding: 10px; border-radius: 8px; }
     .battle-name { font-weight: bold; font-size: 20px; margin-bottom: 5px; color: #a0d535; }
     .battle-pf, .battle-attack { font-size: 16px; margin-bottom: 5px; }
@@ -64,31 +101,63 @@
     #inventoryContainer { margin-top: 20px; width: 100%; text-align: center; }
     #inventoryContainer select { width: 100%; padding: 8px; background: #3a3a2b; color: #fff; border: 1px solid #666; border-radius: 6px; }
 
-    #messageModal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: linear-gradient(135deg, #4a3c26, #2d1f0f); border: 4px solid #8b5e3c; border-radius: 10px; padding: 25px 35px; box-shadow: 0 0 20px black; color: #f5deb3; font-family: 'MedievalSharp', cursive; font-size: 22px; text-align: center; z-index: 1001; user-select: none; }
+    #messageModal { background: linear-gradient(135deg, #4a3c26, #2d1f0f); border: 4px solid #8b5e3c; color: #f5deb3; font-family: 'MedievalSharp', cursive; font-size: 22px; }
     #messageModal.victory-modal .modal-content { display: flex; flex-direction: column; align-items: center; }
     #messageModal.victory-modal #messageModalText { font-size: 28px; margin-bottom: 5px; }
     #messageModal.victory-modal #victorySubText { font-size: 18px; margin-bottom: 10px; }
     #messageModal.victory-modal #prisonerStatusText { font-size: 16px; color: #d2b48c; }
     #messageModal button { font-family: 'MedievalSharp', cursive; font-size: 18px; margin-top: 20px; padding: 8px 25px; background-color: #8b5e3c; border-radius: 5px; border: 2px solid #5a3d2e; }
     #messageModal button:hover { background-color: #a3764a; }
+
+    /* --- Responsive --- */
+    @media (max-width: 1024px) {
+      body {
+        flex-direction: column;
+        align-items: center;
+      }
+      #right { order: 1; }
+      #center-column { order: 2; width: 100%; max-width: 482px; }
+      #left { order: 3; }
+      #left, #right {
+        width: 100%;
+        max-width: 482px;
+      }
+      #right {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: space-around;
+      }
+      #diceRollBtn { flex-basis: 45%; }
+      #diceResult { flex-basis: 45%; }
+      #playerInfo, #inventoryContainer {
+        flex-basis: 100%;
+      }
+      #charForm, #encounterModal, #battleModal, #messageModal {
+        width: 90%;
+      }
+    }
   </style>
 </head>
 <body>
 
   <div id="left">
     <button id="newGameBtn">Nuova Partita</button>
+  </div>
+  
+  <div id="center-column">
+    <div id="center"></div>
+    <div id="game-messages">
+        <div id="enemyMessage"></div>
+        <div id="blockedMessage">Tiro Bloccato</div>
+        <div id="visitedInfo"></div>
+    </div>
     <div id="discoveriesLog"></div>
   </div>
-
-  <div id="center"></div>
 
   <div id="right">
     <button id="diceRollBtn">Tira dado</button>
     <div id="diceResult">-</div>
     <div id="playerInfo"></div>
-    <div id="blockedMessage">Tiro Bloccato</div>
-    <div id="enemyMessage"></div>
-    <div id="visitedInfo"></div>
     <div id="inventoryContainer">
         <div style="font-weight: bold; margin-bottom: 5px;">Inventario Pozioni</div>
         <select id="inventorySelect"></select>
@@ -176,15 +245,13 @@
   const prisonerStatusText = document.getElementById('prisonerStatusText');
   const messageModalOkBtn = document.getElementById('messageModalOkBtn');
 
-
-  const COLS = 9, CELL_SIZE = 50, CELL_GAP = 4, CELL_COUNT = 72, ENEMY_COUNT = 12, PRISONER_COUNT = 11;
+  const COLS = 9, CELL_COUNT = 72, ENEMY_COUNT = 12, PRISONER_COUNT = 11;
   const BONUS_ITEMS = ["Elsa migliorata", "Guanti rinforzati", "Spallacci di cuoio"];
   const POTIONS = [ { name: "Pozione (+5 PF)", value: 5 }, { name: "Pozione (+10 PF)", value: 10 }, { name: "Pozione (+15 PF)", value: 15 } ];
   const GEMS = ["Gemma Blu", "Gemma Verde", "Gemma Viola"];
   const GEM_DOOR = "Porta di Gemme";
-  const NEW_SKULL_ICON_URL = 'https://imgur.com/g9mN0pU.jpg';
-  const PRISONER_ICON_URL = 'https://imgur.com/XW3fJxc.jpg';
-
+  const NEW_SKULL_ICON_URL = 'https://i.imgur.com/g9mN0pU.jpg';
+  const PRISONER_ICON_URL = 'https://i.imgur.com/XW3fJxc.jpg';
 
   let currentCell, character, maxHP, enemiesDefeatedCount, discoveryCounter, unvisitedCellsCounter;
   let visitedCells, enemyMap, bonusMap, potionMap, prisonerMap;
@@ -211,7 +278,7 @@
         const img = document.createElement('img');
         img.src = NEW_SKULL_ICON_URL;
         img.className = 'skull-marker';
-        cell.appendChild(img);
+        cell.firstChild.appendChild(img);
     }
   }
 
@@ -220,7 +287,7 @@
         const img = document.createElement('img');
         img.src = PRISONER_ICON_URL;
         img.className = 'prisoner-marker';
-        cell.appendChild(img);
+        cell.firstChild.appendChild(img);
     }
   }
 
@@ -272,7 +339,6 @@
         lines.push(`\nPrigionieri Liberati: ${character.prisonersFreed}`);
     }
 
-
     discoveriesLog.textContent = lines.join('\n');
   }
   
@@ -312,15 +378,19 @@
   function buildBoard() {
     board.innerHTML = '';
     for (let i = 1; i <= CELL_COUNT; i++) {
-        const r = Math.floor((i - 1) / COLS), c = (i - 1) % COLS;
+        const r = Math.floor((i - 1) / COLS);
+        const c = (i - 1) % COLS;
         const cellDiv = document.createElement('div');
         cellDiv.className = 'cell';
         cellDiv.dataset.cellNumber = i;
         cellDiv.dataset.row = r;
         cellDiv.dataset.col = c;
-        cellDiv.style.left = `${c * (CELL_SIZE + CELL_GAP)}px`;
-        cellDiv.style.top = `${r * (CELL_SIZE + CELL_GAP)}px`;
-        cellDiv.textContent = i;
+        
+        const content = document.createElement('div');
+        content.className = 'cell-content';
+        content.textContent = i;
+        cellDiv.appendChild(content);
+
         board.appendChild(cellDiv);
     }
   }
@@ -376,7 +446,7 @@
     currentCell.classList.add('current', 'visited');
     
     const cellNum = currentCell.dataset.cellNumber;
-    let textMessage = '';
+    resetMessages();
     const isNewVisit = !visitedCells.has(cellNum);
 
     if (isNewVisit) {
@@ -410,7 +480,7 @@
                  if (hasAllGems && !character.hasSpecialSword) {
                      character.hasSpecialSword = true;
                      messageQueue.push("La Porta si apre! Hai trovato la Spada Speciale (1D8+1).");
-                 } else if (character.hasSpecialSword) { textMessage = "La porta di gemme è vuota."; } 
+                 } else if (character.hasSpecialSword) { enemyMsg.textContent = "La porta di gemme è vuota."; } 
                  else { messageQueue.push("Trovi una porta incastonata di gemme. È sigillata."); }
             } else { messageQueue.push(`Hai trovato: ${info.bonus}! Ottieni +1 in attacco.`); }
         }
@@ -428,10 +498,11 @@
             addPrisonerMarker(cell);
             messageQueue.push("Hai liberato un prigioniero!");
         }
-
-        if(enemyObj) { cell.appendChild(Object.assign(document.createElement('div'), {className: 'enemy-marker'})); }
-        if(bonusLabel) { cell.appendChild(Object.assign(document.createElement('div'), {className: 'bonus-marker'})); }
-        if(potionLabel) { cell.appendChild(Object.assign(document.createElement('div'), {className: 'potion-marker'})); }
+        
+        const contentDiv = cell.firstChild;
+        if(enemyObj) { contentDiv.appendChild(Object.assign(document.createElement('div'), {className: 'enemy-marker'})); }
+        if(bonusLabel) { contentDiv.appendChild(Object.assign(document.createElement('div'), {className: 'bonus-marker'})); }
+        if(potionLabel) { contentDiv.appendChild(Object.assign(document.createElement('div'), {className: 'potion-marker'})); }
 
     } else { // Cella già visitata
         const info = visitedCells.get(cellNum);
@@ -449,13 +520,15 @@
 
     if (info.enemy && !info.defeated) { handleEncounter(info.enemy); } else { diceBtn.disabled = false; }
     
-    if (info.enemy && info.defeated) { textMessage += `Qui giace un nemico sconfitto.`; } 
-    else if (!info.enemy && !info.bonus && !info.potion && !info.prisonerFreed) {
-        if (isNewVisit || cellNum === '1') { textMessage = "Procedi tranquillo"; } 
+    if (info.enemy && info.defeated) {
+        enemyMsg.textContent = `Qui giace un nemico sconfitto.`;
+        addSkullMarker(currentCell);
+    } 
+    else if (!info.enemy && !info.bonus && !info.potion && !prisonerMap[cellNum]) {
+        if (isNewVisit || cellNum === '1') { enemyMsg.textContent = "Procedi tranquillo"; } 
         else { visitedInfo.textContent = 'Cella già visitata'; }
     }
 
-    enemyMsg.textContent = textMessage.trim();
     updatePlayerInfo();
     updateDiscoveriesLog();
   }
@@ -464,7 +537,6 @@
     diceBtn.disabled = true;
     encounterModal.style.display = 'block';
     encounterMessage.textContent = `Nemico! Scegli la tua azione.`;
-    encounterDiceResult.textContent = ``;
     encounterActionBtns.innerHTML = ''; 
 
     const rollBtn = document.createElement('button');
@@ -518,7 +590,6 @@
       battleResult.innerHTML = 'Tenti la fuga...';
       battleResult.style.color = '#ffcc00';
       battleResult.style.fontSize = '18px';
-      battleEnemyDice.textContent = '-';
       let flips = 10;
       const timer = setInterval(() => {
           battlePlayerDice.textContent = Math.floor(Math.random() * 6) + 1;
@@ -753,3 +824,4 @@
 </script>
 </body>
 </html>
+
