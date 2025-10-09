@@ -19,7 +19,7 @@
       justify-content: center;
       gap:20px; 
       padding:20px;
-      padding-top: 100px; /* Spazio per il pannello fisso */
+      padding-top: 100px;
       align-items: flex-start;
       box-sizing: border-box;
     }
@@ -101,20 +101,22 @@
     .bonus-marker { bottom:3px; left:3px; background:gold; }
     .potion-marker { bottom:3px; right:3px; background:deepskyblue; }
     .gas-marker { bottom:3px; left:3px; background:#808080;}
-    .skull-marker, .prisoner-marker { 
+    .skull-marker, .prisoner-marker, .shadow-marker { 
         position:absolute; 
         top:50%; 
         left:50%; 
         transform: translate(-50%, -50%); 
-        width:60%; 
-        height:60%; 
+        width: 80%; 
+        height: 80%; 
         pointer-events:none; 
-        opacity: 0.8; 
+        opacity: 0.9; 
     }
     .gem-door-marker { border: 3px solid deepskyblue !important; box-shadow: 0 0 15px deepskyblue; }
     
-    #diceResult { width:80px; height:80px; font-size:48px; font-weight:bold; display:flex; align-items:center; justify-content:center; border:2px solid #a0d535; border-radius:10px; background:linear-gradient(145deg,#6e8547,#8fad6a); color:#d7f39b; }
+    #diceResult, #shadowDiceResult { width:80px; height:80px; font-size:48px; font-weight:bold; display:flex; align-items:center; justify-content:center; border:2px solid #a0d535; border-radius:10px; background:linear-gradient(145deg,#6e8547,#8fad6a); color:#d7f39b; }
+    #shadowDiceResult { border-color: #993333; background: linear-gradient(145deg, #6b2a2a, #8f4b4b); color: #f3c2c2;}
     #main-message-display { min-height:24px; font-weight:bold; text-align:center; background-color: rgba(0,0,0,0.4); border-radius: 5px; padding: 5px; width:100%; box-sizing: border-box; visibility: hidden; }
+    #shadowActionDisplay { display:none; min-height:24px; text-align:center; background-color: rgba(0,0,0,0.4); border-radius: 5px; padding: 5px; width:100%; box-sizing: border-box; margin-top: 10px; }
     
     #discoveriesLog { white-space: pre-line; background:rgba(58, 58, 43, 0.8); border-radius:8px; padding:10px; font-size:14px; min-height: 200px; width: 100%;}
     #playerInfo { 
@@ -187,7 +189,7 @@
         flex-basis: 45%;
         min-width: auto;
       }
-      #diceResult {
+      #diceResult, #shadowDiceResult {
         flex-basis: 45%;
       }
       #playerInfo {
@@ -220,6 +222,10 @@
   </div>
 
   <div id="right">
+    <div id="shadowActionDisplay">
+        <div id="shadowTurnName">Turno Ombre</div>
+        <div id="shadowDiceResult">-</div>
+    </div>
     <div id="inventoryContainer">
         <div style="font-weight: bold; margin-bottom: 5px;">Inventario Pozioni</div>
         <select id="inventorySelect"></select>
@@ -276,6 +282,9 @@
   const discoveriesLog = document.getElementById('discoveriesLog');
   const diceBtn = document.getElementById('diceRollBtn');
   const diceRes = document.getElementById('diceResult');
+  const shadowActionDisplay = document.getElementById('shadowActionDisplay');
+  const shadowTurnName = document.getElementById('shadowTurnName');
+  const shadowDiceRes = document.getElementById('shadowDiceResult');
   const mainMessageDisplay = document.getElementById('main-message-display');
   const playerInfo = document.getElementById('playerInfo');
   const newGameBtn = document.getElementById('newGameBtn');
@@ -313,11 +322,17 @@
   const POTIONS = [ { name: "Pozione (+5 PF)", value: 5 }, { name: "Pozione (+10 PF)", value: 10 }, { name: "Pozione (+15 PF)", value: 15 } ];
   const GEMS = ["Gemma Blu", "Gemma Verde", "Gemma Viola"];
   const GEM_DOOR = "Porta di Gemme";
+  const SHADOW_SPAWNS = [
+      { name: "Ombra", hp: 10, attackDie: 6, attackBonus: 0, iconUrl: "https://i.imgur.com/g8dsPn5.png", spawnTurn: 10 },
+      { name: "Ombra Paurosa", hp: 15, attackDie: 6, attackBonus: 0, iconUrl: "https://i.imgur.com/1vmaXr9.png", spawnTurn: 25 },
+      { name: "Ombra Cattiva", hp: 20, attackDie: 8, attackBonus: 0, iconUrl: "https://i.imgur.com/t3ccoKY.png", spawnTurn: 40 },
+      { name: "Ombra Cattivissima", hp: 25, attackDie: 8, attackBonus: 1, iconUrl: "https://i.imgur.com/eOpP7h2.png", spawnTurn: 52 }
+  ];
   const NEW_SKULL_ICON_URL = 'https://i.imgur.com/g9mN0pU.jpg';
   const PRISONER_ICON_URL = 'https://i.imgur.com/XW3fJxc.jpg';
 
-  let currentCell, character, maxHP, enemiesDefeatedCount, discoveryCounter, unvisitedCellsCounter;
-  let visitedCells, enemyMap, bonusMap, potionMap, prisonerMap, gasTrapPositions, gasActivatedPositions;
+  let currentCell, character, maxHP, enemiesDefeatedCount, discoveryCounter;
+  let visitedCells, enemyMap, bonusMap, potionMap, prisonerMap, gasTrapPositions, gasActivatedPositions, shadows;
   let gasEffect = { active: false, newCellsVisited: 0 };
   let messageQueue = [];
   
@@ -344,13 +359,7 @@
   function addSkullMarker(cell) {
     const contentDiv = cell.querySelector('.cell-content');
     if (!contentDiv) return;
-
-    Array.from(contentDiv.childNodes).forEach(node => {
-        if (node.nodeType === Node.TEXT_NODE) {
-            node.parentNode.removeChild(node);
-        }
-    });
-
+    Array.from(contentDiv.childNodes).forEach(node => { if (node.nodeType === Node.TEXT_NODE) node.parentNode.removeChild(node); });
     if (!contentDiv.querySelector('.skull-marker')) {
         const img = document.createElement('img');
         img.src = NEW_SKULL_ICON_URL;
@@ -362,13 +371,7 @@
   function addPrisonerMarker(cell) {
     const contentDiv = cell.querySelector('.cell-content');
     if (!contentDiv) return;
-
-    Array.from(contentDiv.childNodes).forEach(node => {
-        if (node.nodeType === Node.TEXT_NODE) {
-            node.parentNode.removeChild(node);
-        }
-    });
-      
+    Array.from(contentDiv.childNodes).forEach(node => { if (node.nodeType === Node.TEXT_NODE) node.parentNode.removeChild(node); });
     if (!contentDiv.querySelector('.prisoner-marker')) {
         const img = document.createElement('img');
         img.src = PRISONER_ICON_URL;
@@ -378,10 +381,11 @@
   }
 
   function updateDiscoveriesLog() {
-    let lines = ['Scoperte:'];
+    let lines = [];
     const discoveries = [];
 
     if(visitedCells) {
+        lines.push(`Celle esplorate: ${visitedCells.size}`);
         visitedCells.forEach((info, cellNum) => {
             if (info.discoveryOrder !== null && info.discoveryOrder !== undefined) {
                 discoveries.push({ cellNum: Number(cellNum), info: info, discoveryOrder: info.discoveryOrder });
@@ -392,6 +396,7 @@
     const sortedDiscoveries = discoveries.sort((a, b) => a.discoveryOrder - b.discoveryOrder);
       
     if (sortedDiscoveries.length > 0) {
+        lines.push('\n--- Scoperte ---');
         sortedDiscoveries.forEach(({ cellNum, info }) => {
             if (info.enemy) {
                 const status = info.defeated ? ' (sconfitto)' : '';
@@ -414,7 +419,7 @@
     }
 
     if (character && character.bonuses.length > 0) {
-        lines.push('\nBonus Attivi:');
+        lines.push('\n--- Bonus Attivi ---');
         character.bonuses.forEach(b => {
              if (!GEMS.includes(b) && b !== GEM_DOOR) { lines.push(`- ${b} (+1)`); }
         });
@@ -426,7 +431,7 @@
     }
     
     if (character && GEMS.some(gem => character.bonuses.includes(gem))) {
-        lines.push('\nGemme Raccolte:');
+        lines.push('\n--- Gemme Raccolte ---');
         GEMS.forEach(gem => { if (character.bonuses.includes(gem)) { lines.push(`- ${gem}`); } });
     }
     
@@ -439,7 +444,7 @@
   
   function placeDiscoveries() {
     enemyMap = {}; bonusMap = {}; potionMap = {}; prisonerMap = {}; 
-    gasTrapPositions = new Set(); gasActivatedPositions = new Set();
+    gasTrapPositions = new Set(); gasActivatedPositions = new Set(); shadows = [];
     let availableCells = Array.from({length: CELL_COUNT}, (_, i) => i + 1);
     availableCells = availableCells.filter(cellNum => cellNum !== 1);
 
@@ -489,6 +494,14 @@
         content.className = 'cell-content';
         content.textContent = i;
         cellDiv.appendChild(content);
+
+        const shadowHere = shadows.find(s => s.position === i && s.hp > 0);
+        if (shadowHere) {
+             const img = document.createElement('img');
+             img.src = shadowHere.iconUrl;
+             img.className = 'shadow-marker';
+             content.appendChild(img);
+        }
         
         if (gasActivatedPositions.has(i)) {
              content.appendChild(Object.assign(document.createElement('div'), {className: 'gas-marker'}));
@@ -503,6 +516,10 @@
             if(info.bonus) { content.appendChild(Object.assign(document.createElement('div'), {className: 'bonus-marker'})); }
             if(info.potion) { content.appendChild(Object.assign(document.createElement('div'), {className: 'potion-marker'})); }
             if (info.bonus === GEM_DOOR) cellDiv.classList.add('gem-door-marker');
+        }
+
+        if (currentCell && parseInt(cellDiv.dataset.cellNumber) === parseInt(currentCell.dataset.cellNumber)) {
+            cellDiv.classList.add('current');
         }
 
         board.appendChild(cellDiv);
@@ -572,30 +589,55 @@
       }
   }
 
-  function setCurrent(cell) {
+  function findPath(start, end) {
+      let queue = [[start]];
+      let visited = new Set([start]);
+      while(queue.length > 0) {
+          let path = queue.shift();
+          let pos = path[path.length - 1];
+          if(pos === end) return path;
+
+          let neighbors = [pos - 1, pos + 1, pos - COLS, pos + COLS].filter(n => {
+              if (n < 1 || n > CELL_COUNT || visited.has(n)) return false;
+              const r1 = Math.floor((pos - 1) / COLS), c1 = (pos - 1) % COLS;
+              const r2 = Math.floor((n - 1) / COLS), c2 = (n - 1) % COLS;
+              return Math.abs(r1 - r2) + Math.abs(c1 - c2) === 1;
+          });
+
+          neighbors.sort((a, b) => {
+              const distA = Math.abs(Math.floor((a - 1) / COLS) - Math.floor((end - 1) / COLS)) + Math.abs(((a - 1) % COLS) - ((end - 1) % COLS));
+              const distB = Math.abs(Math.floor((b - 1) / COLS) - Math.floor((end - 1) / COLS)) + Math.abs(((b - 1) % COLS) - ((end - 1) % COLS));
+              return distA - distB;
+          });
+
+          for(const neighbor of neighbors) {
+              if (!visited.has(neighbor)) {
+                visited.add(neighbor);
+                let newPath = [...path, neighbor];
+                queue.push(newPath);
+              }
+          }
+      }
+      return []; 
+  }
+
+  async function setCurrent(cell) {
     if (currentCell) currentCell.classList.remove('current');
     currentCell = cell;
-    currentCell.classList.add('current', 'visited');
     
     const cellNum = parseInt(currentCell.dataset.cellNumber);
     resetMessages();
     const isNewVisit = !visitedCells.has(String(cellNum));
 
     if (isNewVisit) {
-        unvisitedCellsCounter++;
         
         if (gasEffect.active) {
             gasEffect.newCellsVisited++;
             if (gasEffect.newCellsVisited >= GAS_EFFECT_DURATION_CELLS) {
                 gasEffect.active = false;
                 gasEffect.newCellsVisited = 0;
-                messageQueue.push("L'effetto del gas di debolezza è svanito! Il tuo attacco è tornato normale.");
+                messageQueue.push("L'effetto del gas di debolezza è svanito!");
             }
-        }
-
-        if (unvisitedCellsCounter > 0 && unvisitedCellsCounter % 7 === 0) {
-            character.hp = Math.min(character.hp + 5, maxHP);
-            messageQueue.push("Il riposo ti ha fatto guadagnare 5 PF.");
         }
         
         const enemyObj = enemyMap[cellNum];
@@ -603,13 +645,18 @@
         const potionLabel = potionMap[cellNum];
         const isPrisonerCell = prisonerMap[cellNum];
         
-        let order = null;
-        if(enemyObj || bonusLabel || potionLabel || isPrisonerCell || gasTrapPositions.has(cellNum)) { order = discoveryCounter++; }
+        let order = discoveryCounter++;
 
         visitedCells.set(String(cellNum), { 
             enemy: enemyObj || null, bonus: bonusLabel || null, potion: potionLabel || null, 
             prisonerFreed: false, collected: false, defeated: false, hp: 0, discoveryOrder: order
         });
+        
+        const exploredCount = visitedCells.size;
+        if (exploredCount > 0 && exploredCount % 7 === 0) {
+            character.hp = Math.min(character.hp + 5, maxHP);
+            messageQueue.push("Il riposo ti ha fatto guadagnare 5 PF.");
+        }
         
         const info = visitedCells.get(String(cellNum));
         
@@ -618,17 +665,12 @@
             gasEffect.active = true;
             gasEffect.newCellsVisited = 0;
             gasActivatedPositions.add(cellNum);
-            const content = cell.querySelector('.cell-content');
-            if (content && !content.querySelector('.gas-marker')) {
-                content.appendChild(Object.assign(document.createElement('div'), {className: 'gas-marker'}));
-            }
         }
 
         if (info.bonus && !character.bonuses.includes(info.bonus)) {
             character.bonuses.push(info.bonus);
             if (GEMS.includes(info.bonus)) { messageQueue.push(`Hai trovato una ${info.bonus}!`); } 
             else if (info.bonus === GEM_DOOR) {
-                 cell.classList.add('gem-door-marker');
                  const hasAllGems = GEMS.every(gem => character.bonuses.includes(gem));
                  if (hasAllGems && !character.hasSpecialSword) {
                      character.hasSpecialSword = true;
@@ -651,13 +693,8 @@
             addPrisonerMarker(cell);
             messageQueue.push("Hai liberato un prigioniero!");
         }
-        
-        const contentDiv = cell.firstChild;
-        if(enemyObj) { contentDiv.appendChild(Object.assign(document.createElement('div'), {className: 'enemy-marker'})); }
-        if(bonusLabel && !gasActivatedPositions.has(cellNum)) { contentDiv.appendChild(Object.assign(document.createElement('div'), {className: 'bonus-marker'})); }
-        if(potionLabel) { contentDiv.appendChild(Object.assign(document.createElement('div'), {className: 'potion-marker'})); }
 
-    } else { // Cella già visitata
+    } else { 
         const info = visitedCells.get(String(cellNum));
         if (info && info.bonus === GEM_DOOR) {
             const hasAllGems = GEMS.every(gem => character.bonuses.includes(gem));
@@ -668,14 +705,22 @@
         }
     }
     
+    buildBoard();
     processMessageQueue();
     const info = visitedCells.get(String(cellNum));
+    
+    const shadowAtLocation = shadows.find(s => s.position === cellNum && s.hp > 0);
+    if (shadowAtLocation) {
+        startBattle(shadowAtLocation);
+        return;
+    }
 
-    if (info && info.enemy && !info.defeated) { handleEncounter(info.enemy); } else { diceBtn.disabled = false; }
+    if (info && info.enemy && !info.defeated) { handleEncounter(info.enemy); } else {
+        await handleShadowSpawnsAndTurns();
+    }
     
     if (info && info.enemy && info.defeated) {
         setMainMessage(`Qui giace un nemico sconfitto.`, '#a9a9a9');
-        addSkullMarker(currentCell);
     } 
     else if (info && !info.enemy && !info.bonus && !info.potion && !prisonerMap[cellNum]) {
         if (isNewVisit || cellNum === 1) { setMainMessage("Procedi tranquillo", 'lightgreen'); } 
@@ -684,6 +729,56 @@
 
     updatePlayerInfo();
     updateDiscoveriesLog();
+  }
+
+  async function handleShadowSpawnsAndTurns() {
+      let battleStarted = false;
+      const exploredCount = visitedCells.size;
+
+      for (const spawn of SHADOW_SPAWNS) {
+          if (exploredCount >= spawn.spawnTurn && !shadows.some(s => s.name === spawn.name)) {
+              let freeCells = Array.from({length: CELL_COUNT}, (_, i) => i + 1).filter(c => c !== parseInt(currentCell.dataset.cellNumber) && !shadows.some(s => s.position === c));
+              if (freeCells.length > 0) {
+                  const pos = freeCells[Math.floor(Math.random() * freeCells.length)];
+                  shadows.push({ ...spawn, hp: spawn.hp, startHP: spawn.hp, position: pos, isShadow: true });
+                  messageQueue.push(`${spawn.name} è apparsa nel dungeon!`);
+                  processMessageQueue();
+                  buildBoard();
+              }
+          }
+      }
+
+      if (shadows.some(s => s.hp > 0)) {
+          shadowActionDisplay.style.display = 'block';
+          for (const shadow of shadows) {
+            if (shadow.hp > 0) {
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                shadowTurnName.textContent = shadow.name;
+                const moveRoll = Math.floor(Math.random() * 6) + 1;
+                shadowDiceRes.textContent = moveRoll;
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                for (let i = 0; i < moveRoll; i++) {
+                    if (battleStarted) break;
+                    let path = findPath(shadow.position, parseInt(currentCell.dataset.cellNumber));
+                    if (path.length > 1) {
+                        shadow.position = path[1];
+                        buildBoard();
+                        await new Promise(resolve => setTimeout(resolve, 200));
+                        if (shadow.position === parseInt(currentCell.dataset.cellNumber)) {
+                            startBattle(shadow);
+                            battleStarted = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            if(battleStarted) break;
+          }
+          shadowActionDisplay.style.display = 'none';
+      }
+      
+      if (!battleStarted) diceBtn.disabled = false;
   }
 
   function handleEncounter(enemy) {
@@ -711,7 +806,10 @@
                 } else {
                     encounterMessage.textContent = 'Sei riuscito a nasconderti!';
                     closeBtn.textContent = 'Chiudi e continua';
-                    closeBtn.onclick = () => { encounterModal.style.display = 'none'; diceBtn.disabled = false; };
+                    closeBtn.onclick = async () => { 
+                        encounterModal.style.display = 'none'; 
+                        await handleShadowSpawnsAndTurns();
+                    };
                 }
                 encounterActionBtns.appendChild(closeBtn);
             }
@@ -760,31 +858,34 @@
                   setMainMessage(`Fuga riuscita! Ma perdi ${damageRoll + 1} PF.`, '#ffcc00');
                   battleModal.style.display = 'none';
                   setBattleMode(false);
-                  diceBtn.disabled = false;
+                  handleShadowSpawnsAndTurns();
               }
           }
       }, 100);
   }
 
   function startBattle(enemy) {
+    diceBtn.disabled = true;
     setBattleMode(true);
     if (!character) return;
     
-    if (enemy.isBoss) { enemy.startHP = 15; enemy.attackDie = 8; enemy.attackBonus = 1; } 
-    else {
-        if (enemiesDefeatedCount < 3) { enemy.startHP = 10; enemy.attackDie = 6; enemy.attackBonus = 0; } 
-        else if (enemiesDefeatedCount < 6) { enemy.startHP = 12; enemy.attackDie = 6; enemy.attackBonus = 0; } 
-        else if (enemiesDefeatedCount < 9) { enemy.startHP = 12; enemy.attackDie = 8; enemy.attackBonus = 0; } 
-        else { enemy.startHP = 15; enemy.attackDie = 8; enemy.attackBonus = 0; }
+    if (!enemy.isShadow) {
+        if (enemy.isBoss) { enemy.startHP = 15; enemy.attackDie = 8; enemy.attackBonus = 1; } 
+        else {
+            if (enemiesDefeatedCount < 3) { enemy.startHP = 10; enemy.attackDie = 6; enemy.attackBonus = 0; } 
+            else if (enemiesDefeatedCount < 6) { enemy.startHP = 12; enemy.attackDie = 6; enemy.attackBonus = 0; } 
+            else if (enemiesDefeatedCount < 9) { enemy.startHP = 12; enemy.attackDie = 8; enemy.attackBonus = 0; } 
+            else { enemy.startHP = 15; enemy.attackDie = 8; enemy.attackBonus = 0; }
+        }
     }
     
     const cellInfo = visitedCells.get(currentCell.dataset.cellNumber);
-    let currentEnemyHP = cellInfo.hp > 0 ? cellInfo.hp : enemy.startHP;
-    cellInfo.hp = currentEnemyHP;
-    if (!enemy.isBoss) { cellInfo.enemy.name = `Orchetto ${enemiesDefeatedCount + 1}`; }
+    let currentEnemyHP = enemy.isShadow ? enemy.hp : (cellInfo && cellInfo.hp > 0 ? cellInfo.hp : enemy.startHP);
+    if (cellInfo && !enemy.isShadow) cellInfo.hp = currentEnemyHP;
+    if (cellInfo && !enemy.isBoss && !enemy.isShadow) { cellInfo.enemy.name = `Orchetto ${enemiesDefeatedCount + 1}`; }
     
     battlePlayerName.textContent = character.name;
-    battleEnemyName.textContent = cellInfo.enemy.name;
+    battleEnemyName.textContent = enemy.name;
 
     const playerAttackBonus = getAttackBonus();
     const playerAttackDie = character.hasSpecialSword ? 8 : 6;
@@ -792,7 +893,7 @@
     let totalBonus = playerAttackBonus + swordBonus;
     
     battlePlayerAttack.textContent = `Attacco: 1D${playerAttackDie}${totalBonus > 0 ? ' + ' + totalBonus : totalBonus < 0 ? ' ' + totalBonus : ''}`;
-    battleEnemyAttack.textContent = `Attacco: 1D${enemy.attackDie}${enemy.attackBonus > 0 ? ' + ' + enemy.attackBonus : ''}`;
+    battleEnemyAttack.textContent = `Attacco: 1D${enemy.attackDie}${(enemy.attackBonus || 0) > 0 ? ' + ' + enemy.attackBonus : ''}`;
 
     window.updateBattleUI = function() {
         battlePlayerPF.textContent = `PF: ${character.hp > 0 ? character.hp : 0} / ${maxHP}`;
@@ -800,295 +901,5 @@
     }
 
     updateBattleUI();
-    battlePlayerDice.textContent = '-'; battleEnemyDice.textContent = '-';
-    battleResult.innerHTML = 'Preparati allo scontro!';
-    battleResult.style.color = '#ffcc00'; battleResult.style.fontSize = '18px';
-
-    battleActionContainer.innerHTML = '';
-    const roundBtn = document.createElement('button');
-    roundBtn.id = 'battleRoundBtn'; roundBtn.textContent = 'Combatti';
-    const escapeBtn = document.createElement('button');
-    escapeBtn.id = 'escapeBtn'; escapeBtn.textContent = 'Fuggi (subisci 1D6+1 PF)';
-    battleActionContainer.appendChild(roundBtn);
-    battleActionContainer.appendChild(escapeBtn);
     battleModal.style.display = 'block';
-    escapeBtn.onclick = attemptEscape;
-
-    roundBtn.onclick = () => {
-      roundBtn.disabled = true; escapeBtn.disabled = true;
-      battleResult.innerHTML = 'Lancio dei dadi...';
-      battleResult.style.color = '#ffcc00'; battleResult.style.fontSize = '18px';
-      let playerRoll, enemyRoll; let flips = 10;
-      const timer = setInterval(() => {
-        const basePlayerRoll = Math.floor(Math.random() * playerAttackDie) + 1;
-        const enemyBaseRoll = Math.floor(Math.random() * enemy.attackDie) + 1;
-        playerRoll = basePlayerRoll + totalBonus;
-        enemyRoll = enemyBaseRoll + enemy.attackBonus;
-        battlePlayerDice.textContent = `${basePlayerRoll}${totalBonus > 0 ? ' + ' + totalBonus : totalBonus < 0 ? ' ' + totalBonus : ''}`;
-        battleEnemyDice.textContent = `${enemyBaseRoll}${enemy.attackBonus > 0 ? ' + ' + enemy.attackBonus : ''}`;
-
-        if (--flips <= 0) {
-            clearInterval(timer);
-            const diff = playerRoll - enemyRoll;
-            if (diff > 0) {
-                currentEnemyHP -= diff;
-                battleResult.innerHTML = `Hai vinto il round!<br><span style="font-size: 24px;">Il nemico perde ${diff} PF.</span>`;
-                battleResult.style.color = 'lightgreen';
-            } else if (diff < 0) {
-                character.hp -= Math.abs(diff);
-                battleResult.innerHTML = `Hai perso il round!<br><span style="font-size: 24px;">Perdi ${Math.abs(diff)} PF.</span>`;
-                battleResult.style.color = 'red';
-            } else {
-                battleResult.innerHTML = `Pareggio!<br>Nessun danno.`;
-                battleResult.style.color = 'deepskyblue';
-                battleResult.style.fontSize = '20px';
-            }
-            cellInfo.hp = currentEnemyHP;
-            updateBattleUI(); updatePlayerInfo(); updateDiscoveriesLog();
-
-            if (currentEnemyHP <= 0) {
-                battleResult.innerHTML = 'VITTORIA!<br>Hai sconfitto il nemico.';
-                battleResult.style.color = 'lightgreen';
-                cellInfo.defeated = true;
-                
-                if (enemy.isBoss) {
-                    messageQueue.push({victory: true, title: "Dungeon liberato!", subtitle: "Hai sconfitto tutti i nemici!", prisonerStatus: getPrisonerStatusMessage()});
-                    battleActionContainer.innerHTML = '';
-                    const closeBtn = document.createElement('button');
-                    closeBtn.textContent = 'Fine';
-                    closeBtn.onclick = () => { 
-                        battleModal.style.display = 'none'; 
-                        setBattleMode(false);
-                        processMessageQueue(); 
-                    };
-                    battleActionContainer.appendChild(closeBtn);
-                    diceBtn.disabled = true;
-                    return;
-                }
-                
-                enemiesDefeatedCount++;
-                if (enemiesDefeatedCount === ENEMY_COUNT) { placeBoss(); }
-                addSkullMarker(currentCell);
-                updateDiscoveriesLog();
-                
-                battleActionContainer.innerHTML = '';
-                const closeBtn = document.createElement('button');
-                closeBtn.textContent = 'Torna al Dungeon';
-                closeBtn.onclick = () => { 
-                    battleModal.style.display = 'none';
-                    setBattleMode(false);
-                    diceBtn.disabled = false; 
-                    processMessageQueue(); 
-                };
-                battleActionContainer.appendChild(closeBtn);
-
-            } else if (character.hp <= 0) { handleGameOver("in combattimento"); } 
-            else { roundBtn.disabled = false; escapeBtn.disabled = false; }
-        }
-      }, 100);
-    };
-  }
-
-  function updatePlayerInfo() {
-    if (character) {
-      playerInfo.textContent = `${character.name} | PF: ${character.hp > 0 ? character.hp : 0} / ${maxHP}`;
-    } else {
-      playerInfo.textContent = 'Crea un personaggio';
-    }
-  }
-
-  function wireCellListeners() {
-    board.addEventListener('click', (event) => {
-      const target = event.target.closest('.cell');
-      if (target && target.classList.contains('highlighted')) {
-        diceRes.textContent = '-'; resetMessages(); clearHighlights(); setCurrent(target);
-      }
-    });
-  }
-  
-  function rollDice() {
-    if (diceBtn.disabled) return;
-    diceBtn.disabled = true; 
-    resetMessages();
-    let flips = 10;
-    const timer = setInterval(() => {
-      diceRes.textContent = Math.floor(Math.random() * 6) + 1;
-      if (--flips <= 0) {
-        clearInterval(timer);
-        const moves = getValidMoves(Number(diceRes.textContent));
-        if (moves.length === 0) { 
-          setMainMessage("Tiro Bloccato", "#ff5555"); 
-          diceBtn.disabled = false;
-        } 
-        else { moves.forEach(cell => cell.classList.add('highlighted')); }
-      }
-    }, 100);
-  }
-
-  function startGame() {
-    character.bonuses = [];
-    character.inventory = [];
-    character.hasSpecialSword = false;
-    character.prisonersFreed = 0;
-    visitedCells = new Map();
-    enemiesDefeatedCount = 0;
-    discoveryCounter = 1;
-    unvisitedCellsCounter = 0;
-    gasEffect = { active: false, newCellsVisited: 0 };
-    
-    placeDiscoveries();
-    buildBoard();
-    updateLayout();
-    updateDiscoveriesLog();
-    updatePlayerInfo();
-    updateInventory();
-    resetMessages();
-    
-    const startCell = board.querySelector('[data-cell-number="1"]');
-    if (startCell) setCurrent(startCell);
-    charForm.style.display = 'none';
-    diceBtn.disabled = false;
-  }
-  
-  function promptForNewGame() {
-    resetMessages();
-    board.innerHTML = '';
-    discoveriesLog.textContent = '';
-    character = null;
-    updatePlayerInfo();
-    if(inventorySelect) inventorySelect.innerHTML = '';
-    if(usePotionBtn) usePotionBtn.disabled = true;
-    diceRes.textContent = '-';
-    diceBtn.disabled = true;
-    charForm.style.display = 'block';
-  }
-
-  function saveGame() {
-    if (!character) {
-      alert('Nessun gioco da salvare. Inizia una nuova partita prima.');
-      return;
-    }
-    const gameState = {
-      character,
-      maxHP,
-      enemiesDefeatedCount,
-      discoveryCounter,
-      unvisitedCellsCounter,
-      visitedCells: Array.from(visitedCells.entries()),
-      enemyMap,
-      bonusMap,
-      potionMap,
-      prisonerMap,
-      gasTrapPositions: Array.from(gasTrapPositions),
-      gasActivatedPositions: Array.from(gasActivatedPositions),
-      gasEffect,
-      currentCellNumber: currentCell.dataset.cellNumber
-    };
-    localStorage.setItem('dungeon72Save', JSON.stringify(gameState));
-    alert('Partita salvata!');
-    loadGameBtn.style.display = 'block';
-  }
-  
-  function loadGame() {
-    const savedStateJSON = localStorage.getItem('dungeon72Save');
-    if (!savedStateJSON) {
-      alert('Nessun salvataggio trovato.');
-      return;
-    }
-    const savedState = JSON.parse(savedStateJSON);
-    
-    character = savedState.character;
-    maxHP = savedState.maxHP;
-    enemiesDefeatedCount = savedState.enemiesDefeatedCount;
-    discoveryCounter = savedState.discoveryCounter;
-    unvisitedCellsCounter = savedState.unvisitedCellsCounter;
-    visitedCells = new Map(savedState.visitedCells);
-    enemyMap = savedState.enemyMap;
-    bonusMap = savedState.bonusMap;
-    potionMap = savedState.potionMap;
-    prisonerMap = savedState.prisonerMap;
-    gasTrapPositions = new Set(savedState.gasTrapPositions);
-    gasActivatedPositions = new Set(savedState.gasActivatedPositions);
-    gasEffect = savedState.gasEffect;
-    
-    buildBoard(); 
-    updateLayout();
-    
-    const lastCell = board.querySelector(`[data-cell-number="${savedState.currentCellNumber}"]`);
-    if(lastCell) {
-        if(currentCell) currentCell.classList.remove('current');
-        currentCell = lastCell;
-        currentCell.classList.add('current');
-    }
-    
-    updatePlayerInfo();
-    updateInventory();
-    updateDiscoveriesLog();
-    resetMessages();
-    
-    charForm.style.display = 'none';
-    diceBtn.disabled = false;
-    alert('Partita caricata!');
-  }
-
-  function updateLayout() {
-      const discoveriesLog = document.getElementById('discoveriesLog');
-      const leftColumn = document.getElementById('left');
-      const centerColumn = document.getElementById('center-column');
-      const isDesktop = window.innerWidth > 1024;
-
-      if (isDesktop) {
-          if (discoveriesLog.parentElement !== leftColumn) {
-              leftColumn.appendChild(discoveriesLog);
-          }
-      } else {
-          if (discoveriesLog.parentElement !== centerColumn) {
-              centerColumn.appendChild(discoveriesLog);
-          }
-      }
-  }
-
-  newGameBtn.addEventListener('click', promptForNewGame);
-  saveGameBtn.addEventListener('click', saveGame);
-  loadGameBtn.addEventListener('click', loadGame);
-  diceBtn.addEventListener('click', rollDice); 
-  messageModalOkBtn.addEventListener('click', processMessageQueue);
-  cancelCharBtn.addEventListener('click', () => { charForm.style.display = 'none'; });
-
-  startAdventureBtn.addEventListener('click', () => {
-    const name = document.getElementById('charName').value.trim();
-    const hp = parseInt(document.getElementById('charHP').value);
-    if (name && hp > 0) {
-      maxHP = hp;
-      character = { name, hp, bonuses: [], inventory: [], hasSpecialSword: false, prisonersFreed: 0 };
-      startGame();
-    } else { alert('Inserisci un nome valido e PF > 0.'); }
-  });
-
-  usePotionBtn.addEventListener('click', () => {
-    if (character.inventory.length === 0) return;
-    const selectedIndex = inventorySelect.value;
-    const potion = character.inventory[selectedIndex];
-    character.hp = Math.min(character.hp + potion.value, maxHP);
-    character.inventory.splice(selectedIndex, 1);
-    updatePlayerInfo();
-    updateInventory();
-    updateDiscoveriesLog();
-    messageQueue.push(`Hai usato ${potion.name} e recuperato ${potion.value} PF!`);
-    processMessageQueue();
-  });
-
-  function init() {
-    wireCellListeners();
-    if (localStorage.getItem('dungeon72Save')) {
-        loadGameBtn.style.display = 'block';
-    }
-    window.addEventListener('resize', updateLayout);
-    updateLayout();
-    promptForNewGame(); 
-  }
-
-  init();
-</script>
-</body>
-</html>
+    battlePlayerDice.textContent = '-'; battleEnemy
