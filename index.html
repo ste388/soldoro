@@ -484,7 +484,7 @@
       if (freeCells.length > 0) {
           const bossCellNum = freeCells[Math.floor(Math.random() * freeCells.length)];
           enemyMap[bossCellNum] = { name: "Boss Finale", isBoss: true };
-          messageQueue.push("Un'oscura presenza Ã¨ apparsa nel dungeon...");
+          messageQueue.push("Un'oscura presenza è apparsa nel dungeon...");
       } else {
           messageQueue.push("Il Boss non trova spazio per apparire!");
       }
@@ -650,6 +650,7 @@
     const path = findPath(startNum, endNum);
 
     if (!path || path.length <= 1) {
+        currentCell = destinationCell;
         await processCellLogic(destinationCell);
         return;
     }
@@ -659,9 +660,9 @@
         const nextCellNum = path[i];
         const nextCellNode = board.querySelector(`[data-cell-number="${nextCellNum}"]`);
         
-        currentCell.classList.remove('current');
+        if (currentCell) currentCell.classList.remove('current');
         currentCell = nextCellNode;
-        currentCell.classList.add('current');
+        if (currentCell) currentCell.classList.add('current');
         buildBoard();
     }
     
@@ -670,6 +671,7 @@
 
   async function processCellLogic(cell) {
     const cellNum = parseInt(cell.dataset.cellNumber);
+    currentCell = cell; // Ensure global currentCell is up to date
     resetMessages();
     const isNewVisit = !visitedCells.has(String(cellNum));
 
@@ -679,7 +681,7 @@
             if (gasEffect.newCellsVisited >= GAS_EFFECT_DURATION_CELLS) {
                 gasEffect.active = false;
                 gasEffect.newCellsVisited = 0;
-                messageQueue.push("L'effetto del gas di debolezza Ã¨ svanito!");
+                messageQueue.push("L'effetto del gas di debolezza è svanito!");
             }
         }
         
@@ -703,7 +705,7 @@
         const info = visitedCells.get(String(cellNum));
         
         if (gasTrapPositions.has(cellNum) && !gasActivatedPositions.has(cellNum)) {
-            messageQueue.push(`Sei finito in una trappola a gas! Attacco -1 finchÃ© non scopri ${GAS_EFFECT_DURATION_CELLS} nuove celle.`);
+            messageQueue.push(`Sei finito in una trappola a gas! Attacco -1 finché non scopri ${GAS_EFFECT_DURATION_CELLS} nuove celle.`);
             gasEffect.active = true;
             gasEffect.newCellsVisited = 0;
             gasActivatedPositions.add(cellNum);
@@ -717,8 +719,8 @@
                  if (hasAllGems && !character.hasSpecialSword) {
                      character.hasSpecialSword = true;
                      messageQueue.push("La Porta si apre! Hai trovato la Spada Speciale (1D8+1).");
-                 } else if (character.hasSpecialSword) { setMainMessage("La porta di gemme Ã¨ vuota.", '#ffffff'); } 
-                 else { messageQueue.push("Trovi una porta incastonata di gemme. Ãˆ sigillata."); }
+                 } else if (character.hasSpecialSword) { setMainMessage("La porta di gemme è vuota.", '#ffffff'); } 
+                 else { messageQueue.push("Trovi una porta incastonata di gemme. È sigillata."); }
             } else { messageQueue.push(`Hai trovato: ${info.bonus}! Ottieni +1 in attacco.`); }
         }
         
@@ -732,7 +734,6 @@
         if (isPrisonerCell) {
             character.prisonersFreed++;
             info.prisonerFreed = true;
-            addPrisonerMarker(cell);
             messageQueue.push("Hai liberato un prigioniero!");
         }
 
@@ -766,7 +767,7 @@
     } 
     else if (info && !info.enemy && !info.bonus && !info.potion && !prisonerMap[cellNum]) {
         if (isNewVisit || cellNum === 1) { setMainMessage("Procedi tranquillo", 'lightgreen'); } 
-        else { setMainMessage('Cella giÃ  visitata', '#ffffff'); }
+        else { setMainMessage('Cella già visitata', '#ffffff'); }
     }
 
     updatePlayerInfo();
@@ -784,7 +785,7 @@
               if (freeCells.length > 0) {
                   const pos = freeCells[Math.floor(Math.random() * freeCells.length)];
                   shadows.push({ ...spawn, hp: spawn.hp, startHP: spawn.hp, position: pos, isShadow: true });
-                  messageQueue.push(`${spawn.name} Ã¨ apparsa nel dungeon!`);
+                  messageQueue.push(`${spawn.name} è apparsa nel dungeon!`);
                   processMessageQueue();
                   buildBoard();
               }
@@ -1081,8 +1082,8 @@
     
     placeDiscoveries();
     
-    currentCell = board.querySelector('[data-cell-number="1"]');
-    buildBoard();
+    buildBoard(); // FIX: Build the board first...
+    currentCell = board.querySelector('[data-cell-number="1"]'); // ...then select the starting cell.
     
     await processCellLogic(currentCell);
 
@@ -1149,7 +1150,9 @@
     
     updateLayout();
     
-    await processCellLogic(currentCell);
+    // When loading, just update the visuals. Don't re-run the logic for the cell.
+    if(currentCell) currentCell.classList.add('current');
+    buildBoard();
     
     updatePlayerInfo();
     updateInventory();
@@ -1196,8 +1199,9 @@
   });
 
   usePotionBtn.addEventListener('click', () => {
-    if (character.inventory.length === 0) return;
+    if (!character || character.inventory.length === 0) return;
     const selectedIndex = inventorySelect.value;
+    if (!selectedIndex) return;
     const potion = character.inventory[selectedIndex];
     character.hp = Math.min(character.hp + potion.value, maxHP);
     character.inventory.splice(selectedIndex, 1);
