@@ -136,27 +136,50 @@
         min-width: 180px;
     }
     
-    #charForm, #encounterModal, #battleModal, #messageModal { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background: #3a3a2b; padding:20px; border-radius:10px; box-shadow:0 0 15px #000; z-index:1001; text-align:center; width: 300px; }
+    #charForm, #encounterModal, #battleModal, #messageModal, #initiativeModal { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background: #3a3a2b; padding:20px; border-radius:10px; box-shadow:0 0 15px #000; z-index:1001; text-align:center; width: 300px; }
     #charForm input { width: calc(100% - 16px); padding:8px; margin:8px 0; border:none; border-radius:6px; font-size:16px; }
     
-    #battleModal { z-index: 1050; }
+    #battleModal, #initiativeModal { z-index: 1050; }
     .battle-unit { margin: 15px 0; border: 1px solid #555; padding: 10px; border-radius: 8px; }
     .battle-name { font-weight: bold; font-size: 20px; margin-bottom: 5px; color: #a0d535; }
-    .battle-pf, .battle-attack { font-size: 16px; margin-bottom: 5px; }
+    .battle-pf, .battle-attack, .battle-defense { font-size: 16px; margin-bottom: 5px; }
     .battle-dice { font-size: 48px; font-weight: bold; min-height: 60px; display:flex; align-items:center; justify-content:center; }
-    #battleResult { font-size: 18px; font-weight: bold; min-height: 48px; margin-top: 10px; transition: font-size 0.2s; line-height: 1.2; }
-    #battleActionContainer { display:flex; flex-direction:column; gap:10px; }
+    #battleResult { font-size: 18px; font-weight: bold; min-height: 24px; margin-top: 10px; transition: font-size 0.2s; line-height: 1.2; }
+    #battleActionContainer, #initiativeActionContainer { display:flex; flex-direction:column; gap:10px; margin-top: 15px; }
+    #initiativeResult { font-weight: bold; font-size: 18px; min-height: 24px; }
+    #battleLog {
+      min-height: 75px;
+      padding: 10px;
+      margin: 10px 0;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid #444;
+      border-radius: 8px;
+      text-align: left;
+      white-space: pre-line;
+      font-size: 16px;
+      line-height: 1.4;
+    }
     
     #inventoryContainer { margin-top: 20px; width: 100%; text-align: center; }
     #inventoryContainer select { width: 100%; padding: 8px; background: #3a3a2b; color: #fff; border: 1px solid #666; border-radius: 6px; }
 
     #messageModal { background: linear-gradient(135deg, #4a3c26, #2d1f0f); border: 4px solid #8b5e3c; color: #f5deb3; font-family: 'MedievalSharp', cursive; font-size: 22px; }
-    #messageModal.victory-modal .modal-content { display: flex; flex-direction: column; align-items: center; }
-    #messageModal.victory-modal #messageModalText { font-size: 28px; margin-bottom: 5px; }
-    #messageModal.victory-modal #victorySubText { font-size: 18px; margin-bottom: 10px; }
-    #messageModal.victory-modal #prisonerStatusText { font-size: 16px; color: #d2b48c; }
+    #messageModal .modal-content { display: flex; flex-direction: column; align-items: center; }
+    #messageModal #messageModalText { font-size: 28px; margin-bottom: 5px; }
+    #messageModal #victorySubText, #messageModal .dynamic-stat { font-size: 18px; margin-bottom: 10px; }
+    #messageModal #prisonerStatusText { font-size: 16px; color: #d2b48c; }
     #messageModal button { font-family: 'MedievalSharp', cursive; font-size: 18px; margin-top: 20px; padding: 8px 25px; background-color: #8b5e3c; border-radius: 5px; border: 2px solid #5a3d2e; }
     #messageModal button:hover { background-color: #a3764a; }
+
+    #messageModal.game-over-modal {
+        background: linear-gradient(135deg, #4a2626, #2d0f0f);
+        border: 4px solid #8b3c3c;
+        color: #f5d3d3;
+    }
+    #messageModal.game-over-modal #messageModalText { color: #ff8a8a; }
+    #messageModal.game-over-modal #prisonerStatusText { color: #d2a8a8; }
+    #messageModal.game-over-modal button { background-color: #8b3c3c; border: 2px solid #5a2e2e; }
+    #messageModal.game-over-modal button:hover { background-color: #a34a4a; }
 
     @media (max-width: 1024px) {
       body {
@@ -178,14 +201,14 @@
         box-sizing: border-box;
       }
       #inventoryContainer { margin-top: 10px; }
-      #charForm, #encounterModal, #messageModal { width: 90%; }
+      #charForm, #encounterModal, #messageModal, #initiativeModal { width: 90%; }
       #battleModal {
           padding: 10px;
           justify-content: center;
       }
       .battle-unit { margin: 10px 0; padding: 5px; }
       .battle-name { font-size: 18px; }
-      .battle-pf, .battle-attack { font-size: 14px; }
+      .battle-pf, .battle-attack, .battle-defense { font-size: 14px; }
       .battle-dice { font-size: 40px; min-height: 50px; }
       
       #sticky-controls {
@@ -257,18 +280,37 @@
     <div id="encounterActionBtns"></div>
   </div>
 
+  <div id="initiativeModal">
+    <p id="initiativeMessage">Lancio per l'iniziativa!</p>
+    <div class="battle-unit">
+        <div id="initiativePlayerName" class="battle-name"></div>
+        <div id="initiativePlayerDice" class="battle-dice">-</div>
+    </div>
+    <div class="battle-unit">
+        <div id="initiativeEnemyName" class="battle-name"></div>
+        <div id="initiativeEnemyDice" class="battle-dice">-</div>
+    </div>
+    <p id="initiativeResult"></p>
+    <div id="initiativeActionContainer">
+        <button id="initiativeRollBtn">Lancia i dadi</button>
+    </div>
+  </div>
+
   <div id="battleModal">
     <div class="battle-unit">
         <div id="battlePlayerName" class="battle-name"></div>
         <div id="battlePlayerPF" class="battle-pf"></div>
-        <div id="battlePlayerAttack" class="battle-attack">Attacco: 1D6</div>
+        <div id="battlePlayerAttack" class="battle-attack"></div>
+        <div id="battlePlayerDefense" class="battle-defense"></div>
         <div id="battlePlayerDice" class="battle-dice">-</div>
     </div>
+    <div id="battleLog"></div>
     <div id="battleResult"></div>
     <div class="battle-unit">
         <div id="battleEnemyName" class="battle-name"></div>
         <div id="battleEnemyPF" class="battle-pf"></div>
-        <div id="battleEnemyAttack" class="battle-attack">Attacco: 1D6</div>
+        <div id="battleEnemyAttack" class="battle-attack"></div>
+        <div id="battleEnemyDefense" class="battle-defense"></div>
         <div id="battleEnemyDice" class="battle-dice">-</div>
     </div>
     <div id="battleActionContainer"></div>
@@ -308,12 +350,15 @@
   const battlePlayerName = document.getElementById('battlePlayerName');
   const battlePlayerPF = document.getElementById('battlePlayerPF');
   const battlePlayerAttack = document.getElementById('battlePlayerAttack');
+  const battlePlayerDefense = document.getElementById('battlePlayerDefense');
   const battlePlayerDice = document.getElementById('battlePlayerDice');
   const battleEnemyName = document.getElementById('battleEnemyName');
   const battleEnemyPF = document.getElementById('battleEnemyPF');
   const battleEnemyAttack = document.getElementById('battleEnemyAttack');
+  const battleEnemyDefense = document.getElementById('battleEnemyDefense');
   const battleEnemyDice = document.getElementById('battleEnemyDice');
   const battleResult = document.getElementById('battleResult');
+  const battleLog = document.getElementById('battleLog');
   const battleActionContainer = document.getElementById('battleActionContainer');
   const inventorySelect = document.getElementById('inventorySelect');
   const usePotionBtn = document.getElementById('usePotionBtn');
@@ -323,17 +368,40 @@
   const prisonerStatusText = document.getElementById('prisonerStatusText');
   const messageModalOkBtn = document.getElementById('messageModalOkBtn');
   const stickyControls = document.getElementById('sticky-controls');
+  const initiativeModal = document.getElementById('initiativeModal');
+  const initiativePlayerName = document.getElementById('initiativePlayerName');
+  const initiativePlayerDice = document.getElementById('initiativePlayerDice');
+  const initiativeEnemyName = document.getElementById('initiativeEnemyName');
+  const initiativeEnemyDice = document.getElementById('initiativeEnemyDice');
+  const initiativeResult = document.getElementById('initiativeResult');
+  const initiativeRollBtn = document.getElementById('initiativeRollBtn');
+
 
   const COLS = 9, CELL_COUNT = 72, ENEMY_COUNT = 12, PRISONER_COUNT = 11, GAS_TRAP_COUNT = 2, GAS_EFFECT_DURATION_CELLS = 5;
-  const BONUS_ITEMS = ["Elsa migliorata", "Guanti rinforzati", "Spallacci di cuoio"];
+  const ATTACK_BONUS_ITEMS = ["Elsa migliorata", "Guanti rinforzati", "Spallacci di cuoio"];
+  const DEFENSE_BONUS_ITEMS = ["Scudo di ferro", "Elmo", "Corazza"];
   const POTIONS = [ { name: "Pozione (+5 PF)", value: 5 }, { name: "Pozione (+10 PF)", value: 10 }, { name: "Pozione (+15 PF)", value: 15 } ];
   const GEMS = ["Gemma Blu", "Gemma Verde", "Gemma Viola"];
   const GEM_DOOR = "Porta di Gemme";
   const SHADOW_SPAWNS = [
-      { name: "Ombra", hp: 10, attackDie: 6, attackBonus: 0, iconUrl: "https://i.imgur.com/sgLJSln.png", spawnTurn: 10 },
-      { name: "Ombra Paurosa", hp: 15, attackDie: 6, attackBonus: 0, iconUrl: "https://i.imgur.com/grZ66Ex.png", spawnTurn: 25 },
-      { name: "Ombra Cattiva", hp: 20, attackDie: 8, attackBonus: 0, iconUrl: "https://i.imgur.com/Jo45qDz.png", spawnTurn: 40 },
-      { name: "Ombra Cattivissima", hp: 25, attackDie: 8, attackBonus: 1, iconUrl: "https://i.imgur.com/rJg2v1t.png", spawnTurn: 52 }
+      { name: "Ombra", hp: 10, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 1, iconUrl: "https://i.imgur.com/sgLJSln.png", spawnTurn: 10 },
+      { name: "Ombra Paurosa", hp: 15, attackDie: 10, attackBonus: 1, defenseDie: 6, defenseBonus: 0, iconUrl: "https://i.imgur.com/grZ66Ex.png", spawnTurn: 25 },
+      { name: "Ombra Cattiva", hp: 20, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 1, iconUrl: "https://i.imgur.com/Jo45qDz.png", spawnTurn: 40 },
+      { name: "Ombra Cattivissima", hp: 25, attackDie: 10, attackBonus: 1, defenseDie: 6, defenseBonus: 1, iconUrl: "https://i.imgur.com/rJg2v1t.png", spawnTurn: 52 }
+  ];
+  const ENEMY_DEFINITIONS = [
+    { name: "Orchetto", hp: 10, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 0 },
+    { name: "Orchetto", hp: 10, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 0 },
+    { name: "Orchetto", hp: 10, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 0 },
+    { name: "Orco", hp: 12, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 1 },
+    { name: "Orco", hp: 12, attackDie: 10, attackBonus: 1, defenseDie: 6, defenseBonus: 0 },
+    { name: "Orco", hp: 12, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 1 },
+    { name: "Orco", hp: 12, attackDie: 10, attackBonus: 1, defenseDie: 6, defenseBonus: 0 },
+    { name: "Orco", hp: 12, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 1 },
+    { name: "Orco", hp: 12, attackDie: 10, attackBonus: 1, defenseDie: 6, defenseBonus: 1 },
+    { name: "Troll", hp: 15, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 1 },
+    { name: "Troll", hp: 15, attackDie: 10, attackBonus: 1, defenseDie: 6, defenseBonus: 0 },
+    { name: "Troll", hp: 15, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 1 },
   ];
   const NEW_SKULL_ICON_URL = 'https://i.imgur.com/g9mN0pU.jpg';
   const PRISONER_ICON_URL = 'https://i.imgur.com/XW3fJxc.jpg';
@@ -343,14 +411,20 @@
   let visitedCells, enemyMap, bonusMap, potionMap, prisonerMap, gasTrapPositions, gasActivatedPositions, shadows, spawnedShadows;
   let gasEffect = { active: false, newCellsVisited: 0 };
   let messageQueue = [];
+  let currentBattleTurn = {};
   
   function getAttackBonus() {
       if (!character) return 0;
-      let bonus = character.bonuses.filter(b => !GEMS.includes(b) && b !== GEM_DOOR).length;
+      let bonus = character.bonuses.filter(b => ATTACK_BONUS_ITEMS.includes(b)).length;
       if (gasEffect.active) {
           bonus -= 1;
       }
       return bonus;
+  }
+
+  function getDefenseBonus() {
+      if (!character) return 0;
+      return character.bonuses.filter(b => DEFENSE_BONUS_ITEMS.includes(b)).length;
   }
   
   function updateInventory() {
@@ -426,11 +500,16 @@
         lines.push(`(Nessuna scoperta ancora)`);
     }
 
-    if (character && character.bonuses.length > 0) {
-        lines.push('\n--- Bonus Attivi ---');
-        character.bonuses.forEach(b => {
-             if (!GEMS.includes(b) && b !== GEM_DOOR) { lines.push(`- ${b} (+1)`); }
-        });
+    const attackBonuses = character ? character.bonuses.filter(b => ATTACK_BONUS_ITEMS.includes(b)) : [];
+    if (attackBonuses.length > 0) {
+        lines.push('\n--- Bonus Attacco Attivi ---');
+        attackBonuses.forEach(b => lines.push(`- ${b} (+1)`));
+    }
+
+    const defenseBonuses = character ? character.bonuses.filter(b => DEFENSE_BONUS_ITEMS.includes(b)) : [];
+    if (defenseBonuses.length > 0) {
+        lines.push('\n--- Bonus Difesa Attivi ---');
+        defenseBonuses.forEach(b => lines.push(`- ${b} (+1)`));
     }
 
     if (gasEffect.active) {
@@ -465,7 +544,8 @@
     }
 
     for (let i = 0; i < ENEMY_COUNT; i++) { enemyMap[availableCells.pop()] = { name: `Nemico Casuale` }; }
-    BONUS_ITEMS.forEach(itemName => { bonusMap[availableCells.pop()] = itemName; });
+    ATTACK_BONUS_ITEMS.forEach(itemName => { bonusMap[availableCells.pop()] = itemName; });
+    DEFENSE_BONUS_ITEMS.forEach(itemName => { bonusMap[availableCells.pop()] = itemName; });
     POTIONS.forEach(potion => { potionMap[availableCells.pop()] = potion; });
     GEMS.forEach(gem => { bonusMap[availableCells.pop()] = gem; });
     bonusMap[availableCells.pop()] = GEM_DOOR;
@@ -568,17 +648,41 @@
   }
 
   function processMessageQueue() {
-    messageModal.classList.remove('victory-modal');
-    victorySubText.textContent = ''; prisonerStatusText.textContent = '';
+    if (messageModal.classList.contains('game-over-modal')) {
+        messageModal.style.display = 'none';
+        messageModal.classList.remove('game-over-modal');
+        promptForNewGame();
+        return;
+    }
+
+    messageModal.classList.remove('victory-modal', 'game-over-modal');
+    victorySubText.textContent = '';
+    prisonerStatusText.textContent = '';
+    const modalContent = messageModal.querySelector('.modal-content');
+    modalContent.querySelectorAll('.dynamic-stat').forEach(el => el.remove());
+
     if (messageQueue.length > 0) {
         const message = messageQueue.shift();
-        if (typeof message === 'object' && message.victory) {
+
+        if (message.gameOver) {
+            messageModal.classList.add('game-over-modal');
+            messageModalText.textContent = message.title;
+            victorySubText.textContent = message.subtitle;
+            const statsDiv = document.createElement('div');
+            statsDiv.className = 'dynamic-stat';
+            statsDiv.textContent = message.stats;
+            victorySubText.after(statsDiv);
+            prisonerStatusText.textContent = message.prisonerStatus;
+            messageModalOkBtn.textContent = 'Ricomincia';
+        } else if (typeof message === 'object' && message.victory) {
             messageModal.classList.add('victory-modal');
             messageModalText.textContent = message.title;
             victorySubText.textContent = message.subtitle;
             prisonerStatusText.textContent = message.prisonerStatus;
+            messageModalOkBtn.textContent = 'OK';
         } else {
             messageModalText.textContent = message;
+            messageModalOkBtn.textContent = 'OK';
         }
         messageModal.style.display = 'block';
         messageModalOkBtn.focus();
@@ -671,7 +775,7 @@
 
   async function processCellLogic(cell) {
     const cellNum = parseInt(cell.dataset.cellNumber);
-    currentCell = cell; // Ensure global currentCell is up to date
+    currentCell = cell; 
     resetMessages();
     const isNewVisit = !visitedCells.has(String(cellNum));
 
@@ -713,15 +817,20 @@
 
         if (info.bonus && !character.bonuses.includes(info.bonus)) {
             character.bonuses.push(info.bonus);
-            if (GEMS.includes(info.bonus)) { messageQueue.push(`Hai trovato una ${info.bonus}!`); } 
-            else if (info.bonus === GEM_DOOR) {
+            if (GEMS.includes(info.bonus)) { 
+                messageQueue.push(`Hai trovato una ${info.bonus}!`); 
+            } else if (info.bonus === GEM_DOOR) {
                  const hasAllGems = GEMS.every(gem => character.bonuses.includes(gem));
                  if (hasAllGems && !character.hasSpecialSword) {
                      character.hasSpecialSword = true;
-                     messageQueue.push("La Porta si apre! Hai trovato la Spada Speciale (1D8+1).");
+                     messageQueue.push("La Porta si apre! Hai trovato la Spada Speciale (1D12+1).");
                  } else if (character.hasSpecialSword) { setMainMessage("La porta di gemme è vuota.", '#ffffff'); } 
                  else { messageQueue.push("Trovi una porta incastonata di gemme. È sigillata."); }
-            } else { messageQueue.push(`Hai trovato: ${info.bonus}! Ottieni +1 in attacco.`); }
+            } else if (ATTACK_BONUS_ITEMS.includes(info.bonus)) {
+                messageQueue.push(`Hai trovato: ${info.bonus}! Ottieni +1 in attacco.`); 
+            } else if (DEFENSE_BONUS_ITEMS.includes(info.bonus)) {
+                messageQueue.push(`Hai trovato: ${info.bonus}! Ottieni +1 in difesa.`);
+            }
         }
         
         if (info.potion && !info.collected) {
@@ -743,7 +852,7 @@
             const hasAllGems = GEMS.every(gem => character.bonuses.includes(gem));
             if (hasAllGems && !character.hasSpecialSword) {
                 character.hasSpecialSword = true;
-                messageQueue.push("Usi le gemme. La Porta si apre! Trovi la Spada Speciale (1D8+1).");
+                messageQueue.push("Usi le gemme. La Porta si apre! Trovi la Spada Speciale (1D12+1).");
             }
         }
     }
@@ -869,22 +978,24 @@
   
   function handleGameOver(source) {
       const prisonerMessage = getPrisonerStatusMessage();
-      battleResult.innerHTML = `GAME OVER.<br>Sei stato sconfitto ${source}.<br>Nemici uccisi: ${enemiesDefeatedCount}<br>${prisonerMessage}`;
-      battleResult.style.color = 'red';
-      battleResult.style.fontSize = '22px';
-      battleActionContainer.innerHTML = '';
+      battleModal.style.display = 'none';
+      initiativeModal.style.display = 'none';
+      setBattleMode(false);
       diceBtn.disabled = true;
-      const newGameButton = document.createElement('button');
-      newGameButton.textContent = "Inizia una nuova partita";
-      newGameButton.onclick = () => { 
-        battleModal.style.display = 'none';
-        setBattleMode(false);
-        promptForNewGame(); 
-      };
-      battleActionContainer.appendChild(newGameButton);
+
+      messageQueue.push({
+          gameOver: true,
+          title: "GAME OVER.",
+          subtitle: `Sei stato sconfitto ${source}.`,
+          stats: `Nemici uccisi: ${enemiesDefeatedCount}`,
+          prisonerStatus: prisonerMessage
+      });
+      processMessageQueue();
   }
 
   function attemptEscape() {
+      initiativeModal.style.display = 'none';
+      battleModal.style.display = 'block';
       battleActionContainer.innerHTML = '';
       battleResult.innerHTML = 'Tenti la fuga...';
       battleResult.style.color = '#ffcc00';
@@ -897,7 +1008,7 @@
               const damageRoll = Number(battlePlayerDice.textContent);
               character.hp -= (damageRoll + 1);
               updatePlayerInfo();
-              if (character.hp <= 0) { window.updateBattleUI(); handleGameOver("durante la fuga"); } 
+              if (character.hp <= 0) { handleGameOver("durante la fuga"); } 
               else {
                   setMainMessage(`Fuga riuscita! Ma perdi ${damageRoll + 1} PF.`, '#ffcc00');
                   battleModal.style.display = 'none';
@@ -912,98 +1023,200 @@
     diceBtn.disabled = true;
     setBattleMode(true);
     if (!character) return;
-    
+
     if (!enemy.isShadow) {
         if (enemy.isBoss) { 
             enemy.startHP = 30; 
-            enemy.attackDie = 8; 
-            enemy.attackBonus = 2; 
+            enemy.attackDie = 10; enemy.attackBonus = 2;
+            enemy.defenseDie = 8; enemy.defenseBonus = 2;
         } else {
-            if (enemiesDefeatedCount < 3) { enemy.startHP = 10; enemy.attackDie = 6; enemy.attackBonus = 0; } 
-            else if (enemiesDefeatedCount < 6) { enemy.startHP = 12; enemy.attackDie = 6; enemy.attackBonus = 0; } 
-            else if (enemiesDefeatedCount < 9) { enemy.startHP = 12; enemy.attackDie = 8; enemy.attackBonus = 0; } 
-            else { enemy.startHP = 15; enemy.attackDie = 8; enemy.attackBonus = 0; }
+            const definition = ENEMY_DEFINITIONS[enemiesDefeatedCount];
+            enemy = {...enemy, ...definition};
+            enemy.startHP = definition.hp;
+            enemy.name = `${definition.name} ${enemiesDefeatedCount + 1}`;
         }
     }
     
     const cellInfo = visitedCells.get(currentCell.dataset.cellNumber);
     let currentEnemyHP = enemy.isShadow ? enemy.hp : (cellInfo && cellInfo.hp > 0 ? cellInfo.hp : enemy.startHP);
     if (cellInfo && !enemy.isShadow) cellInfo.hp = currentEnemyHP;
-    if (cellInfo && !enemy.isBoss && !enemy.isShadow) { cellInfo.enemy.name = `Orchetto ${enemiesDefeatedCount + 1}`; }
     
-    battlePlayerName.textContent = character.name;
-    battleEnemyName.textContent = enemy.name;
+    const battleState = {
+        player: character,
+        enemy: { ...enemy, hp: currentEnemyHP, startHP: enemy.startHP }
+    };
 
-    const playerAttackBonus = getAttackBonus();
-    const playerAttackDie = character.hasSpecialSword ? 8 : 6;
-    const swordBonus = character.hasSpecialSword ? 1 : 0;
-    let totalBonus = playerAttackBonus + swordBonus;
-    
-    battlePlayerAttack.textContent = `Attacco: 1D${playerAttackDie}${totalBonus > 0 ? ' + ' + totalBonus : totalBonus < 0 ? ' ' + totalBonus : ''}`;
-    battleEnemyAttack.textContent = `Attacco: 1D${enemy.attackDie}${(enemy.attackBonus || 0) > 0 ? ' + ' + enemy.attackBonus : ''}`;
+    startInitiativePhase(battleState);
+  }
 
-    window.updateBattleUI = function() {
-        battlePlayerPF.textContent = `PF: ${character.hp > 0 ? character.hp : 0} / ${maxHP}`;
-        battleEnemyPF.textContent = `PF: ${currentEnemyHP > 0 ? currentEnemyHP : 0} / ${enemy.startHP}`;
-    }
+  function startInitiativePhase(battleState) {
+    initiativeModal.style.display = 'block';
+    battleModal.style.display = 'none';
+    initiativePlayerName.textContent = `${battleState.player.name} (PF: ${character.hp} / ${maxHP})`;
+    initiativeEnemyName.textContent = `${battleState.enemy.name} (PF: ${battleState.enemy.hp} / ${battleState.enemy.startHP})`;
+    initiativePlayerDice.textContent = '-';
+    initiativeEnemyDice.textContent = '-';
+    initiativeResult.textContent = '';
+    initiativeRollBtn.disabled = false;
 
-    updateBattleUI();
+    initiativeRollBtn.onclick = () => {
+        initiativeRollBtn.disabled = true;
+        let playerRoll, enemyRoll;
+        let flips = 10;
+        const timer = setInterval(() => {
+            playerRoll = Math.floor(Math.random() * 6) + 1;
+            enemyRoll = Math.floor(Math.random() * 6) + 1;
+            initiativePlayerDice.textContent = playerRoll;
+            initiativeEnemyDice.textContent = enemyRoll;
+            if (--flips <= 0) {
+                clearInterval(timer);
+                if (playerRoll >= enemyRoll) {
+                    initiativeResult.textContent = `${battleState.player.name} inizia!`;
+                    setTimeout(() => {
+                        initiativeModal.style.display = 'none';
+                        setupBattleTurn(battleState, battleState.player, battleState.enemy);
+                    }, 1500);
+                } else {
+                    initiativeResult.textContent = `${battleState.enemy.name} inizia!`;
+                    setTimeout(() => {
+                        initiativeModal.style.display = 'none';
+                        setupBattleTurn(battleState, battleState.enemy, battleState.player);
+                    }, 1500);
+                }
+            }
+        }, 100);
+    };
+  }
+
+function setupBattleTurn(battleState, attacker, defender) {
+    currentBattleTurn = { battleState, attacker, defender };
+
     battleModal.style.display = 'block';
-    battlePlayerDice.textContent = '-'; battleEnemyDice.textContent = '-';
-    battleResult.innerHTML = 'Preparati allo scontro!';
-    battleResult.style.color = '#ffcc00'; battleResult.style.fontSize = '18px';
 
-    battleActionContainer.innerHTML = '';
-    const roundBtn = document.createElement('button');
-    roundBtn.id = 'battleRoundBtn'; roundBtn.textContent = 'Combatti';
-    if (!enemy.isShadow) {
-        const escapeBtn = document.createElement('button');
-        escapeBtn.id = 'escapeBtn'; escapeBtn.textContent = 'Fuggi (subisci 1D6+1 PF)';
-        battleActionContainer.appendChild(escapeBtn);
-        escapeBtn.onclick = attemptEscape;
-    }
-    battleActionContainer.appendChild(roundBtn);
+    const isPlayerAttacker = attacker.name === battleState.player.name;
     
-    roundBtn.onclick = () => {
-      roundBtn.disabled = true;
-      if (document.getElementById('escapeBtn')) document.getElementById('escapeBtn').disabled = true;
-      battleResult.innerHTML = 'Lancio dei dadi...';
-      let playerRoll, enemyRoll; let flips = 10;
-      const timer = setInterval(() => {
-        const basePlayerRoll = Math.floor(Math.random() * playerAttackDie) + 1;
-        const enemyBaseRoll = Math.floor(Math.random() * enemy.attackDie) + 1;
-        playerRoll = basePlayerRoll + totalBonus;
-        enemyRoll = enemyBaseRoll + (enemy.attackBonus || 0);
-        battlePlayerDice.textContent = `${basePlayerRoll}${totalBonus > 0 ? ' + ' + totalBonus : totalBonus < 0 ? ' ' + totalBonus : ''}`;
-        battleEnemyDice.textContent = `${enemyBaseRoll}${(enemy.attackBonus || 0) > 0 ? ' + ' + enemy.attackBonus : ''}`;
+    const playerTotalAttackBonus = getAttackBonus() + (character.hasSpecialSword ? 1 : 0);
+    const playerAttackDie = character.hasSpecialSword ? 12 : character.attackDie;
+    const playerTotalDefenseBonus = getDefenseBonus();
+    const playerDefenseDie = character.defenseDie;
+
+    battlePlayerName.textContent = character.name;
+    battleEnemyName.textContent = battleState.enemy.name;
+    battlePlayerPF.textContent = `PF: ${character.hp > 0 ? character.hp : 0} / ${maxHP}`;
+    battleEnemyPF.textContent = `PF: ${battleState.enemy.hp > 0 ? battleState.enemy.hp : 0} / ${battleState.enemy.startHP}`;
+    
+    battlePlayerAttack.textContent = `Attacco: 1D${playerAttackDie}${playerTotalAttackBonus >= 0 ? '+' + playerTotalAttackBonus : playerTotalAttackBonus}`;
+    battlePlayerDefense.textContent = `Difesa: 1D${playerDefenseDie}+${playerTotalDefenseBonus}`;
+    battleEnemyAttack.textContent = `Attacco: 1D${battleState.enemy.attackDie}+${battleState.enemy.attackBonus || 0}`;
+    battleEnemyDefense.textContent = `Difesa: 1D${battleState.enemy.defenseDie}+${battleState.enemy.defenseBonus || 0}`;
+    
+    battlePlayerAttack.style.display = isPlayerAttacker ? 'block' : 'none';
+    battlePlayerDefense.style.display = isPlayerAttacker ? 'none' : 'block';
+    battleEnemyAttack.style.display = !isPlayerAttacker ? 'block' : 'none';
+    battleEnemyDefense.style.display = !isPlayerAttacker ? 'none' : 'block';
+
+    battlePlayerDice.textContent = '-';
+    battleEnemyDice.textContent = '-';
+    battleActionContainer.innerHTML = '';
+    battleLog.textContent = '';
+    battleResult.innerHTML = `Tocca a ${attacker.name} attaccare!`;
+
+    const rollBtn = document.createElement('button');
+    rollBtn.textContent = 'Lancia i dadi';
+    rollBtn.onclick = resolveBattleTurn;
+    battleActionContainer.appendChild(rollBtn);
+}
+
+function resolveBattleTurn() {
+    const { battleState, attacker, defender } = currentBattleTurn;
+    battleActionContainer.innerHTML = '';
+
+    const isPlayerAttacker = attacker.name === battleState.player.name;
+
+    const playerTotalAttackBonus = getAttackBonus() + (character.hasSpecialSword ? 1 : 0);
+    const playerAttackDie = character.hasSpecialSword ? 12 : character.attackDie;
+    const playerTotalDefenseBonus = getDefenseBonus();
+    const playerDefenseDie = character.defenseDie;
+
+    let attackDie, attackBonus, defenseDie, defenseBonus;
+
+    if (isPlayerAttacker) {
+        attackDie = playerAttackDie;
+        attackBonus = playerTotalAttackBonus;
+        defenseDie = battleState.enemy.defenseDie;
+        defenseBonus = battleState.enemy.defenseBonus || 0;
+    } else {
+        attackDie = battleState.enemy.attackDie;
+        attackBonus = battleState.enemy.attackBonus || 0;
+        defenseDie = playerDefenseDie;
+        defenseBonus = playerTotalDefenseBonus;
+    }
+    
+    let flips = 10;
+    const timer = setInterval(() => {
+        const randomAttack = Math.floor(Math.random() * attackDie) + 1 + attackBonus;
+        const randomDefense = Math.floor(Math.random() * defenseDie) + 1 + defenseBonus;
+
+        if (isPlayerAttacker) {
+            battlePlayerDice.textContent = randomAttack;
+            battleEnemyDice.textContent = randomDefense;
+        } else {
+            battleEnemyDice.textContent = randomAttack;
+            battlePlayerDice.textContent = randomDefense;
+        }
 
         if (--flips <= 0) {
             clearInterval(timer);
-            const diff = playerRoll - enemyRoll;
-            if (diff > 0) {
-                currentEnemyHP -= diff;
-                battleResult.innerHTML = `Hai vinto il round!<br><span style="font-size: 24px;">Il nemico perde ${diff} PF.</span>`;
-                battleResult.style.color = 'lightgreen';
-            } else if (diff < 0) {
-                character.hp -= Math.abs(diff);
-                battleResult.innerHTML = `Hai perso il round!<br><span style="font-size: 24px;">Perdi ${Math.abs(diff)} PF.</span>`;
-                battleResult.style.color = 'red';
+            
+            const attackBaseRoll = Math.floor(Math.random() * attackDie) + 1;
+            const defenseBaseRoll = Math.floor(Math.random() * defenseDie) + 1;
+            const totalAttack = attackBaseRoll + attackBonus;
+            const totalDefense = defenseBaseRoll + defenseBonus;
+
+            if (isPlayerAttacker) {
+                battlePlayerDice.textContent = totalAttack;
+                battleEnemyDice.textContent = totalDefense;
             } else {
-                battleResult.innerHTML = `Pareggio!<br>Nessun danno.`;
+                battleEnemyDice.textContent = totalAttack;
+                battlePlayerDice.textContent = totalDefense;
+            }
+
+            let logText = `${attacker.name} attacca con un tiro di ${totalAttack}.\n`;
+            logText += `${defender.name} si difende con un tiro di ${totalDefense}.\n`;
+
+            const damage = totalAttack - totalDefense;
+
+            if (damage > 0) {
+                defender.hp -= damage;
+                logText += `\n${defender.name} subisce ${damage} danni!`;
+                battleResult.innerHTML = `${attacker.name} ha colpito!`;
+                battleResult.style.color = isPlayerAttacker ? 'lightgreen' : 'red';
+            } else {
+                logText += `\nL'attacco è stato parato!`;
+                battleResult.innerHTML = `Colpo parato!`;
                 battleResult.style.color = 'deepskyblue';
             }
-            if(enemy.isShadow) enemy.hp = currentEnemyHP; else if(cellInfo) cellInfo.hp = currentEnemyHP;
-            updateBattleUI(); updatePlayerInfo(); updateDiscoveriesLog();
+            
+            battleLog.textContent = logText;
 
-            if (currentEnemyHP <= 0) {
+            if (!battleState.enemy.isShadow) {
+                const cellInfo = visitedCells.get(currentCell.dataset.cellNumber);
+                if (cellInfo) cellInfo.hp = battleState.enemy.hp;
+            }
+
+            battlePlayerPF.textContent = `PF: ${character.hp > 0 ? character.hp : 0} / ${maxHP}`;
+            battleEnemyPF.textContent = `PF: ${battleState.enemy.hp > 0 ? battleState.enemy.hp : 0} / ${battleState.enemy.startHP}`;
+            updatePlayerInfo();
+
+            if (battleState.enemy.hp <= 0) {
                 battleResult.innerHTML = 'VITTORIA!<br>Hai sconfitto il nemico.';
                 battleResult.style.color = 'lightgreen';
-                
-                if (enemy.isShadow) {
-                    shadows = shadows.filter(s => s.name !== enemy.name);
+                if (battleState.enemy.isShadow) {
+                    shadows = shadows.filter(s => s.name !== battleState.enemy.name);
                 } else {
+                    const cellInfo = visitedCells.get(currentCell.dataset.cellNumber);
                     cellInfo.defeated = true;
-                    if (enemy.isBoss) {
+                    if (battleState.enemy.isBoss) {
                         messageQueue.push({victory: true, title: "Dungeon liberato!", subtitle: "Hai sconfitto tutti i nemici!", prisonerStatus: getPrisonerStatusMessage()});
                         diceBtn.disabled = true;
                     } else {
@@ -1012,27 +1225,36 @@
                     }
                 }
                 updateDiscoveriesLog();
-                
-                battleActionContainer.innerHTML = '';
                 const closeBtn = document.createElement('button');
                 closeBtn.textContent = 'Continua...';
                 closeBtn.onclick = async () => { 
                     battleModal.style.display = 'none';
                     setBattleMode(false);
-                    if (!enemy.isBoss) await handleShadowSpawnsAndTurns();
+                    if (!battleState.enemy.isBoss) await handleShadowSpawnsAndTurns();
                     else processMessageQueue(); 
                 };
+                battleActionContainer.innerHTML = '';
                 battleActionContainer.appendChild(closeBtn);
-
-            } else if (character.hp <= 0) { handleGameOver("in combattimento"); } 
-            else { 
-                roundBtn.disabled = false; 
-                if (document.getElementById('escapeBtn')) document.getElementById('escapeBtn').disabled = false;
+            } else if (character.hp <= 0) {
+                handleGameOver("in combattimento");
+            } else {
+                setTimeout(() => {
+                  const nextRoundBtn = document.createElement('button');
+                  nextRoundBtn.textContent = 'Prossimo Turno';
+                  nextRoundBtn.onclick = () => startInitiativePhase(battleState);
+                  if (!battleState.enemy.isShadow) {
+                       const escapeBtn = document.createElement('button');
+                       escapeBtn.textContent = 'Fuggi (subisci 1D6+1 PF)';
+                       escapeBtn.onclick = attemptEscape;
+                       battleActionContainer.appendChild(escapeBtn);
+                  }
+                  battleActionContainer.appendChild(nextRoundBtn);
+                }, 1000);
             }
         }
-      }, 100);
-    };
-  }
+    }, 100);
+}
+
 
   function updatePlayerInfo() {
     if (character) {
@@ -1082,8 +1304,8 @@
     
     placeDiscoveries();
     
-    buildBoard(); // FIX: Build the board first...
-    currentCell = board.querySelector('[data-cell-number="1"]'); // ...then select the starting cell.
+    buildBoard();
+    currentCell = board.querySelector('[data-cell-number="1"]');
     
     await processCellLogic(currentCell);
 
@@ -1091,6 +1313,7 @@
     updatePlayerInfo();
     updateInventory();
     charForm.style.display = 'none';
+    diceBtn.disabled = false;
   }
   
   function promptForNewGame() {
@@ -1150,7 +1373,6 @@
     
     updateLayout();
     
-    // When loading, just update the visuals. Don't re-run the logic for the cell.
     if(currentCell) currentCell.classList.add('current');
     buildBoard();
     
@@ -1193,7 +1415,7 @@
     const hp = parseInt(document.getElementById('charHP').value);
     if (name && hp > 0) {
       maxHP = hp;
-      character = { name, hp, bonuses: [], inventory: [], hasSpecialSword: false, prisonersFreed: 0 };
+      character = { name, hp, bonuses: [], inventory: [], hasSpecialSword: false, prisonersFreed: 0, attackDie: 10, defenseDie: 6 };
       startGame();
     } else { alert('Inserisci un nome valido e PF > 0.'); }
   });
