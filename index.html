@@ -99,7 +99,7 @@
     .current { background:linear-gradient(145deg, rgba(143, 173, 106, 0.8), rgba(110, 133, 71, 0.8)); border-color:#a0d535; color:#eff7d6; box-shadow:0 0 10px #a0d535; }
     .highlighted { border: 3px solid white !important; cursor: pointer; }
     
-    .enemy-marker, .bonus-marker, .potion-marker, .gas-marker, .hole-marker { position:absolute; width:10px; height:10px; border-radius:50%; border:1px solid #fff; }
+    .enemy-marker, .bonus-marker, .potion-marker, .gas-marker { position:absolute; width:10px; height:10px; border-radius:50%; border:1px solid #fff; }
     .enemy-marker { top:3px; right:3px; background:red; }
     .bonus-marker { bottom:3px; left:3px; background:gold; }
     .potion-marker { bottom:3px; right:3px; background:deepskyblue; }
@@ -107,7 +107,7 @@
     .hole-marker {
         position:absolute; top:50%; left:50%; transform:translate(-50%, -50%);
         width: 40px; height: 40px; border-radius: 0; border: none;
-        background-image: url('https://imgur.com/kG6JJlO.png');
+        background-image: url('https://i.imgur.com/kG6JJlO.png');
         background-size: contain;
         background-repeat: no-repeat;
         background-position: center;
@@ -662,7 +662,11 @@
           enemyMap[bossCellNum] = { name: "Boss Finale", isBoss: true };
           messageQueue.push("Un'oscura presenza è apparsa nel dungeon...");
       } else {
-          messageQueue.push("Il Boss non trova spazio per apparire!");
+          messageQueue.push({
+            endGame: true,
+            title: "Dungeon non depurato!",
+            subtitle: "Il Dungeon non è stato completamente depurato, prova ancora, avrai più fortuna.."
+          });
       }
   }
 
@@ -759,6 +763,17 @@ function getValidMoves(steps) {
             messageModalText.textContent = message.title;
             victorySubText.textContent = message.subtitle;
             prisonerStatusText.textContent = message.prisonerStatus;
+        } else if (typeof message === 'object' && message.endGame) {
+            messageModal.classList.add('victory-modal');
+            messageModalText.textContent = message.title;
+            victorySubText.textContent = message.subtitle;
+            messageModal.style.display = 'block';
+            diceBtn.disabled = true;
+            messageModalOkBtn.onclick = () => {
+                messageModal.style.display = 'none';
+                promptForNewGame();
+            };
+            return; 
         } else {
             messageModalText.textContent = message;
         }
@@ -861,6 +876,7 @@ function getValidMoves(steps) {
     if (isNewVisit) {
         if(holePositions.has(cellNum)) {
             messageQueue.push("Ti sloghi una caviglia in un buco! Perdi 5 PF.");
+            addHoleMarker(cell); // Aggiunto per mostrare l'immagine subito
             character.hp -= 5;
             updatePlayerInfo();
             if(character.hp <= 0) {
