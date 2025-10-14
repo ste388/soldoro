@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dungeon 72 Celle - Responsive</title>
+  <title>Dungeon 72 Celle - Classi</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap" rel="stylesheet">
@@ -99,12 +99,20 @@
     .current { background:linear-gradient(145deg, rgba(143, 173, 106, 0.8), rgba(110, 133, 71, 0.8)); border-color:#a0d535; color:#eff7d6; box-shadow:0 0 10px #a0d535; }
     .highlighted { border: 3px solid white !important; cursor: pointer; }
     
-    .enemy-marker, .bonus-marker, .potion-marker, .gas-marker { position:absolute; width:10px; height:10px; border-radius:50%; border:1px solid #fff; }
+    .enemy-marker, .bonus-marker, .potion-marker, .gas-marker, .hole-marker { position:absolute; width:10px; height:10px; border-radius:50%; border:1px solid #fff; }
     .enemy-marker { top:3px; right:3px; background:red; }
     .bonus-marker { bottom:3px; left:3px; background:gold; }
     .potion-marker { bottom:3px; right:3px; background:deepskyblue; }
     .gas-marker { bottom:3px; left:3px; background:#808080;}
-    
+    .hole-marker {
+        position:absolute; top:50%; left:50%; transform:translate(-50%, -50%);
+        width: 40px; height: 40px; border-radius: 0; border: none;
+        background-image: url('https://imgur.com/kG6JJlO.png');
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+    }
+
     .skull-marker, .prisoner-marker, .shadow-marker, .hero-marker { 
         position:absolute; 
         top:50%; 
@@ -136,16 +144,21 @@
         min-width: 180px;
     }
     
-    #charForm, #encounterModal, #battleModal, #messageModal, #initiativeModal { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background: #3a3a2b; padding:20px; border-radius:10px; box-shadow:0 0 15px #000; z-index:1001; text-align:center; width: 300px; }
-    #charForm input { width: calc(100% - 16px); padding:8px; margin:8px 0; border:none; border-radius:6px; font-size:16px; }
+    #charForm, #encounterModal, #battleModal, #messageModal, #initiativeModal, #potionDamageModal, #combatPotionSelectModal { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background: #3a3a2b; padding:20px; border-radius:10px; box-shadow:0 0 15px #000; z-index:1001; text-align:center; width: 300px; }
+    #charForm input, #charForm select { width: calc(100% - 16px); padding:8px; margin:8px 0; border:none; border-radius:6px; font-size:16px; }
     
     #battleModal, #initiativeModal { z-index: 1050; }
+    #potionDamageModal, #combatPotionSelectModal { z-index: 1060; }
+    
     .battle-unit { margin: 15px 0; border: 1px solid #555; padding: 10px; border-radius: 8px; }
-    .battle-name { font-weight: bold; font-size: 20px; margin-bottom: 5px; color: #a0d535; }
+    .battle-name { font-weight: bold; font-size: 18px; margin-bottom: 5px; color: #a0d535; }
+    .battle-stats { font-size: 14px; color: #ccc; }
     .battle-pf, .battle-attack, .battle-defense { font-size: 16px; margin-bottom: 5px; }
     .battle-dice { font-size: 48px; font-weight: bold; min-height: 60px; display:flex; align-items:center; justify-content:center; }
     #battleResult { font-size: 18px; font-weight: bold; min-height: 24px; margin-top: 10px; transition: font-size 0.2s; line-height: 1.2; }
     #battleActionContainer, #initiativeActionContainer { display:flex; flex-direction:column; gap:10px; margin-top: 15px; }
+    #specialAbilitiesContainer { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; justify-content: center;}
+    #specialAbilitiesContainer button { font-size: 12px; padding: 8px 12px;}
     #initiativeResult { font-weight: bold; font-size: 18px; min-height: 24px; }
     #battleLog {
       min-height: 75px;
@@ -164,22 +177,12 @@
     #inventoryContainer select { width: 100%; padding: 8px; background: #3a3a2b; color: #fff; border: 1px solid #666; border-radius: 6px; }
 
     #messageModal { background: linear-gradient(135deg, #4a3c26, #2d1f0f); border: 4px solid #8b5e3c; color: #f5deb3; font-family: 'MedievalSharp', cursive; font-size: 22px; }
-    #messageModal .modal-content { display: flex; flex-direction: column; align-items: center; }
-    #messageModal #messageModalText { font-size: 28px; margin-bottom: 5px; }
-    #messageModal #victorySubText, #messageModal .dynamic-stat { font-size: 18px; margin-bottom: 10px; }
-    #messageModal #prisonerStatusText { font-size: 16px; color: #d2b48c; }
+    #messageModal.victory-modal .modal-content { display: flex; flex-direction: column; align-items: center; }
+    #messageModal.victory-modal #messageModalText { font-size: 28px; margin-bottom: 5px; }
+    #messageModal.victory-modal #victorySubText { font-size: 18px; margin-bottom: 10px; }
+    #messageModal.victory-modal #prisonerStatusText { font-size: 16px; color: #d2b48c; }
     #messageModal button { font-family: 'MedievalSharp', cursive; font-size: 18px; margin-top: 20px; padding: 8px 25px; background-color: #8b5e3c; border-radius: 5px; border: 2px solid #5a3d2e; }
     #messageModal button:hover { background-color: #a3764a; }
-
-    #messageModal.game-over-modal {
-        background: linear-gradient(135deg, #4a2626, #2d0f0f);
-        border: 4px solid #8b3c3c;
-        color: #f5d3d3;
-    }
-    #messageModal.game-over-modal #messageModalText { color: #ff8a8a; }
-    #messageModal.game-over-modal #prisonerStatusText { color: #d2a8a8; }
-    #messageModal.game-over-modal button { background-color: #8b3c3c; border: 2px solid #5a2e2e; }
-    #messageModal.game-over-modal button:hover { background-color: #a34a4a; }
 
     @media (max-width: 1024px) {
       body {
@@ -201,7 +204,7 @@
         box-sizing: border-box;
       }
       #inventoryContainer { margin-top: 10px; }
-      #charForm, #encounterModal, #messageModal, #initiativeModal { width: 90%; }
+      #charForm, #encounterModal, #messageModal, #initiativeModal, #potionDamageModal, #combatPotionSelectModal { width: 90%; }
       #battleModal {
           padding: 10px;
           justify-content: center;
@@ -235,6 +238,7 @@
       <button id="diceRollBtn">Tira dado</button>
       <div id="diceResult">-</div>
       <div id="playerInfo">Crea un personaggio</div>
+      <div id="energyInfo" style="color: #4dd0e1; font-weight: bold;">Energia: <span id="energyValue">0</span></div>
   </div>
 
   <div id="left">
@@ -257,7 +261,7 @@
         <div id="shadowDiceResult">-</div>
     </div>
     <div id="inventoryContainer">
-        <div style="font-weight: bold; margin-bottom: 5px;">Inventario Pozioni</div>
+        <div style="font-weight: bold; margin-bottom: 5px;">Inventario Pozioni di Cura</div>
         <select id="inventorySelect"></select>
         <button id="usePotionBtn" style="margin-top: 8px;">Usa Pozione</button>
     </div>
@@ -268,6 +272,12 @@
     <input type="text" id="charName" placeholder="Nome...">
     <div>PF iniziali:</div>
     <input type="number" id="charHP" value="30" min="1">
+    <div>Classe:</div>
+    <select id="charClass">
+      <option value="Guerriero">Guerriero (+5 PF, +5 Energia)</option>
+      <option value="Esploratore">Esploratore (+1 Movimento, Rilancio)</option>
+      <option value="Ladro">Ladro (Furtività e Fuga Migliorate)</option>
+    </select>
     <div style="display:flex; gap:8px; margin-top:10px;">
       <button id="startAdventureBtn">Inizia Avventura</button>
       <button id="cancelCharBtn">Annulla</button>
@@ -284,10 +294,12 @@
     <p id="initiativeMessage">Lancio per l'iniziativa!</p>
     <div class="battle-unit">
         <div id="initiativePlayerName" class="battle-name"></div>
+        <div id="initiativePlayerStats" class="battle-stats"></div>
         <div id="initiativePlayerDice" class="battle-dice">-</div>
     </div>
     <div class="battle-unit">
         <div id="initiativeEnemyName" class="battle-name"></div>
+        <div id="initiativeEnemyStats" class="battle-stats"></div>
         <div id="initiativeEnemyDice" class="battle-dice">-</div>
     </div>
     <p id="initiativeResult"></p>
@@ -296,7 +308,7 @@
     </div>
   </div>
 
-  <div id="battleModal">
+ <div id="battleModal">
     <div class="battle-unit">
         <div id="battlePlayerName" class="battle-name"></div>
         <div id="battlePlayerPF" class="battle-pf"></div>
@@ -314,6 +326,10 @@
         <div id="battleEnemyDice" class="battle-dice">-</div>
     </div>
     <div id="battleActionContainer"></div>
+    <div id="specialAbilitiesContainer">
+      <button id="powerStrikeBtn" title="Un attacco che non può essere parato"></button>
+      <button id="doubleAttackBtn" title="Esegui due tiri di attacco in un turno"></button>
+    </div>
   </div>
 
   <div id="messageModal">
@@ -323,6 +339,18 @@
           <div id="prisonerStatusText"></div>
       </div>
       <button id="messageModalOkBtn">OK</button>
+  </div>
+
+  <div id="combatPotionSelectModal">
+    <p>Seleziona una pozione da combattimento:</p>
+    <div id="combatPotionList"></div>
+    <button id="closeCombatPotionSelectBtn" style="margin-top:15px;">Annulla</button>
+  </div>
+
+  <div id="potionDamageModal">
+      <p id="potionDamageTitle"></p>
+      <div id="potionDamageDice" style="font-size: 48px; font-weight: bold; min-height: 60px;">-</div>
+      <button id="potionDamageRollBtn">Lancia</button>
   </div>
 
 
@@ -336,6 +364,7 @@
   const shadowDiceRes = document.getElementById('shadowDiceResult');
   const mainMessageDisplay = document.getElementById('main-message-display');
   const playerInfo = document.getElementById('playerInfo');
+  const energyValue = document.getElementById('energyValue');
   const newGameBtn = document.getElementById('newGameBtn');
   const saveGameBtn = document.getElementById('saveGameBtn');
   const loadGameBtn = document.getElementById('loadGameBtn');
@@ -360,6 +389,9 @@
   const battleResult = document.getElementById('battleResult');
   const battleLog = document.getElementById('battleLog');
   const battleActionContainer = document.getElementById('battleActionContainer');
+  const specialAbilitiesContainer = document.getElementById('specialAbilitiesContainer');
+  const powerStrikeBtn = document.getElementById('powerStrikeBtn');
+  const doubleAttackBtn = document.getElementById('doubleAttackBtn');
   const inventorySelect = document.getElementById('inventorySelect');
   const usePotionBtn = document.getElementById('usePotionBtn');
   const messageModal = document.getElementById('messageModal');
@@ -370,49 +402,88 @@
   const stickyControls = document.getElementById('sticky-controls');
   const initiativeModal = document.getElementById('initiativeModal');
   const initiativePlayerName = document.getElementById('initiativePlayerName');
+  const initiativePlayerStats = document.getElementById('initiativePlayerStats');
   const initiativePlayerDice = document.getElementById('initiativePlayerDice');
   const initiativeEnemyName = document.getElementById('initiativeEnemyName');
+  const initiativeEnemyStats = document.getElementById('initiativeEnemyStats');
   const initiativeEnemyDice = document.getElementById('initiativeEnemyDice');
   const initiativeResult = document.getElementById('initiativeResult');
   const initiativeRollBtn = document.getElementById('initiativeRollBtn');
+  const combatPotionSelectModal = document.getElementById('combatPotionSelectModal');
+  const combatPotionList = document.getElementById('combatPotionList');
+  const closeCombatPotionSelectBtn = document.getElementById('closeCombatPotionSelectBtn');
+  const potionDamageModal = document.getElementById('potionDamageModal');
+  const potionDamageTitle = document.getElementById('potionDamageTitle');
+  const potionDamageDice = document.getElementById('potionDamageDice');
+  const potionDamageRollBtn = document.getElementById('potionDamageRollBtn');
 
 
-  const COLS = 9, CELL_COUNT = 72, ENEMY_COUNT = 12, PRISONER_COUNT = 11, GAS_TRAP_COUNT = 2, GAS_EFFECT_DURATION_CELLS = 5;
+  const COLS = 9, CELL_COUNT = 72, ENEMY_COUNT = 12, PRISONER_COUNT = 11, GAS_TRAP_COUNT = 2, HOLE_COUNT = 3, GAS_EFFECT_DURATION_CELLS = 5;
+  const HOLE_IMAGE_URL = 'https://i.imgur.com/kG6JJlO.png';
   const ATTACK_BONUS_ITEMS = ["Elsa migliorata", "Guanti rinforzati", "Spallacci di cuoio"];
   const DEFENSE_BONUS_ITEMS = ["Scudo di ferro", "Elmo", "Corazza"];
-  const POTIONS = [ { name: "Pozione (+5 PF)", value: 5 }, { name: "Pozione (+10 PF)", value: 10 }, { name: "Pozione (+15 PF)", value: 15 } ];
+  const POTIONS = [ 
+      { name: "Pozione Fuoco", type: "fire" }, 
+      { name: "Pozione Ghiaccio", type: "ice" },
+      { name: "Pozione (+5 PF)", value: 5, type: "heal" }, 
+      { name: "Pozione (+10 PF)", value: 10, type: "heal" }, 
+      { name: "Pozione (+15 PF)", value: 15, type: "heal" } 
+  ];
   const GEMS = ["Gemma Blu", "Gemma Verde", "Gemma Viola"];
   const GEM_DOOR = "Porta di Gemme";
   const SHADOW_SPAWNS = [
       { name: "Ombra", hp: 10, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 1, iconUrl: "https://i.imgur.com/sgLJSln.png", spawnTurn: 10 },
-      { name: "Ombra Paurosa", hp: 15, attackDie: 10, attackBonus: 1, defenseDie: 6, defenseBonus: 0, iconUrl: "https://i.imgur.com/grZ66Ex.png", spawnTurn: 25 },
-      { name: "Ombra Cattiva", hp: 20, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 1, iconUrl: "https://i.imgur.com/Jo45qDz.png", spawnTurn: 40 },
-      { name: "Ombra Cattivissima", hp: 25, attackDie: 10, attackBonus: 1, defenseDie: 6, defenseBonus: 1, iconUrl: "https://i.imgur.com/rJg2v1t.png", spawnTurn: 52 }
+      { name: "Ombra Paurosa", hp: 15, attackDie: 10, attackBonus: 1, defenseDie: 8, defenseBonus: 0, iconUrl: "https://i.imgur.com/grZ66Ex.png", spawnTurn: 30 },
+      { name: "Ombra Cattiva", hp: 20, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 1, iconUrl: "https://i.imgur.com/Jo45qDz.png", spawnTurn: 45 },
+      { name: "Ombra Cattivissima", hp: 25, attackDie: 10, attackBonus: 1, defenseDie: 8, defenseBonus: 1, iconUrl: "https://i.imgur.com/rJg2v1t.png", spawnTurn: 55 }
   ];
   const ENEMY_DEFINITIONS = [
-    { name: "Orchetto", hp: 10, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 0 },
-    { name: "Orchetto", hp: 10, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 0 },
-    { name: "Orchetto", hp: 10, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 0 },
-    { name: "Orco", hp: 12, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 1 },
-    { name: "Orco", hp: 12, attackDie: 10, attackBonus: 1, defenseDie: 6, defenseBonus: 0 },
-    { name: "Orco", hp: 12, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 1 },
-    { name: "Orco", hp: 12, attackDie: 10, attackBonus: 1, defenseDie: 6, defenseBonus: 0 },
-    { name: "Orco", hp: 12, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 1 },
-    { name: "Orco", hp: 12, attackDie: 10, attackBonus: 1, defenseDie: 6, defenseBonus: 1 },
-    { name: "Troll", hp: 15, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 1 },
-    { name: "Troll", hp: 15, attackDie: 10, attackBonus: 1, defenseDie: 6, defenseBonus: 0 },
-    { name: "Troll", hp: 15, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 1 },
+    { name: "Orchetto 1", hp: 10, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 0 },
+    { name: "Orchetto 2", hp: 10, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 0 },
+    { name: "Orchetto 3", hp: 10, attackDie: 10, attackBonus: 0, defenseDie: 8, defenseBonus: 0 },
+    { name: "Orco 4", hp: 12, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 1 },
+    { name: "Orco 5", hp: 12, attackDie: 10, attackBonus: 1, defenseDie: 6, defenseBonus: 0 },
+    { name: "Orco 6", hp: 12, attackDie: 10, attackBonus: 0, defenseDie: 8, defenseBonus: 0 },
+    { name: "Orco 7", hp: 12, attackDie: 10, attackBonus: 1, defenseDie: 8, defenseBonus: 0 },
+    { name: "Orco 8", hp: 12, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 1 },
+    { name: "Orco 9", hp: 12, attackDie: 10, attackBonus: 1, defenseDie: 6, defenseBonus: 1 },
+    { name: "Troll 10", hp: 15, attackDie: 10, attackBonus: 0, defenseDie: 8, defenseBonus: 0 },
+    { name: "Troll 11", hp: 15, attackDie: 10, attackBonus: 1, defenseDie: 8, defenseBonus: 0 },
+    { name: "Troll 12", hp: 15, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 1 },
   ];
   const NEW_SKULL_ICON_URL = 'https://i.imgur.com/g9mN0pU.jpg';
   const PRISONER_ICON_URL = 'https://i.imgur.com/XW3fJxc.jpg';
-  const HERO_ICON_URL = 'https://i.imgur.com/IcEVhov.png';
+  const CLASS_ICONS = {
+    Guerriero: 'https://i.imgur.com/IcEVhov.png',
+    Esploratore: 'https://i.imgur.com/61wtgJ1.png',
+    Ladro: 'https://i.imgur.com/eY1Q0b5.png'
+  };
 
   let currentCell, character, maxHP, enemiesDefeatedCount, discoveryCounter;
-  let visitedCells, enemyMap, bonusMap, potionMap, prisonerMap, gasTrapPositions, gasActivatedPositions, shadows, spawnedShadows;
+  let visitedCells, enemyMap, bonusMap, potionMap, prisonerMap, gasTrapPositions, gasActivatedPositions, holePositions, shadows, spawnedShadows;
   let gasEffect = { active: false, newCellsVisited: 0 };
   let messageQueue = [];
   let currentBattleTurn = {};
+  let activeAbility = null;
   
+  function updateEnergyUI() {
+    if (!character) return;
+    const cost = character.class === 'Guerriero' ? 4 : 5;
+    
+    energyValue.textContent = character.energy;
+    powerStrikeBtn.disabled = character.energy < cost;
+    doubleAttackBtn.disabled = character.energy < cost;
+    
+    powerStrikeBtn.textContent = `Colpo Potente (${cost})`;
+    doubleAttackBtn.textContent = `Doppio Attacco (${cost})`;
+  }
+  
+  function gainEnergy(amount) {
+    if (!character) return;
+    character.energy = Math.min(character.energy + amount, character.maxEnergy);
+    updateEnergyUI();
+  }
+
   function getAttackBonus() {
       if (!character) return 0;
       let bonus = character.bonuses.filter(b => ATTACK_BONUS_ITEMS.includes(b)).length;
@@ -424,18 +495,21 @@
 
   function getDefenseBonus() {
       if (!character) return 0;
-      return character.bonuses.filter(b => DEFENSE_BONUS_ITEMS.includes(b)).length;
+      let bonus = character.bonuses.filter(b => DEFENSE_BONUS_ITEMS.includes(b)).length;
+      return bonus;
   }
   
   function updateInventory() {
     inventorySelect.innerHTML = '';
-    character.inventory.forEach((potion, index) => {
+    const healingPotions = character.inventory.filter(p => p.type === 'heal');
+    healingPotions.forEach(potion => {
         const option = document.createElement('option');
-        option.value = index;
+        // Store original index to find it later
+        option.value = character.inventory.findIndex(p => p === potion);
         option.textContent = potion.name;
         inventorySelect.appendChild(option);
     });
-    usePotionBtn.disabled = character.inventory.length === 0;
+    usePotionBtn.disabled = healingPotions.length === 0;
   }
 
   function addSkullMarker(cell) {
@@ -458,6 +532,16 @@
         const img = document.createElement('img');
         img.src = PRISONER_ICON_URL;
         img.className = 'prisoner-marker';
+        contentDiv.appendChild(img);
+    }
+  }
+  
+  function addHoleMarker(cell) {
+    const contentDiv = cell.querySelector('.cell-content');
+    if (!contentDiv) return;
+    if (!contentDiv.querySelector('.hole-marker')) {
+        const img = document.createElement('div');
+        img.className = 'hole-marker';
         contentDiv.appendChild(img);
     }
   }
@@ -494,6 +578,8 @@
                 lines.push(`Cella ${cellNum}: Prigioniero liberato`);
             } else if (gasActivatedPositions.has(cellNum)) {
                 lines.push(`Cella ${cellNum}: Trappola a Gas (attiva)`);
+            } else if (holePositions.has(cellNum)) {
+                 lines.push(`Cella ${cellNum}: Buco`);
             }
         });
     } else if (!visitedCells || visitedCells.size === 0) {
@@ -534,7 +620,8 @@
   
   function placeDiscoveries() {
     enemyMap = {}; bonusMap = {}; potionMap = {}; prisonerMap = {}; 
-    gasTrapPositions = new Set(); gasActivatedPositions = new Set(); shadows = []; spawnedShadows = new Set();
+    gasTrapPositions = new Set(); gasActivatedPositions = new Set(); holePositions = new Set();
+    shadows = []; spawnedShadows = new Set();
     let availableCells = Array.from({length: CELL_COUNT}, (_, i) => i + 1);
     availableCells = availableCells.filter(cellNum => cellNum !== 1);
 
@@ -543,13 +630,17 @@
         [availableCells[i], availableCells[j]] = [availableCells[j], availableCells[i]];
     }
 
-    for (let i = 0; i < ENEMY_COUNT; i++) { enemyMap[availableCells.pop()] = { name: `Nemico Casuale` }; }
-    ATTACK_BONUS_ITEMS.forEach(itemName => { bonusMap[availableCells.pop()] = itemName; });
-    DEFENSE_BONUS_ITEMS.forEach(itemName => { bonusMap[availableCells.pop()] = itemName; });
-    POTIONS.forEach(potion => { potionMap[availableCells.pop()] = potion; });
-    GEMS.forEach(gem => { bonusMap[availableCells.pop()] = gem; });
-    bonusMap[availableCells.pop()] = GEM_DOOR;
-    for (let i = 0; i < PRISONER_COUNT; i++) { prisonerMap[availableCells.pop()] = true; }
+    for(let i = 0; i < HOLE_COUNT; i++) {
+        if(availableCells.length > 0) holePositions.add(availableCells.pop());
+    }
+
+    for (let i = 0; i < ENEMY_COUNT; i++) { if(availableCells.length > 0) enemyMap[availableCells.pop()] = { name: `Nemico Casuale` }; }
+    ATTACK_BONUS_ITEMS.forEach(itemName => { if(availableCells.length > 0) bonusMap[availableCells.pop()] = itemName; });
+    DEFENSE_BONUS_ITEMS.forEach(itemName => { if(availableCells.length > 0) bonusMap[availableCells.pop()] = itemName; });
+    POTIONS.forEach(potion => { if(availableCells.length > 0) potionMap[availableCells.pop()] = potion; });
+    GEMS.forEach(gem => { if(availableCells.length > 0) bonusMap[availableCells.pop()] = gem; });
+    if(availableCells.length > 0) bonusMap[availableCells.pop()] = GEM_DOOR;
+    for (let i = 0; i < PRISONER_COUNT; i++) { if(availableCells.length > 0) prisonerMap[availableCells.pop()] = true; }
     for (let i = 0; i < GAS_TRAP_COUNT; i++) { 
         if (availableCells.length > 0) gasTrapPositions.add(availableCells.pop()); 
     }
@@ -559,6 +650,11 @@
       const allCellNumbers = Array.from({length: CELL_COUNT}, (_, i) => i + 1);
       const occupiedCells = new Set(Array.from(visitedCells.keys()).map(Number));
       Object.keys(enemyMap).forEach(k => occupiedCells.add(Number(k)));
+      Object.keys(bonusMap).forEach(k => occupiedCells.add(Number(k)));
+      Object.keys(potionMap).forEach(k => occupiedCells.add(Number(k)));
+      Object.keys(prisonerMap).forEach(k => occupiedCells.add(Number(k)));
+      holePositions.forEach(k => occupiedCells.add(Number(k)));
+
       const freeCells = allCellNumbers.filter(num => !occupiedCells.has(num));
       
       if (freeCells.length > 0) {
@@ -591,6 +687,8 @@
             const info = visitedCells.get(String(i));
             if (info.defeated) addSkullMarker(cellDiv);
             if (info.prisonerFreed) addPrisonerMarker(cellDiv);
+            if (holePositions.has(i)) addHoleMarker(cellDiv);
+
             if(info.enemy && !info.defeated) { content.appendChild(Object.assign(document.createElement('div'), {className: 'enemy-marker'})); }
             if(info.bonus) { content.appendChild(Object.assign(document.createElement('div'), {className: 'bonus-marker'})); }
             if(info.potion) { content.appendChild(Object.assign(document.createElement('div'), {className: 'potion-marker'})); }
@@ -607,7 +705,7 @@
 
         if (currentCell && parseInt(currentCell.dataset.cellNumber) === i && battleModal.style.display !== 'block') {
             const img = document.createElement('img');
-            img.src = HERO_ICON_URL;
+            img.src = CLASS_ICONS[character.class];
             img.className = 'hero-marker';
             content.appendChild(img);
         }
@@ -624,14 +722,18 @@
     }
   }
 
-  function getValidMoves(steps) {
+function getValidMoves(steps) {
     if (!currentCell) return [];
     const startRow = +currentCell.dataset.row, startCol = +currentCell.dataset.col;
+    let finalSteps = steps;
+    if(character.class === 'Esploratore') {
+        finalSteps += 1;
+    }
     return [...board.querySelectorAll('.cell')].filter(cell => {
       if (cell === currentCell) return false;
       const r = +cell.dataset.row, c = +cell.dataset.col;
       const dr = Math.abs(r - startRow), dc = Math.abs(c - startCol);
-      return Math.max(dr, dc) === steps;
+      return Math.max(dr, dc) === finalSteps;
     });
   }
 
@@ -648,43 +750,20 @@
   }
 
   function processMessageQueue() {
-    if (messageModal.classList.contains('game-over-modal')) {
-        messageModal.style.display = 'none';
-        messageModal.classList.remove('game-over-modal');
-        promptForNewGame();
-        return;
-    }
-
-    messageModal.classList.remove('victory-modal', 'game-over-modal');
-    victorySubText.textContent = '';
-    prisonerStatusText.textContent = '';
-    const modalContent = messageModal.querySelector('.modal-content');
-    modalContent.querySelectorAll('.dynamic-stat').forEach(el => el.remove());
-
+    messageModal.classList.remove('victory-modal');
+    victorySubText.textContent = ''; prisonerStatusText.textContent = '';
     if (messageQueue.length > 0) {
         const message = messageQueue.shift();
-
-        if (message.gameOver) {
-            messageModal.classList.add('game-over-modal');
-            messageModalText.textContent = message.title;
-            victorySubText.textContent = message.subtitle;
-            const statsDiv = document.createElement('div');
-            statsDiv.className = 'dynamic-stat';
-            statsDiv.textContent = message.stats;
-            victorySubText.after(statsDiv);
-            prisonerStatusText.textContent = message.prisonerStatus;
-            messageModalOkBtn.textContent = 'Ricomincia';
-        } else if (typeof message === 'object' && message.victory) {
+        if (typeof message === 'object' && message.victory) {
             messageModal.classList.add('victory-modal');
             messageModalText.textContent = message.title;
             victorySubText.textContent = message.subtitle;
             prisonerStatusText.textContent = message.prisonerStatus;
-            messageModalOkBtn.textContent = 'OK';
         } else {
             messageModalText.textContent = message;
-            messageModalOkBtn.textContent = 'OK';
         }
         messageModal.style.display = 'block';
+        messageModalOkBtn.onclick = processMessageQueue;
         messageModalOkBtn.focus();
     } else {
         messageModal.style.display = 'none';
@@ -780,6 +859,17 @@
     const isNewVisit = !visitedCells.has(String(cellNum));
 
     if (isNewVisit) {
+        if(holePositions.has(cellNum)) {
+            messageQueue.push("Ti sloghi una caviglia in un buco! Perdi 5 PF.");
+            character.hp -= 5;
+            updatePlayerInfo();
+            if(character.hp <= 0) {
+                handleGameOver("per una caviglia slogata");
+                return;
+            }
+        }
+
+        gainEnergy(1);
         if (gasEffect.active) {
             gasEffect.newCellsVisited++;
             if (gasEffect.newCellsVisited >= GAS_EFFECT_DURATION_CELLS) {
@@ -874,7 +964,7 @@
     if (info && info.enemy && info.defeated) {
         setMainMessage(`Qui giace un nemico sconfitto.`, '#a9a9a9');
     } 
-    else if (info && !info.enemy && !info.bonus && !info.potion && !prisonerMap[cellNum]) {
+    else if (info && !info.enemy && !info.bonus && !info.potion && !prisonerMap[cellNum] && !holePositions.has(cellNum)) {
         if (isNewVisit || cellNum === 1) { setMainMessage("Procedi tranquillo", 'lightgreen'); } 
         else { setMainMessage('Cella già visitata', '#ffffff'); }
     }
@@ -949,20 +1039,25 @@
             encounterDiceResult.textContent = Math.floor(Math.random() * 6) + 1;
             if (--flips <= 0) {
                 clearInterval(timer);
-                const roll = Number(encounterDiceResult.textContent);
+                let roll = Number(encounterDiceResult.textContent);
+                let success = roll > 3; // Standard: 4, 5, 6
+                if(character.class === 'Ladro') {
+                    success = roll > 2; // Ladro: 3, 4, 5, 6
+                }
+                
                 encounterActionBtns.innerHTML = '';
                 const closeBtn = document.createElement('button');
-                if (roll <= 3) {
-                    encounterMessage.textContent = `Sei stato visto! Inizia la battaglia.`;
-                    closeBtn.textContent = 'Vai alla Battaglia';
-                    closeBtn.onclick = () => { encounterModal.style.display = 'none'; startBattle(enemy); };
-                } else {
+                if (success) {
                     encounterMessage.textContent = 'Sei riuscito a nasconderti!';
                     closeBtn.textContent = 'Chiudi e continua';
                     closeBtn.onclick = async () => { 
                         encounterModal.style.display = 'none'; 
                         await handleShadowSpawnsAndTurns();
                     };
+                } else {
+                    encounterMessage.textContent = `Sei stato visto! Inizia la battaglia.`;
+                    closeBtn.textContent = 'Vai alla Battaglia';
+                    closeBtn.onclick = () => { encounterModal.style.display = 'none'; startBattle(enemy); };
                 }
                 encounterActionBtns.appendChild(closeBtn);
             }
@@ -978,19 +1073,21 @@
   
   function handleGameOver(source) {
       const prisonerMessage = getPrisonerStatusMessage();
+      messageModal.classList.remove('victory-modal');
+      messageModalText.innerHTML = `GAME OVER<br>Sei stato sconfitto ${source}.<br>Nemici uccisi: ${enemiesDefeatedCount}<br>${prisonerMessage}`;
+      victorySubText.textContent = '';
+      prisonerStatusText.textContent = '';
+      messageModal.style.display = 'block';
+      diceBtn.disabled = true;
+      
+      messageModalOkBtn.onclick = () => {
+          messageModal.style.display = 'none';
+          promptForNewGame();
+      };
+      
       battleModal.style.display = 'none';
       initiativeModal.style.display = 'none';
       setBattleMode(false);
-      diceBtn.disabled = true;
-
-      messageQueue.push({
-          gameOver: true,
-          title: "GAME OVER.",
-          subtitle: `Sei stato sconfitto ${source}.`,
-          stats: `Nemici uccisi: ${enemiesDefeatedCount}`,
-          prisonerStatus: prisonerMessage
-      });
-      processMessageQueue();
   }
 
   function attemptEscape() {
@@ -1002,15 +1099,16 @@
       battleResult.style.fontSize = '18px';
       let flips = 10;
       const timer = setInterval(() => {
-          battlePlayerDice.textContent = Math.floor(Math.random() * 6) + 1;
+          let dieSize = character.class === 'Ladro' ? 4 : 6;
+          battlePlayerDice.textContent = Math.floor(Math.random() * dieSize) + 1;
           if (--flips <= 0) {
               clearInterval(timer);
               const damageRoll = Number(battlePlayerDice.textContent);
-              character.hp -= (damageRoll + 1);
+              character.hp -= damageRoll;
               updatePlayerInfo();
               if (character.hp <= 0) { handleGameOver("durante la fuga"); } 
               else {
-                  setMainMessage(`Fuga riuscita! Ma perdi ${damageRoll + 1} PF.`, '#ffcc00');
+                  setMainMessage(`Fuga riuscita! Ma perdi ${damageRoll} PF.`, '#ffcc00');
                   battleModal.style.display = 'none';
                   setBattleMode(false);
                   handleShadowSpawnsAndTurns();
@@ -1033,7 +1131,7 @@
             const definition = ENEMY_DEFINITIONS[enemiesDefeatedCount];
             enemy = {...enemy, ...definition};
             enemy.startHP = definition.hp;
-            enemy.name = `${definition.name} ${enemiesDefeatedCount + 1}`;
+            enemy.name = definition.name;
         }
     }
     
@@ -1052,8 +1150,10 @@
   function startInitiativePhase(battleState) {
     initiativeModal.style.display = 'block';
     battleModal.style.display = 'none';
-    initiativePlayerName.textContent = `${battleState.player.name} (PF: ${character.hp} / ${maxHP})`;
-    initiativeEnemyName.textContent = `${battleState.enemy.name} (PF: ${battleState.enemy.hp} / ${battleState.enemy.startHP})`;
+    initiativePlayerName.textContent = battleState.player.name;
+    initiativePlayerStats.textContent = `PF: ${battleState.player.hp} | Energia: ${character.energy}`;
+    initiativeEnemyName.textContent = battleState.enemy.name;
+    initiativeEnemyStats.textContent = `PF: ${battleState.enemy.hp}`;
     initiativePlayerDice.textContent = '-';
     initiativeEnemyDice.textContent = '-';
     initiativeResult.textContent = '';
@@ -1092,6 +1192,8 @@ function setupBattleTurn(battleState, attacker, defender) {
     currentBattleTurn = { battleState, attacker, defender };
 
     battleModal.style.display = 'block';
+    specialAbilitiesContainer.style.display = 'flex';
+    updateEnergyUI();
 
     const isPlayerAttacker = attacker.name === battleState.player.name;
     
@@ -1121,146 +1223,186 @@ function setupBattleTurn(battleState, attacker, defender) {
     battleLog.textContent = '';
     battleResult.innerHTML = `Tocca a ${attacker.name} attaccare!`;
 
-    const rollBtn = document.createElement('button');
-    rollBtn.textContent = 'Lancia i dadi';
-    rollBtn.onclick = resolveBattleTurn;
-    battleActionContainer.appendChild(rollBtn);
+    if (isPlayerAttacker) {
+        const rollBtn = document.createElement('button');
+        rollBtn.textContent = 'Attacco Normale';
+        rollBtn.onclick = () => {
+            activeAbility = null;
+            resolveBattleTurn();
+        };
+        battleActionContainer.appendChild(rollBtn);
+        
+        const combatPotions = character.inventory.filter(p => p.type === 'fire' || p.type === 'ice');
+        if(combatPotions.length > 0) {
+            const useCombatPotionBtn = document.createElement('button');
+            useCombatPotionBtn.textContent = 'Usa Pozione da Combattimento';
+            useCombatPotionBtn.onclick = openCombatPotionSelect;
+            battleActionContainer.appendChild(useCombatPotionBtn);
+        }
+
+        specialAbilitiesContainer.style.visibility = 'visible';
+    } else {
+        specialAbilitiesContainer.style.visibility = 'hidden';
+        setTimeout(resolveBattleTurn, 1500);
+    }
 }
 
 function resolveBattleTurn() {
     const { battleState, attacker, defender } = currentBattleTurn;
     battleActionContainer.innerHTML = '';
+    specialAbilitiesContainer.style.visibility = 'hidden';
 
     const isPlayerAttacker = attacker.name === battleState.player.name;
 
-    const playerTotalAttackBonus = getAttackBonus() + (character.hasSpecialSword ? 1 : 0);
-    const playerAttackDie = character.hasSpecialSword ? 12 : character.attackDie;
-    const playerTotalDefenseBonus = getDefenseBonus();
-    const playerDefenseDie = character.defenseDie;
-
-    let attackDie, attackBonus, defenseDie, defenseBonus;
-
-    if (isPlayerAttacker) {
-        attackDie = playerAttackDie;
-        attackBonus = playerTotalAttackBonus;
-        defenseDie = battleState.enemy.defenseDie;
-        defenseBonus = battleState.enemy.defenseBonus || 0;
-    } else {
-        attackDie = battleState.enemy.attackDie;
-        attackBonus = battleState.enemy.attackBonus || 0;
-        defenseDie = playerDefenseDie;
-        defenseBonus = playerTotalDefenseBonus;
+    function animateAndRoll(targetEl, die, bonus, callback) {
+        let flips = 10;
+        const timer = setInterval(() => {
+            targetEl.textContent = Math.floor(Math.random() * die) + 1;
+            if (--flips <= 0) {
+                clearInterval(timer);
+                const finalRoll = Math.floor(Math.random() * die) + 1 + bonus;
+                targetEl.textContent = finalRoll;
+                callback(finalRoll);
+            }
+        }, 80);
     }
     
-    let flips = 10;
-    const timer = setInterval(() => {
-        const randomAttack = Math.floor(Math.random() * attackDie) + 1 + attackBonus;
-        const randomDefense = Math.floor(Math.random() * defenseDie) + 1 + defenseBonus;
-
-        if (isPlayerAttacker) {
-            battlePlayerDice.textContent = randomAttack;
-            battleEnemyDice.textContent = randomDefense;
+    function processCombatResult(attackRoll, defenseRoll) {
+        const damage = Math.max(0, attackRoll - defenseRoll);
+        defender.hp -= damage;
+        battleLog.textContent = `${attacker.name} attacca con ${attackRoll}.\n${defender.name} difende con ${defenseRoll}.`;
+        if (damage > 0) {
+            battleResult.innerHTML = `${defender.name} subisce ${damage} danni!`;
+            battleResult.style.color = isPlayerAttacker ? 'lightgreen' : 'red';
         } else {
-            battleEnemyDice.textContent = randomAttack;
-            battlePlayerDice.textContent = randomDefense;
+            battleResult.innerHTML = `Attacco parato!`;
+            battleResult.style.color = 'deepskyblue';
         }
-
-        if (--flips <= 0) {
-            clearInterval(timer);
-            
-            const attackBaseRoll = Math.floor(Math.random() * attackDie) + 1;
-            const defenseBaseRoll = Math.floor(Math.random() * defenseDie) + 1;
-            const totalAttack = attackBaseRoll + attackBonus;
-            const totalDefense = defenseBaseRoll + defenseBonus;
-
-            if (isPlayerAttacker) {
-                battlePlayerDice.textContent = totalAttack;
-                battleEnemyDice.textContent = totalDefense;
-            } else {
-                battleEnemyDice.textContent = totalAttack;
-                battlePlayerDice.textContent = totalDefense;
-            }
-
-            let logText = `${attacker.name} attacca con un tiro di ${totalAttack}.\n`;
-            logText += `${defender.name} si difende con un tiro di ${totalDefense}.\n`;
-
-            const damage = totalAttack - totalDefense;
-
-            if (damage > 0) {
-                defender.hp -= damage;
-                logText += `\n${defender.name} subisce ${damage} danni!`;
-                battleResult.innerHTML = `${attacker.name} ha colpito!`;
-                battleResult.style.color = isPlayerAttacker ? 'lightgreen' : 'red';
-            } else {
-                logText += `\nL'attacco è stato parato!`;
-                battleResult.innerHTML = `Colpo parato!`;
-                battleResult.style.color = 'deepskyblue';
-            }
-            
-            battleLog.textContent = logText;
-
-            if (!battleState.enemy.isShadow) {
-                const cellInfo = visitedCells.get(currentCell.dataset.cellNumber);
-                if (cellInfo) cellInfo.hp = battleState.enemy.hp;
-            }
-
-            battlePlayerPF.textContent = `PF: ${character.hp > 0 ? character.hp : 0} / ${maxHP}`;
-            battleEnemyPF.textContent = `PF: ${battleState.enemy.hp > 0 ? battleState.enemy.hp : 0} / ${battleState.enemy.startHP}`;
-            updatePlayerInfo();
-
-            if (battleState.enemy.hp <= 0) {
-                battleResult.innerHTML = 'VITTORIA!<br>Hai sconfitto il nemico.';
-                battleResult.style.color = 'lightgreen';
-                if (battleState.enemy.isShadow) {
-                    shadows = shadows.filter(s => s.name !== battleState.enemy.name);
-                } else {
-                    const cellInfo = visitedCells.get(currentCell.dataset.cellNumber);
-                    cellInfo.defeated = true;
-                    if (battleState.enemy.isBoss) {
-                        messageQueue.push({victory: true, title: "Dungeon liberato!", subtitle: "Hai sconfitto tutti i nemici!", prisonerStatus: getPrisonerStatusMessage()});
-                        diceBtn.disabled = true;
-                    } else {
-                        enemiesDefeatedCount++;
-                        if (enemiesDefeatedCount === ENEMY_COUNT) { placeBoss(); }
-                    }
-                }
-                updateDiscoveriesLog();
-                const closeBtn = document.createElement('button');
-                closeBtn.textContent = 'Continua...';
-                closeBtn.onclick = async () => { 
-                    battleModal.style.display = 'none';
-                    setBattleMode(false);
-                    if (!battleState.enemy.isBoss) await handleShadowSpawnsAndTurns();
-                    else processMessageQueue(); 
-                };
-                battleActionContainer.innerHTML = '';
-                battleActionContainer.appendChild(closeBtn);
-            } else if (character.hp <= 0) {
-                handleGameOver("in combattimento");
-            } else {
+        finalizeTurn();
+    }
+    
+    if (activeAbility === 'doubleAttack' && isPlayerAttacker) {
+        let totalDamage = 0;
+        let logText = '';
+        
+        animateAndRoll(battlePlayerDice, character.hasSpecialSword ? 12 : character.attackDie, getAttackBonus(), (attack1) => {
+            animateAndRoll(battleEnemyDice, battleState.enemy.defenseDie, (battleState.enemy.defenseBonus || 0), (defense1) => {
+                const damage1 = Math.max(0, attack1 - defense1);
+                totalDamage += damage1;
+                logText += `Attacco 1: ${attack1} vs ${defense1}. Danno: ${damage1}\n`;
+                
                 setTimeout(() => {
-                  const nextRoundBtn = document.createElement('button');
-                  nextRoundBtn.textContent = 'Prossimo Turno';
-                  nextRoundBtn.onclick = () => startInitiativePhase(battleState);
-                  if (!battleState.enemy.isShadow) {
-                       const escapeBtn = document.createElement('button');
-                       escapeBtn.textContent = 'Fuggi (subisci 1D6+1 PF)';
-                       escapeBtn.onclick = attemptEscape;
-                       battleActionContainer.appendChild(escapeBtn);
-                  }
-                  battleActionContainer.appendChild(nextRoundBtn);
-                }, 1000);
+                    animateAndRoll(battlePlayerDice, character.hasSpecialSword ? 12 : character.attackDie, getAttackBonus(), (attack2) => {
+                        animateAndRoll(battleEnemyDice, battleState.enemy.defenseDie, (battleState.enemy.defenseBonus || 0), (defense2) => {
+                            const damage2 = Math.max(0, attack2 - defense2);
+                            totalDamage += damage2;
+                            logText += `Attacco 2: ${attack2} vs ${defense2}. Danno: ${damage2}`;
+                            defender.hp -= totalDamage;
+                            battleLog.textContent = logText;
+                            battleResult.innerHTML = `Doppio Attacco! Danno Totale: ${totalDamage}`;
+                            finalizeTurn();
+                        });
+                    });
+                }, 800);
+            });
+        });
+    } else if (activeAbility === 'powerStrike' && isPlayerAttacker) {
+        animateAndRoll(battlePlayerDice, character.hasSpecialSword ? 12 : character.attackDie, getAttackBonus(), (attackRoll) => {
+            battleEnemyDice.textContent = 'X';
+            defender.hp -= attackRoll;
+            battleLog.textContent = `Colpo Potente! L'attacco ignora la difesa.`;
+            battleResult.innerHTML = `Danno inflitto: ${attackRoll}`;
+            finalizeTurn();
+        });
+    } else { 
+        const attackDie = isPlayerAttacker ? (character.hasSpecialSword ? 12 : character.attackDie) : battleState.enemy.attackDie;
+        const attackBonus = isPlayerAttacker ? getAttackBonus() : (battleState.enemy.attackBonus || 0);
+        const defenseDie = isPlayerAttacker ? battleState.enemy.defenseDie : character.defenseDie;
+        const defenseBonus = isPlayerAttacker ? (battleState.enemy.defenseBonus || 0) : getDefenseBonus();
+
+        const attackerDiceEl = isPlayerAttacker ? battlePlayerDice : battleEnemyDice;
+        const defenderDiceEl = isPlayerAttacker ? battleEnemyDice : battlePlayerDice;
+
+        animateAndRoll(attackerDiceEl, attackDie, attackBonus, (attackRoll) => {
+            animateAndRoll(defenderDiceEl, defenseDie, defenseBonus, (defenseRoll) => {
+                processCombatResult(attackRoll, defenseRoll);
+            });
+        });
+    }
+}
+
+function finalizeTurn(keepTurn = false) {
+    const { battleState } = currentBattleTurn;
+    activeAbility = null;
+
+    if (!battleState.enemy.isShadow) {
+        const cellInfo = visitedCells.get(currentCell.dataset.cellNumber);
+        if (cellInfo) cellInfo.hp = battleState.enemy.hp;
+    }
+
+    battlePlayerPF.textContent = `PF: ${character.hp > 0 ? character.hp : 0} / ${maxHP}`;
+    battleEnemyPF.textContent = `PF: ${battleState.enemy.hp > 0 ? battleState.enemy.hp : 0} / ${battleState.enemy.startHP}`;
+    updatePlayerInfo();
+
+    if (battleState.enemy.hp <= 0) {
+        gainEnergy(3);
+        battleResult.innerHTML = 'VITTORIA!<br>Hai sconfitto il nemico.';
+        battleResult.style.color = 'lightgreen';
+        battleActionContainer.innerHTML = '';
+        if (battleState.enemy.isShadow) {
+            shadows = shadows.filter(s => s.name !== battleState.enemy.name);
+        } else {
+            const cellInfo = visitedCells.get(currentCell.dataset.cellNumber);
+            cellInfo.defeated = true;
+            if (battleState.enemy.isBoss) {
+                messageQueue.push({victory: true, title: "Dungeon liberato!", subtitle: "Hai sconfitto tutti i nemici!", prisonerStatus: getPrisonerStatusMessage()});
+                diceBtn.disabled = true;
+            } else {
+                enemiesDefeatedCount++;
+                if (enemiesDefeatedCount === ENEMY_COUNT) { placeBoss(); }
             }
         }
-    }, 100);
+        updateDiscoveriesLog();
+        const closeBtn = document.createElement('button');
+        closeBtn.textContent = 'Continua...';
+        closeBtn.onclick = async () => { 
+            battleModal.style.display = 'none';
+            specialAbilitiesContainer.style.display = 'none';
+            setBattleMode(false);
+            if (!battleState.enemy.isBoss) await handleShadowSpawnsAndTurns();
+            else processMessageQueue(); 
+        };
+        battleActionContainer.appendChild(closeBtn);
+    } else if (character.hp <= 0) {
+        handleGameOver("in combattimento");
+    } else {
+        battleActionContainer.innerHTML = '';
+        const nextRoundBtn = document.createElement('button');
+        nextRoundBtn.textContent = 'Prossimo Turno';
+        if (keepTurn) {
+            nextRoundBtn.onclick = () => setupBattleTurn(battleState, battleState.player, battleState.enemy);
+        } else {
+            nextRoundBtn.onclick = () => startInitiativePhase(battleState);
+        }
+
+        if (!battleState.enemy.isShadow) {
+            const escapeBtn = document.createElement('button');
+            escapeBtn.textContent = 'Fuggi (subisci 1D' + (character.class === 'Ladro' ? '4' : '6') + ' PF)';
+            escapeBtn.onclick = attemptEscape;
+            battleActionContainer.appendChild(escapeBtn);
+        }
+        battleActionContainer.appendChild(nextRoundBtn);
+    }
 }
 
 
   function updatePlayerInfo() {
     if (character) {
       playerInfo.textContent = `${character.name} | PF: ${character.hp > 0 ? character.hp : 0} / ${maxHP}`;
+      updateEnergyUI();
     } else {
       playerInfo.textContent = 'Crea un personaggio';
+      energyValue.textContent = '0';
     }
   }
 
@@ -1279,7 +1421,12 @@ function resolveBattleTurn() {
     resetMessages();
     let flips = 10;
     const timer = setInterval(() => {
-      diceRes.textContent = Math.floor(Math.random() * 6) + 1;
+      let roll = Math.floor(Math.random() * 6) + 1;
+      if(character.class === 'Esploratore' && (roll === 1 || roll === 2) && Math.random() < 0.25) {
+          setMainMessage("Rilancio Esploratore!", "cyan");
+          roll = Math.floor(Math.random() * 6) + 1;
+      }
+      diceRes.textContent = roll;
       if (--flips <= 0) {
         clearInterval(timer);
         const moves = getValidMoves(Number(diceRes.textContent));
@@ -1293,17 +1440,19 @@ function resolveBattleTurn() {
   }
 
   async function startGame() {
-    character.bonuses = [];
-    character.inventory = [];
-    character.hasSpecialSword = false;
-    character.prisonersFreed = 0;
+    character.bonuses = character.bonuses || [];
+    character.inventory = character.inventory || [];
+    character.hasSpecialSword = character.hasSpecialSword || false;
+    character.prisonersFreed = character.prisonersFreed || 0;
+    
     visitedCells = new Map();
     enemiesDefeatedCount = 0;
     discoveryCounter = 1;
     gasEffect = { active: false, newCellsVisited: 0 };
+    shadows = []; 
+    spawnedShadows = new Set();
     
     placeDiscoveries();
-    
     buildBoard();
     currentCell = board.querySelector('[data-cell-number="1"]');
     
@@ -1340,6 +1489,7 @@ function resolveBattleTurn() {
       enemyMap, bonusMap, potionMap, prisonerMap,
       gasTrapPositions: Array.from(gasTrapPositions),
       gasActivatedPositions: Array.from(gasActivatedPositions),
+      holePositions: Array.from(holePositions),
       gasEffect,
       shadows, spawnedShadows: Array.from(spawnedShadows),
       currentCellNumber: currentCell.dataset.cellNumber
@@ -1363,6 +1513,7 @@ function resolveBattleTurn() {
     enemyMap = savedState.enemyMap; bonusMap = savedState.bonusMap; potionMap = savedState.potionMap; prisonerMap = savedState.prisonerMap;
     gasTrapPositions = new Set(savedState.gasTrapPositions);
     gasActivatedPositions = new Set(savedState.gasActivatedPositions);
+    holePositions = new Set(savedState.holePositions || []);
     gasEffect = savedState.gasEffect;
     shadows = savedState.shadows;
     spawnedShadows = new Set(savedState.spawnedShadows || []);
@@ -1403,36 +1554,146 @@ function resolveBattleTurn() {
       }
   }
 
+  function openCombatPotionSelect() {
+      combatPotionList.innerHTML = '';
+      const combatPotions = character.inventory.map((p, i) => ({...p, originalIndex: i})).filter(p => p.type === 'fire' || p.type === 'ice');
+      if(combatPotions.length === 0) {
+          alert("Non hai pozioni da combattimento.");
+          return;
+      }
+
+      combatPotions.forEach(potion => {
+          const btn = document.createElement('button');
+          btn.textContent = potion.name;
+          btn.onclick = () => {
+              combatPotionSelectModal.style.display = 'none';
+              useCombatPotion(potion);
+          };
+          combatPotionList.appendChild(btn);
+      });
+      combatPotionSelectModal.style.display = 'block';
+  }
+
+  function useCombatPotion(potion) {
+      potionDamageModal.style.display = 'block';
+      potionDamageTitle.textContent = `Usa ${potion.name}`;
+      potionDamageDice.textContent = '-';
+      potionDamageRollBtn.disabled = false;
+
+      potionDamageRollBtn.onclick = () => {
+          potionDamageRollBtn.disabled = true;
+          let flips = 10;
+          const timer = setInterval(() => {
+            potionDamageDice.textContent = Math.floor(Math.random() * 6) + 1;
+            if (--flips <= 0) {
+              clearInterval(timer);
+              const damage = Number(potionDamageDice.textContent);
+              potionDamageModal.style.display = 'none';
+              applyCombatPotionEffect(potion, damage);
+            }
+          }, 100);
+      };
+  }
+
+  function applyCombatPotionEffect(potion, damage) {
+      const { battleState } = currentBattleTurn;
+      const enemy = battleState.enemy;
+
+      // Rimuovi la pozione dall'inventario
+      character.inventory.splice(potion.originalIndex, 1);
+      updateInventory();
+
+      enemy.hp -= damage;
+      let log = `${potion.name} infligge ${damage} danni!`;
+
+      if (potion.type === 'ice') {
+          const heroAttackRoll = Math.floor(Math.random() * (character.hasSpecialSword ? 12 : character.attackDie)) + 1 + getAttackBonus();
+          enemy.hp -= heroAttackRoll;
+          log += `\nIl nemico è congelato e subisce un colpo extra da ${heroAttackRoll} danni!`;
+      }
+      
+      battleLog.textContent = log;
+      finalizeTurn(); // Questo si occuperà di aggiornare l'UI e controllare la fine della battaglia
+  }
+
+
   newGameBtn.addEventListener('click', promptForNewGame);
   saveGameBtn.addEventListener('click', saveGame);
   loadGameBtn.addEventListener('click', loadGame);
   diceBtn.addEventListener('click', rollDice); 
-  messageModalOkBtn.addEventListener('click', processMessageQueue);
   cancelCharBtn.addEventListener('click', () => { charForm.style.display = 'none'; });
+  closeCombatPotionSelectBtn.addEventListener('click', () => { combatPotionSelectModal.style.display = 'none'; });
 
   startAdventureBtn.addEventListener('click', () => {
     const name = document.getElementById('charName').value.trim();
-    const hp = parseInt(document.getElementById('charHP').value);
-    if (name && hp > 0) {
+    const hpInput = document.getElementById('charHP').value;
+    const charClass = document.getElementById('charClass').value;
+    
+    if (name && hpInput) {
+      let hp = parseInt(hpInput);
+      let energy = 0;
+      let maxEnergy = 10;
+      
+      if(charClass === 'Guerriero') {
+          hp += 5;
+          energy = 5;
+          maxEnergy = 12;
+      }
       maxHP = hp;
-      character = { name, hp, bonuses: [], inventory: [], hasSpecialSword: false, prisonersFreed: 0, attackDie: 10, defenseDie: 6 };
+
+      character = { 
+          name, 
+          hp: hp,
+          class: charClass,
+          attackDie: 10,
+          defenseDie: 6,
+          bonuses: [], 
+          inventory: [], 
+          hasSpecialSword: false, 
+          prisonersFreed: 0, 
+          energy: energy, 
+          maxEnergy: maxEnergy 
+      };
+      
       startGame();
-    } else { alert('Inserisci un nome valido e PF > 0.'); }
+    } else { alert('Inserisci un nome valido e i PF.'); }
   });
 
   usePotionBtn.addEventListener('click', () => {
-    if (!character || character.inventory.length === 0) return;
-    const selectedIndex = inventorySelect.value;
-    if (!selectedIndex) return;
-    const potion = character.inventory[selectedIndex];
-    character.hp = Math.min(character.hp + potion.value, maxHP);
-    character.inventory.splice(selectedIndex, 1);
-    updatePlayerInfo();
-    updateInventory();
-    updateDiscoveriesLog();
-    messageQueue.push(`Hai usato ${potion.name} e recuperato ${potion.value} PF!`);
-    processMessageQueue();
+    if (!character || inventorySelect.options.length === 0) return;
+    const selectedOriginalIndex = inventorySelect.value;
+    if (selectedOriginalIndex === null || selectedOriginalIndex === "") return;
+    const potion = character.inventory[selectedOriginalIndex];
+
+    if (potion && potion.type === 'heal') {
+        character.hp = Math.min(character.hp + potion.value, maxHP);
+        character.inventory.splice(selectedOriginalIndex, 1);
+        
+        updatePlayerInfo();
+        updateInventory();
+        updateDiscoveriesLog();
+        messageQueue.push(`Hai usato ${potion.name} e recuperato ${potion.value} PF!`);
+        processMessageQueue();
+    }
   });
+  
+  powerStrikeBtn.addEventListener('click', () => {
+      const cost = character.class === 'Guerriero' ? 4 : 5;
+      if(character.energy >= cost) {
+          character.energy -= cost;
+          activeAbility = 'powerStrike';
+          resolveBattleTurn();
+      }
+  });
+  doubleAttackBtn.addEventListener('click', () => {
+      const cost = character.class === 'Guerriero' ? 4 : 5;
+      if(character.energy >= cost) {
+          character.energy -= cost;
+          activeAbility = 'doubleAttack';
+          resolveBattleTurn();
+      }
+  });
+
 
   function init() {
     wireCellListeners();
