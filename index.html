@@ -144,11 +144,11 @@
         min-width: 180px;
     }
     
-    #charForm, #encounterModal, #battleModal, #messageModal, #initiativeModal, #potionDamageModal, #combatPotionSelectModal { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background: #3a3a2b; padding:20px; border-radius:10px; box-shadow:0 0 15px #000; z-index:1001; text-align:center; width: 300px; }
+    #charForm, #encounterModal, #battleModal, #messageModal, #initiativeModal, #potionDamageModal, #battlePotionSelectModal { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background: #3a3a2b; padding:20px; border-radius:10px; box-shadow:0 0 15px #000; z-index:1001; text-align:center; width: 300px; }
     #charForm input, #charForm select { width: calc(100% - 16px); padding:8px; margin:8px 0; border:none; border-radius:6px; font-size:16px; }
     
     #battleModal, #initiativeModal { z-index: 1050; }
-    #potionDamageModal, #combatPotionSelectModal { z-index: 1060; }
+    #potionDamageModal, #battlePotionSelectModal { z-index: 1060; }
     
     .battle-unit { margin: 15px 0; border: 1px solid #555; padding: 10px; border-radius: 8px; }
     .battle-name { font-weight: bold; font-size: 18px; margin-bottom: 5px; color: #a0d535; }
@@ -172,9 +172,6 @@
       font-size: 16px;
       line-height: 1.4;
     }
-    
-    #inventoryContainer { margin-top: 20px; width: 100%; text-align: center; }
-    #inventoryContainer select { width: 100%; padding: 8px; background: #3a3a2b; color: #fff; border: 1px solid #666; border-radius: 6px; }
 
     #messageModal { background: linear-gradient(135deg, #4a3c26, #2d1f0f); border: 4px solid #8b5e3c; color: #f5deb3; font-family: 'MedievalSharp', cursive; font-size: 22px; }
     #messageModal.victory-modal .modal-content { display: flex; flex-direction: column; align-items: center; }
@@ -203,8 +200,7 @@
         width: 100%;
         box-sizing: border-box;
       }
-      #inventoryContainer { margin-top: 10px; }
-      #charForm, #encounterModal, #messageModal, #initiativeModal, #potionDamageModal, #combatPotionSelectModal { width: 90%; }
+      #charForm, #encounterModal, #messageModal, #initiativeModal, #potionDamageModal, #battlePotionSelectModal { width: 90%; }
       #battleModal {
           padding: 10px;
           justify-content: center;
@@ -259,11 +255,6 @@
     <div id="shadowActionDisplay">
         <div id="shadowTurnName">Turno Ombre</div>
         <div id="shadowDiceResult">-</div>
-    </div>
-    <div id="inventoryContainer">
-        <div style="font-weight: bold; margin-bottom: 5px;">Inventario Pozioni di Cura</div>
-        <select id="inventorySelect"></select>
-        <button id="usePotionBtn" style="margin-top: 8px;">Usa Pozione</button>
     </div>
   </div>
 
@@ -329,6 +320,7 @@
     <div id="specialAbilitiesContainer">
       <button id="powerStrikeBtn" title="Un attacco che non può essere parato"></button>
       <button id="doubleAttackBtn" title="Esegui due tiri di attacco in un turno"></button>
+      <button id="usePotionBattleBtn">Usa Pozione</button>
     </div>
   </div>
 
@@ -341,10 +333,10 @@
       <button id="messageModalOkBtn">OK</button>
   </div>
 
-  <div id="combatPotionSelectModal">
-    <p>Seleziona una pozione da combattimento:</p>
-    <div id="combatPotionList"></div>
-    <button id="closeCombatPotionSelectBtn" style="margin-top:15px;">Annulla</button>
+  <div id="battlePotionSelectModal">
+    <p>Seleziona una pozione da usare:</p>
+    <div id="battlePotionList"></div>
+    <button id="closeBattlePotionSelectBtn" style="margin-top:15px;">Annulla</button>
   </div>
 
   <div id="potionDamageModal">
@@ -392,8 +384,7 @@
   const specialAbilitiesContainer = document.getElementById('specialAbilitiesContainer');
   const powerStrikeBtn = document.getElementById('powerStrikeBtn');
   const doubleAttackBtn = document.getElementById('doubleAttackBtn');
-  const inventorySelect = document.getElementById('inventorySelect');
-  const usePotionBtn = document.getElementById('usePotionBtn');
+  const usePotionBattleBtn = document.getElementById('usePotionBattleBtn');
   const messageModal = document.getElementById('messageModal');
   const messageModalText = document.getElementById('messageModalText');
   const victorySubText = document.getElementById('victorySubText');
@@ -409,9 +400,9 @@
   const initiativeEnemyDice = document.getElementById('initiativeEnemyDice');
   const initiativeResult = document.getElementById('initiativeResult');
   const initiativeRollBtn = document.getElementById('initiativeRollBtn');
-  const combatPotionSelectModal = document.getElementById('combatPotionSelectModal');
-  const combatPotionList = document.getElementById('combatPotionList');
-  const closeCombatPotionSelectBtn = document.getElementById('closeCombatPotionSelectBtn');
+  const battlePotionSelectModal = document.getElementById('battlePotionSelectModal');
+  const battlePotionList = document.getElementById('battlePotionList');
+  const closeBattlePotionSelectBtn = document.getElementById('closeBattlePotionSelectBtn');
   const potionDamageModal = document.getElementById('potionDamageModal');
   const potionDamageTitle = document.getElementById('potionDamageTitle');
   const potionDamageDice = document.getElementById('potionDamageDice');
@@ -473,9 +464,6 @@
     energyValue.textContent = character.energy;
     powerStrikeBtn.disabled = character.energy < cost;
     doubleAttackBtn.disabled = character.energy < cost;
-    
-    powerStrikeBtn.textContent = `Colpo Potente (${cost})`;
-    doubleAttackBtn.textContent = `Doppio Attacco (${cost})`;
   }
   
   function gainEnergy(amount) {
@@ -497,19 +485,6 @@
       if (!character) return 0;
       let bonus = character.bonuses.filter(b => DEFENSE_BONUS_ITEMS.includes(b)).length;
       return bonus;
-  }
-  
-  function updateInventory() {
-    inventorySelect.innerHTML = '';
-    const healingPotions = character.inventory.filter(p => p.type === 'heal');
-    healingPotions.forEach(potion => {
-        const option = document.createElement('option');
-        // Store original index to find it later
-        option.value = character.inventory.findIndex(p => p === potion);
-        option.textContent = potion.name;
-        inventorySelect.appendChild(option);
-    });
-    usePotionBtn.disabled = healingPotions.length === 0;
   }
 
   function addSkullMarker(cell) {
@@ -596,6 +571,12 @@
     if (defenseBonuses.length > 0) {
         lines.push('\n--- Bonus Difesa Attivi ---');
         defenseBonuses.forEach(b => lines.push(`- ${b} (+1)`));
+    }
+    
+    const potionsInInventory = character ? character.inventory : [];
+    if (potionsInInventory.length > 0) {
+        lines.push('\n--- Pozioni ---');
+        potionsInInventory.forEach(p => lines.push(`- ${p.name}`));
     }
 
     if (gasEffect.active) {
@@ -943,7 +924,6 @@ function getValidMoves(steps) {
             character.inventory.push(info.potion);
             info.collected = true;
             messageQueue.push(`Hai trovato: ${info.potion.name}.`);
-            updateInventory();
         }
 
         if (isPrisonerCell) {
@@ -1223,6 +1203,10 @@ function setupBattleTurn(battleState, attacker, defender) {
     battlePlayerPF.textContent = `PF: ${character.hp > 0 ? character.hp : 0} / ${maxHP}`;
     battleEnemyPF.textContent = `PF: ${battleState.enemy.hp > 0 ? battleState.enemy.hp : 0} / ${battleState.enemy.startHP}`;
     
+    const cost = character.class === 'Guerriero' ? 4 : 5;
+    powerStrikeBtn.textContent = `Colpo Potente (${cost})`;
+    doubleAttackBtn.textContent = `Doppio Attacco (${cost})`;
+
     battlePlayerAttack.textContent = `Attacco: 1D${playerAttackDie}${playerTotalAttackBonus >= 0 ? '+' + playerTotalAttackBonus : playerTotalAttackBonus}`;
     battlePlayerDefense.textContent = `Difesa: 1D${playerDefenseDie}+${playerTotalDefenseBonus}`;
     battleEnemyAttack.textContent = `Attacco: 1D${battleState.enemy.attackDie}+${battleState.enemy.attackBonus || 0}`;
@@ -1248,14 +1232,7 @@ function setupBattleTurn(battleState, attacker, defender) {
         };
         battleActionContainer.appendChild(rollBtn);
         
-        const combatPotions = character.inventory.filter(p => p.type === 'fire' || p.type === 'ice');
-        if(combatPotions.length > 0) {
-            const useCombatPotionBtn = document.createElement('button');
-            useCombatPotionBtn.textContent = 'Usa Pozione da Combattimento';
-            useCombatPotionBtn.onclick = openCombatPotionSelect;
-            battleActionContainer.appendChild(useCombatPotionBtn);
-        }
-
+        usePotionBattleBtn.disabled = character.inventory.length === 0;
         specialAbilitiesContainer.style.visibility = 'visible';
     } else {
         specialAbilitiesContainer.style.visibility = 'hidden';
@@ -1396,8 +1373,10 @@ function finalizeTurn(keepTurn = false) {
         const nextRoundBtn = document.createElement('button');
         nextRoundBtn.textContent = 'Prossimo Turno';
         if (keepTurn) {
+            // Se il turno è mantenuto (es. dopo aver usato una pozione), si torna a setupBattleTurn con il giocatore come attaccante
             nextRoundBtn.onclick = () => setupBattleTurn(battleState, battleState.player, battleState.enemy);
         } else {
+            // Altrimenti, si rilancia l'iniziativa
             nextRoundBtn.onclick = () => startInitiativePhase(battleState);
         }
 
@@ -1476,7 +1455,7 @@ function finalizeTurn(keepTurn = false) {
 
     updateLayout();
     updatePlayerInfo();
-    updateInventory();
+    updateDiscoveriesLog();
     charForm.style.display = 'none';
     diceBtn.disabled = false;
   }
@@ -1487,8 +1466,6 @@ function finalizeTurn(keepTurn = false) {
     discoveriesLog.textContent = '';
     character = null;
     updatePlayerInfo();
-    if(inventorySelect) inventorySelect.innerHTML = '';
-    if(usePotionBtn) usePotionBtn.disabled = true;
     diceRes.textContent = '-';
     diceBtn.disabled = true;
     charForm.style.display = 'block';
@@ -1544,7 +1521,6 @@ function finalizeTurn(keepTurn = false) {
     buildBoard();
     
     updatePlayerInfo();
-    updateInventory();
     updateDiscoveriesLog();
     resetMessages();
     
@@ -1570,75 +1546,83 @@ function finalizeTurn(keepTurn = false) {
       }
   }
 
-  function openCombatPotionSelect() {
-      combatPotionList.innerHTML = '';
-      const combatPotions = character.inventory.map((p, i) => ({...p, originalIndex: i})).filter(p => p.type === 'fire' || p.type === 'ice');
-      if(combatPotions.length === 0) {
-          alert("Non hai pozioni da combattimento.");
+  function openBattlePotionSelect() {
+      battlePotionList.innerHTML = '';
+      if(character.inventory.length === 0) {
           return;
       }
 
-      combatPotions.forEach(potion => {
+      character.inventory.forEach((potion, index) => {
           const btn = document.createElement('button');
           btn.textContent = potion.name;
           btn.onclick = () => {
-              combatPotionSelectModal.style.display = 'none';
-              useCombatPotion(potion);
+              battlePotionSelectModal.style.display = 'none';
+              usePotionInBattle(potion, index);
           };
-          combatPotionList.appendChild(btn);
+          battlePotionList.appendChild(btn);
       });
-      combatPotionSelectModal.style.display = 'block';
+      battlePotionSelectModal.style.display = 'block';
   }
 
-  function useCombatPotion(potion) {
-      potionDamageModal.style.display = 'block';
-      potionDamageTitle.textContent = `Usa ${potion.name}`;
-      potionDamageDice.textContent = '-';
-      potionDamageRollBtn.disabled = false;
-
-      potionDamageRollBtn.onclick = () => {
-          potionDamageRollBtn.disabled = true;
-          let flips = 10;
-          const timer = setInterval(() => {
-            potionDamageDice.textContent = Math.floor(Math.random() * 6) + 1;
-            if (--flips <= 0) {
-              clearInterval(timer);
-              const damage = Number(potionDamageDice.textContent);
-              potionDamageModal.style.display = 'none';
-              applyCombatPotionEffect(potion, damage);
-            }
-          }, 100);
-      };
-  }
-
-  function applyCombatPotionEffect(potion, damage) {
-      const { battleState } = currentBattleTurn;
-      const enemy = battleState.enemy;
-
-      // Rimuovi la pozione dall'inventario
-      character.inventory.splice(potion.originalIndex, 1);
-      updateInventory();
-
-      enemy.hp -= damage;
-      let log = `${potion.name} infligge ${damage} danni!`;
-
-      if (potion.type === 'ice') {
-          const heroAttackRoll = Math.floor(Math.random() * (character.hasSpecialSword ? 12 : character.attackDie)) + 1 + getAttackBonus();
-          enemy.hp -= heroAttackRoll;
-          log += `\nIl nemico è congelato e subisce un colpo extra da ${heroAttackRoll} danni!`;
-      }
+  function usePotionInBattle(potion, index) {
+      character.inventory.splice(index, 1);
       
-      battleLog.textContent = log;
-      finalizeTurn(); // Questo si occuperà di aggiornare l'UI e controllare la fine della battaglia
-  }
+      if (potion.type === 'heal') {
+          const oldHp = character.hp;
+          character.hp = Math.min(character.hp + potion.value, maxHP);
+          const healedAmount = character.hp - oldHp;
+          
+          updatePlayerInfo();
+          battlePlayerPF.textContent = `PF: ${character.hp > 0 ? character.hp : 0} / ${maxHP}`;
+          updateDiscoveriesLog();
 
+          battleLog.textContent = `${character.name} usa ${potion.name} e recupera ${healedAmount} PF!`;
+          battleResult.innerHTML = `Ora hai ${character.hp} PF.`;
+          
+          finalizeTurn(true); 
+      } else if (potion.type === 'fire' || potion.type === 'ice') {
+          potionDamageModal.style.display = 'block';
+          potionDamageTitle.textContent = `Usa ${potion.name}`;
+          potionDamageDice.textContent = '-';
+          potionDamageRollBtn.disabled = false;
+
+          potionDamageRollBtn.onclick = () => {
+              potionDamageRollBtn.disabled = true;
+              let flips = 10;
+              const timer = setInterval(() => {
+                potionDamageDice.textContent = Math.floor(Math.random() * 6) + 1;
+                if (--flips <= 0) {
+                  clearInterval(timer);
+                  const damage = Number(potionDamageDice.textContent);
+                  potionDamageModal.style.display = 'none';
+                  
+                  const { battleState } = currentBattleTurn;
+                  const enemy = battleState.enemy;
+                  
+                  enemy.hp -= damage;
+                  let log = `${potion.name} infligge ${damage} danni!`;
+
+                  if (potion.type === 'ice') {
+                      const heroAttackRoll = Math.floor(Math.random() * (character.hasSpecialSword ? 12 : character.attackDie)) + 1 + getAttackBonus();
+                      enemy.hp -= heroAttackRoll;
+                      log += `\nIl nemico è congelato e subisce un colpo extra da ${heroAttackRoll} danni!`;
+                  }
+                  
+                  battleLog.textContent = log;
+                  updateDiscoveriesLog();
+                  finalizeTurn();
+                }
+              }, 100);
+          };
+      }
+  }
 
   newGameBtn.addEventListener('click', promptForNewGame);
   saveGameBtn.addEventListener('click', saveGame);
   loadGameBtn.addEventListener('click', loadGame);
   diceBtn.addEventListener('click', rollDice); 
   cancelCharBtn.addEventListener('click', () => { charForm.style.display = 'none'; });
-  closeCombatPotionSelectBtn.addEventListener('click', () => { combatPotionSelectModal.style.display = 'none'; });
+  closeBattlePotionSelectBtn.addEventListener('click', () => { battlePotionSelectModal.style.display = 'none'; });
 
   startAdventureBtn.addEventListener('click', () => {
     const name = document.getElementById('charName').value.trim();
@@ -1674,24 +1658,6 @@ function finalizeTurn(keepTurn = false) {
       startGame();
     } else { alert('Inserisci un nome valido e i PF.'); }
   });
-
-  usePotionBtn.addEventListener('click', () => {
-    if (!character || inventorySelect.options.length === 0) return;
-    const selectedOriginalIndex = inventorySelect.value;
-    if (selectedOriginalIndex === null || selectedOriginalIndex === "") return;
-    const potion = character.inventory[selectedOriginalIndex];
-
-    if (potion && potion.type === 'heal') {
-        character.hp = Math.min(character.hp + potion.value, maxHP);
-        character.inventory.splice(selectedOriginalIndex, 1);
-        
-        updatePlayerInfo();
-        updateInventory();
-        updateDiscoveriesLog();
-        messageQueue.push(`Hai usato ${potion.name} e recuperato ${potion.value} PF!`);
-        processMessageQueue();
-    }
-  });
   
   powerStrikeBtn.addEventListener('click', () => {
       const cost = character.class === 'Guerriero' ? 4 : 5;
@@ -1709,7 +1675,7 @@ function finalizeTurn(keepTurn = false) {
           resolveBattleTurn();
       }
   });
-
+  usePotionBattleBtn.addEventListener('click', openBattlePotionSelect);
 
   function init() {
     wireCellListeners();
