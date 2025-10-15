@@ -431,28 +431,28 @@
   const HOLE_IMAGE_URL = 'https://i.imgur.com/kG6JJlO.png';
   
   const ATTACK_BONUS_ITEMS = [
-    { name: "Elsa migliorata", iconUrl: "https://imgur.com/euz20nX" }, 
-    { name: "Guanti rinforzati", iconUrl: "https://imgur.com/aE8GVDY" },
-    { name: "Stivali", iconUrl: "https://imgur.com/BNy44sG" }
+    { name: "Elsa migliorata", iconUrl: "https://i.imgur.com/euz20nX.png" }, 
+    { name: "Guanti rinforzati", iconUrl: "https://i.imgur.com/aE8GVDY.png" },
+    { name: "Stivali", iconUrl: "https://i.imgur.com/BNy44sG.png" }
   ];
   const DEFENSE_BONUS_ITEMS = [
-    { name: "Scudo di ferro", iconUrl: "https://imgur.com/hF20xva" }, 
-    { name: "Elmo", iconUrl: "https://imgur.com/7Ur7oSX" }, 
-    { name: "Corazza", iconUrl: "https://imgur.com/vTBxHQI" }
+    { name: "Scudo di ferro", iconUrl: "https://i.imgur.com/hF20xva.png" }, 
+    { name: "Elmo", iconUrl: "https://i.imgur.com/7Ur7oSX.png" }, 
+    { name: "Corazza", iconUrl: "https://i.imgur.com/vTBxHQI.png" }
   ];
   const POTIONS = [ 
-      { name: "Pozione Fuoco", type: "fire", iconUrl: "https://imgur.com/U4jwiij" }, 
-      { name: "Pozione Ghiaccio", type: "ice", iconUrl: "https://imgur.com/UqxFF43" },
-      { name: "Pozione (+5 PF)", value: 5, type: "heal", iconUrl: "https://imgur.com/OpZJJ1f" }, 
-      { name: "Pozione (+10 PF)", value: 10, type: "heal", iconUrl: "https://imgur.com/OpZJJ1f" }, 
-      { name: "Pozione (+15 PF)", value: 15, type: "heal", iconUrl: "https://imgur.com/OpZJJ1f" } 
+      { name: "Pozione Fuoco", type: "fire", iconUrl: "https://i.imgur.com/U4jwiij.png" }, 
+      { name: "Pozione Ghiaccio", type: "ice", iconUrl: "https://i.imgur.com/UqxFF43.png" },
+      { name: "Pozione (+5 PF)", value: 5, type: "heal", iconUrl: "https://i.imgur.com/OpZJJ1f.png" }, 
+      { name: "Pozione (+10 PF)", value: 10, type: "heal", iconUrl: "https://i.imgur.com/OpZJJ1f.png" }, 
+      { name: "Pozione (+15 PF)", value: 15, type: "heal", iconUrl: "https://i.imgur.com/OpZJJ1f.png" } 
   ];
   const GEMS = [
-      { name: "Gemma Blu", iconUrl: "https://imgur.com/cD8wDec" }, 
-      { name: "Gemma Verde", iconUrl: "https://imgur.com/h7dcivA" }, 
-      { name: "Gemma Viola", iconUrl: "https://imgur.com/yWygx8z" }
+      { name: "Gemma Blu", iconUrl: "https://i.imgur.com/cD8wDec.png" }, 
+      { name: "Gemma Verde", iconUrl: "https://i.imgur.com/h7dcivA.png" }, 
+      { name: "Gemma Viola", iconUrl: "https://i.imgur.com/yWygx8z.png" }
   ];
-  const GEM_DOOR = { name: "Porta di Gemme", iconUrl: "https://imgur.com/2u6BWSv" };
+  const GEM_DOOR = { name: "Porta di Gemme", iconUrl: "https://i.imgur.com/2u6BWSv.png" };
 
   const SHADOW_SPAWNS = [
       { name: "Ombra", hp: 10, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 1, iconUrl: "https://i.imgur.com/sgLJSln.png", spawnTurn: 10 },
@@ -710,15 +710,18 @@
         
         const content = document.createElement('div');
         content.className = 'cell-content';
-        content.textContent = i;
+        
         cellDiv.appendChild(content);
         
         if (visitedCells && visitedCells.has(String(i))) {
             cellDiv.classList.add('visited');
             const info = visitedCells.get(String(i));
             if (info.defeated) addSkullMarker(cellDiv);
-            if (info.prisonerFreed) addPrisonerMarker(cellDiv);
-            if (holePositions.has(i)) addHoleMarker(cellDiv);
+            else if (info.prisonerFreed) addPrisonerMarker(cellDiv);
+            else if (holePositions.has(i)) addHoleMarker(cellDiv);
+            else {
+                 content.textContent = i;
+            }
 
             if(info.enemy && !info.defeated) {
                 content.appendChild(Object.assign(document.createElement('div'), {className: 'enemy-marker'}));
@@ -742,6 +745,8 @@
             }
 
             if (info.bonus && info.bonus.name === GEM_DOOR.name) cellDiv.classList.add('gem-door-marker');
+        } else {
+            content.textContent = i;
         }
         
         const shadowHere = shadows.find(s => s.position === i && s.hp > 0);
