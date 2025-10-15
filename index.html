@@ -118,10 +118,8 @@
     .current { background:linear-gradient(145deg, rgba(143, 173, 106, 0.8), rgba(110, 133, 71, 0.8)); border-color:#a0d535; color:#eff7d6; box-shadow:0 0 10px #a0d535; }
     .highlighted { border: 3px solid white !important; cursor: pointer; }
     
-    .enemy-marker, .bonus-marker, .potion-marker, .gas-marker { position:absolute; width:10px; height:10px; border-radius:50%; border:1px solid #fff; }
+    .enemy-marker, .gas-marker { position:absolute; width:10px; height:10px; border-radius:50%; border:1px solid #fff; }
     .enemy-marker { top:3px; right:3px; background:red; }
-    .bonus-marker { bottom:3px; left:3px; background:gold; }
-    .potion-marker { bottom:3px; right:3px; background:deepskyblue; }
     .gas-marker { bottom:3px; left:3px; background:#808080;}
     .hole-marker {
         position:absolute; top:50%; left:50%; transform:translate(-50%, -50%);
@@ -132,7 +130,7 @@
         background-position: center;
     }
 
-    .skull-marker, .prisoner-marker, .shadow-marker, .hero-marker { 
+    .skull-marker, .prisoner-marker, .shadow-marker, .hero-marker, .item-marker { 
         position:absolute; 
         top:50%; 
         left:50%; 
@@ -142,6 +140,7 @@
         pointer-events:none; 
         opacity: 0.9;
     }
+    .item-marker { width: 70%; height: 70%; z-index: 6; }
     .skull-marker, .prisoner-marker { z-index: 5; }
     .hero-marker, .shadow-marker { z-index: 10; }
 
@@ -430,17 +429,31 @@
 
   const COLS = 9, CELL_COUNT = 72, ENEMY_COUNT = 12, PRISONER_COUNT = 11, GAS_TRAP_COUNT = 2, HOLE_COUNT = 3, GAS_EFFECT_DURATION_CELLS = 5;
   const HOLE_IMAGE_URL = 'https://i.imgur.com/kG6JJlO.png';
-  const ATTACK_BONUS_ITEMS = ["Elsa migliorata", "Guanti rinforzati", "Spallacci di cuoio"];
-  const DEFENSE_BONUS_ITEMS = ["Scudo di ferro", "Elmo", "Corazza"];
-  const POTIONS = [ 
-      { name: "Pozione Fuoco", type: "fire" }, 
-      { name: "Pozione Ghiaccio", type: "ice" },
-      { name: "Pozione (+5 PF)", value: 5, type: "heal" }, 
-      { name: "Pozione (+10 PF)", value: 10, type: "heal" }, 
-      { name: "Pozione (+15 PF)", value: 15, type: "heal" } 
+  
+  const ATTACK_BONUS_ITEMS = [
+    { name: "Elsa migliorata", iconUrl: "https://imgur.com/euz20nX" }, 
+    { name: "Guanti rinforzati", iconUrl: "https://imgur.com/aE8GVDY" },
+    { name: "Stivali", iconUrl: "https://imgur.com/BNy44sG" }
   ];
-  const GEMS = ["Gemma Blu", "Gemma Verde", "Gemma Viola"];
-  const GEM_DOOR = "Porta di Gemme";
+  const DEFENSE_BONUS_ITEMS = [
+    { name: "Scudo di ferro", iconUrl: "https://imgur.com/hF20xva" }, 
+    { name: "Elmo", iconUrl: "https://imgur.com/7Ur7oSX" }, 
+    { name: "Corazza", iconUrl: "https://imgur.com/vTBxHQI" }
+  ];
+  const POTIONS = [ 
+      { name: "Pozione Fuoco", type: "fire", iconUrl: "https://imgur.com/U4jwiij" }, 
+      { name: "Pozione Ghiaccio", type: "ice", iconUrl: "https://imgur.com/UqxFF43" },
+      { name: "Pozione (+5 PF)", value: 5, type: "heal", iconUrl: "https://imgur.com/OpZJJ1f" }, 
+      { name: "Pozione (+10 PF)", value: 10, type: "heal", iconUrl: "https://imgur.com/OpZJJ1f" }, 
+      { name: "Pozione (+15 PF)", value: 15, type: "heal", iconUrl: "https://imgur.com/OpZJJ1f" } 
+  ];
+  const GEMS = [
+      { name: "Gemma Blu", iconUrl: "https://imgur.com/cD8wDec" }, 
+      { name: "Gemma Verde", iconUrl: "https://imgur.com/h7dcivA" }, 
+      { name: "Gemma Viola", iconUrl: "https://imgur.com/yWygx8z" }
+  ];
+  const GEM_DOOR = { name: "Porta di Gemme", iconUrl: "https://imgur.com/2u6BWSv" };
+
   const SHADOW_SPAWNS = [
       { name: "Ombra", hp: 10, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 1, iconUrl: "https://i.imgur.com/sgLJSln.png", spawnTurn: 10 },
       { name: "Ombra Paurosa", hp: 15, attackDie: 10, attackBonus: 1, defenseDie: 8, defenseBonus: 0, iconUrl: "https://i.imgur.com/grZ66Ex.png", spawnTurn: 30 },
@@ -500,7 +513,8 @@
 
   function getAttackBonus() {
       if (!character) return 0;
-      let bonus = character.bonuses.filter(b => ATTACK_BONUS_ITEMS.includes(b)).length;
+      const attackItemNames = ATTACK_BONUS_ITEMS.map(item => item.name);
+      let bonus = character.bonuses.filter(b => attackItemNames.includes(b.name)).length;
       if (gasEffect.active) {
           bonus -= 1;
       }
@@ -509,7 +523,8 @@
 
   function getDefenseBonus() {
       if (!character) return 0;
-      let bonus = character.bonuses.filter(b => DEFENSE_BONUS_ITEMS.includes(b)).length;
+      const defenseItemNames = DEFENSE_BONUS_ITEMS.map(item => item.name);
+      let bonus = character.bonuses.filter(b => defenseItemNames.includes(b.name)).length;
       return bonus;
   }
 
@@ -540,6 +555,7 @@
   function addHoleMarker(cell) {
     const contentDiv = cell.querySelector('.cell-content');
     if (!contentDiv) return;
+    Array.from(contentDiv.childNodes).forEach(node => { if (node.nodeType === Node.TEXT_NODE) node.parentNode.removeChild(node); });
     if (!contentDiv.querySelector('.hole-marker')) {
         const img = document.createElement('div');
         img.className = 'hole-marker';
@@ -570,8 +586,8 @@
                 const hpInfo = (!info.defeated && info.hp < (info.enemy.startHP || 0)) ? ` - PF: ${info.hp}` : '';
                 lines.push(`Cella ${cellNum}: ${info.enemy.name}${status}${hpInfo}`);
             } else if (info.bonus) {
-                const collected = character.bonuses.includes(info.bonus) ? ' (raccolto)' : '';
-                lines.push(`Cella ${cellNum}: ${info.bonus}${collected}`);
+                const collected = character.bonuses.some(b => b.name === info.bonus.name) ? ' (raccolto)' : '';
+                lines.push(`Cella ${cellNum}: ${info.bonus.name}${collected}`);
             } else if (info.potion) {
                 const collected = info.collected ? ' (raccolta)' : '';
                 lines.push(`Cella ${cellNum}: ${info.potion.name}${collected}`);
@@ -587,16 +603,18 @@
         lines.push(`(Nessuna scoperta ancora)`);
     }
 
-    const attackBonuses = character ? character.bonuses.filter(b => ATTACK_BONUS_ITEMS.includes(b)) : [];
+    const attackItemNames = ATTACK_BONUS_ITEMS.map(item => item.name);
+    const attackBonuses = character ? character.bonuses.filter(b => attackItemNames.includes(b.name)) : [];
     if (attackBonuses.length > 0) {
         lines.push('\n--- Bonus Attacco Attivi ---');
-        attackBonuses.forEach(b => lines.push(`- ${b} (+1)`));
+        attackBonuses.forEach(b => lines.push(`- ${b.name} (+1)`));
     }
 
-    const defenseBonuses = character ? character.bonuses.filter(b => DEFENSE_BONUS_ITEMS.includes(b)) : [];
+    const defenseItemNames = DEFENSE_BONUS_ITEMS.map(item => item.name);
+    const defenseBonuses = character ? character.bonuses.filter(b => defenseItemNames.includes(b.name)) : [];
     if (defenseBonuses.length > 0) {
         lines.push('\n--- Bonus Difesa Attivi ---');
-        defenseBonuses.forEach(b => lines.push(`- ${b} (+1)`));
+        defenseBonuses.forEach(b => lines.push(`- ${b.name} (+1)`));
     }
     
     const potionsInInventory = character ? character.inventory : [];
@@ -610,9 +628,11 @@
         lines.push(`- Gas Debolezza (-1 Atk per ${remainingCells} nuove celle)`);
     }
     
-    if (character && GEMS.some(gem => character.bonuses.includes(gem))) {
+    const collectedGemNames = character ? character.bonuses.map(b => b.name) : [];
+    const gemsToShow = GEMS.filter(g => collectedGemNames.includes(g.name));
+    if (character && gemsToShow.length > 0) {
         lines.push('\n--- Gemme Raccolte ---');
-        GEMS.forEach(gem => { if (character.bonuses.includes(gem)) { lines.push(`- ${gem}`); } });
+        gemsToShow.forEach(gem => { lines.push(`- ${gem.name}`); });
     }
     
     if (character) {
@@ -642,8 +662,8 @@
     }
 
     for (let i = 0; i < ENEMY_COUNT; i++) { if(availableCells.length > 0) enemyMap[availableCells.pop()] = { name: `Nemico Casuale` }; }
-    ATTACK_BONUS_ITEMS.forEach(itemName => { if(availableCells.length > 0) bonusMap[availableCells.pop()] = itemName; });
-    DEFENSE_BONUS_ITEMS.forEach(itemName => { if(availableCells.length > 0) bonusMap[availableCells.pop()] = itemName; });
+    ATTACK_BONUS_ITEMS.forEach(item => { if(availableCells.length > 0) bonusMap[availableCells.pop()] = item; });
+    DEFENSE_BONUS_ITEMS.forEach(item => { if(availableCells.length > 0) bonusMap[availableCells.pop()] = item; });
     POTIONS.forEach(potion => { if(availableCells.length > 0) potionMap[availableCells.pop()] = potion; });
     GEMS.forEach(gem => { if(availableCells.length > 0) bonusMap[availableCells.pop()] = gem; });
     if(availableCells.length > 0) bonusMap[availableCells.pop()] = GEM_DOOR;
@@ -700,10 +720,28 @@
             if (info.prisonerFreed) addPrisonerMarker(cellDiv);
             if (holePositions.has(i)) addHoleMarker(cellDiv);
 
-            if(info.enemy && !info.defeated) { content.appendChild(Object.assign(document.createElement('div'), {className: 'enemy-marker'})); }
-            if(info.bonus) { content.appendChild(Object.assign(document.createElement('div'), {className: 'bonus-marker'})); }
-            if(info.potion) { content.appendChild(Object.assign(document.createElement('div'), {className: 'potion-marker'})); }
-            if (info.bonus === GEM_DOOR) cellDiv.classList.add('gem-door-marker');
+            if(info.enemy && !info.defeated) {
+                content.appendChild(Object.assign(document.createElement('div'), {className: 'enemy-marker'}));
+            }
+            
+            let itemToShow = null;
+            if (info.bonus && info.bonus.iconUrl) {
+                itemToShow = info.bonus;
+            } else if (info.potion && info.potion.iconUrl) {
+                itemToShow = info.potion;
+            }
+
+            if (itemToShow) {
+                Array.from(content.childNodes).forEach(node => {
+                    if (node.nodeType === Node.TEXT_NODE) node.parentNode.removeChild(node);
+                });
+                const img = document.createElement('img');
+                img.src = itemToShow.iconUrl;
+                img.className = 'item-marker';
+                content.appendChild(img);
+            }
+
+            if (info.bonus && info.bonus.name === GEM_DOOR.name) cellDiv.classList.add('gem-door-marker');
         }
         
         const shadowHere = shadows.find(s => s.position === i && s.hp > 0);
@@ -883,7 +921,7 @@ function getValidMoves(steps) {
     if (isNewVisit) {
         if(holePositions.has(cellNum)) {
             messageQueue.push("Ti sloghi una caviglia in un buco! Perdi 5 PF.");
-            addHoleMarker(cell); // Aggiunto per mostrare l'immagine subito
+            addHoleMarker(cell);
             character.hp -= 5;
             updatePlayerInfo();
             if(character.hp <= 0) {
@@ -928,21 +966,27 @@ function getValidMoves(steps) {
             gasActivatedPositions.add(cellNum);
         }
 
-        if (info.bonus && !character.bonuses.includes(info.bonus)) {
+        if (info.bonus && !character.bonuses.some(b => b.name === info.bonus.name)) {
             character.bonuses.push(info.bonus);
-            if (GEMS.includes(info.bonus)) { 
-                messageQueue.push(`Hai trovato una ${info.bonus}!`); 
-            } else if (info.bonus === GEM_DOOR) {
-                 const hasAllGems = GEMS.every(gem => character.bonuses.includes(gem));
+            
+            const gemNames = GEMS.map(g => g.name);
+            const attackItemNames = ATTACK_BONUS_ITEMS.map(i => i.name);
+            const defenseItemNames = DEFENSE_BONUS_ITEMS.map(i => i.name);
+
+            if (gemNames.includes(info.bonus.name)) { 
+                messageQueue.push(`Hai trovato una ${info.bonus.name}!`); 
+            } else if (info.bonus.name === GEM_DOOR.name) {
+                 const collectedGemNames = new Set(character.bonuses.map(b => b.name));
+                 const hasAllGems = GEMS.every(gem => collectedGemNames.has(gem.name));
                  if (hasAllGems && !character.hasSpecialSword) {
                      character.hasSpecialSword = true;
                      messageQueue.push("La Porta si apre! Hai trovato la Spada Speciale (1D12+1).");
                  } else if (character.hasSpecialSword) { setMainMessage("La porta di gemme è vuota.", '#ffffff'); } 
                  else { messageQueue.push("Trovi una porta incastonata di gemme. È sigillata."); }
-            } else if (ATTACK_BONUS_ITEMS.includes(info.bonus)) {
-                messageQueue.push(`Hai trovato: ${info.bonus}! Ottieni +1 in attacco.`); 
-            } else if (DEFENSE_BONUS_ITEMS.includes(info.bonus)) {
-                messageQueue.push(`Hai trovato: ${info.bonus}! Ottieni +1 in difesa.`);
+            } else if (attackItemNames.includes(info.bonus.name)) {
+                messageQueue.push(`Hai trovato: ${info.bonus.name}! Ottieni +1 in attacco.`); 
+            } else if (defenseItemNames.includes(info.bonus.name)) {
+                messageQueue.push(`Hai trovato: ${info.bonus.name}! Ottieni +1 in difesa.`);
             }
         }
         
@@ -960,8 +1004,9 @@ function getValidMoves(steps) {
 
     } else { 
         const info = visitedCells.get(String(cellNum));
-        if (info && info.bonus === GEM_DOOR) {
-            const hasAllGems = GEMS.every(gem => character.bonuses.includes(gem));
+        if (info && info.bonus && info.bonus.name === GEM_DOOR.name) {
+            const collectedGemNames = new Set(character.bonuses.map(b => b.name));
+            const hasAllGems = GEMS.every(gem => collectedGemNames.has(gem.name));
             if (hasAllGems && !character.hasSpecialSword) {
                 character.hasSpecialSword = true;
                 messageQueue.push("Usi le gemme. La Porta si apre! Trovi la Spada Speciale (1D12+1).");
@@ -1128,12 +1173,22 @@ function getValidMoves(steps) {
               const damageRoll = Number(battlePlayerDice.textContent);
               character.hp -= damageRoll;
               updatePlayerInfo();
-              if (character.hp <= 0) { handleGameOver("durante la fuga"); } 
-              else {
-                  setMainMessage(`Fuga riuscita! Ma perdi ${damageRoll} PF.`, '#ffcc00');
+              if (character.hp <= 0) {
+                  handleGameOver("durante la fuga");
+              } else {
                   battleModal.style.display = 'none';
                   setBattleMode(false);
-                  handleShadowSpawnsAndTurns();
+                  
+                  messageModalText.textContent = `Fuga riuscita! Ma hai perso ${damageRoll} PF.`;
+                  victorySubText.textContent = '';
+                  prisonerStatusText.textContent = '';
+                  messageModal.classList.remove('victory-modal');
+                  messageModal.style.display = 'block';
+
+                  messageModalOkBtn.onclick = () => {
+                      messageModal.style.display = 'none';
+                      handleShadowSpawnsAndTurns();
+                  };
               }
           }
       }, 100);
