@@ -162,12 +162,14 @@
         min-width: 180px;
     }
     
-    #charForm, #encounterModal, #battleModal, #messageModal, #initiativeModal, #potionDamageModal, #battlePotionSelectModal { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background: #3a3a2b; padding:20px; border-radius:10px; box-shadow:0 0 15px #000; z-index:1001; text-align:center; width: 300px; }
+    #charForm, #encounterModal, #battleModal, #messageModal, #initiativeModal, #potionDamageModal, #battlePotionSelectModal, #altarModal { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background: #3a3a2b; padding:20px; border-radius:10px; box-shadow:0 0 15px #000; z-index:1001; text-align:center; width: 300px; }
     #charForm input, #charForm select { width: calc(100% - 16px); padding:8px; margin:8px 0; border:none; border-radius:6px; font-size:16px; }
     
     #battleModal, #initiativeModal { z-index: 1050; }
     #potionDamageModal, #battlePotionSelectModal { z-index: 1060; }
-    
+    #altarModal { z-index: 1070; }
+    #altarActions { display: flex; gap: 10px; justify-content: center; margin-top: 15px; }
+
     .battle-unit { margin: 15px 0; border: 1px solid #555; padding: 10px; border-radius: 8px; }
     .battle-name { font-weight: bold; font-size: 18px; margin-bottom: 5px; color: #a0d535; }
     .battle-stats { font-size: 14px; color: #ccc; }
@@ -218,7 +220,7 @@
         width: 100%;
         box-sizing: border-box;
       }
-      #charForm, #encounterModal, #messageModal, #initiativeModal, #potionDamageModal, #battlePotionSelectModal { width: 90%; }
+      #charForm, #encounterModal, #messageModal, #initiativeModal, #potionDamageModal, #battlePotionSelectModal, #altarModal { width: 90%; }
       #battleModal {
           padding: 10px;
           justify-content: center;
@@ -350,6 +352,11 @@
       </div>
       <button id="messageModalOkBtn">OK</button>
   </div>
+  
+  <div id="altarModal">
+    <p id="altarMessage"></p>
+    <div id="altarActions"></div>
+  </div>
 
   <div id="battlePotionSelectModal">
     <p>Seleziona una pozione da usare:</p>
@@ -425,6 +432,9 @@
   const potionDamageTitle = document.getElementById('potionDamageTitle');
   const potionDamageDice = document.getElementById('potionDamageDice');
   const potionDamageRollBtn = document.getElementById('potionDamageRollBtn');
+  const altarModal = document.getElementById('altarModal');
+  const altarMessage = document.getElementById('altarMessage');
+  const altarActions = document.getElementById('altarActions');
 
 
   const COLS = 9, CELL_COUNT = 72, ENEMY_COUNT = 12, PRISONER_COUNT = 11, GAS_TRAP_COUNT = 2, HOLE_COUNT = 3, GAS_EFFECT_DURATION_CELLS = 5;
@@ -453,6 +463,12 @@
       { name: "Gemma Viola", iconUrl: "https://i.imgur.com/yWygx8z.png" }
   ];
   const GEM_DOOR = { name: "Porta di Gemme", iconUrl: "https://i.imgur.com/2u6BWSv.png" };
+
+  const ALTARS = [
+      { name: "Altare Sacrificale", type: 'sacrificial', iconUrl: "https://i.imgur.com/zR75xod.png" },
+      { name: "Altare della Maledizione", type: 'curse', iconUrl: "https://i.imgur.com/0XEOJdW.png" },
+      { name: "Altare della Purificazione", type: 'purification', iconUrl: "https://i.imgur.com/SNImGq0.png" }
+  ];
 
   const SHADOW_SPAWNS = [
       { name: "Ombra", hp: 10, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 1, iconUrl: "https://i.imgur.com/sgLJSln.png", spawnTurn: 10 },
@@ -483,8 +499,9 @@
   };
 
   let currentCell, character, maxHP, enemiesDefeatedCount, discoveryCounter;
-  let visitedCells, enemyMap, bonusMap, potionMap, prisonerMap, gasTrapPositions, gasActivatedPositions, holePositions, shadows, spawnedShadows;
+  let visitedCells, enemyMap, bonusMap, potionMap, prisonerMap, altarMap, gasTrapPositions, gasActivatedPositions, holePositions, shadows, spawnedShadows;
   let gasEffect = { active: false, newCellsVisited: 0 };
+  let prisonerQuests = {};
   let messageQueue = [];
   let currentBattleTurn = {};
   let activeAbility = null;
@@ -511,12 +528,18 @@
     updateEnergyUI();
   }
 
-  function getAttackBonus() {
+  function getAttackBonus(isAgainstShadow = false) {
       if (!character) return 0;
       const attackItemNames = ATTACK_BONUS_ITEMS.map(item => item.name);
       let bonus = character.bonuses.filter(b => attackItemNames.includes(b.name)).length;
       if (gasEffect.active) {
           bonus -= 1;
+      }
+      if (character.isCursed) {
+          bonus -= 2;
+      }
+      if (isAgainstShadow && character.shadowBlessing) {
+          bonus += 1;
       }
       return bonus;
   }
@@ -531,36 +554,30 @@
   function addSkullMarker(cell) {
     const contentDiv = cell.querySelector('.cell-content');
     if (!contentDiv) return;
-    Array.from(contentDiv.childNodes).forEach(node => { if (node.nodeType === Node.TEXT_NODE) node.parentNode.removeChild(node); });
-    if (!contentDiv.querySelector('.skull-marker')) {
-        const img = document.createElement('img');
-        img.src = NEW_SKULL_ICON_URL;
-        img.className = 'skull-marker';
-        contentDiv.appendChild(img);
-    }
+    contentDiv.innerHTML = '';
+    const img = document.createElement('img');
+    img.src = NEW_SKULL_ICON_URL;
+    img.className = 'skull-marker';
+    contentDiv.appendChild(img);
   }
 
   function addPrisonerMarker(cell) {
     const contentDiv = cell.querySelector('.cell-content');
     if (!contentDiv) return;
-    Array.from(contentDiv.childNodes).forEach(node => { if (node.nodeType === Node.TEXT_NODE) node.parentNode.removeChild(node); });
-    if (!contentDiv.querySelector('.prisoner-marker')) {
-        const img = document.createElement('img');
-        img.src = PRISONER_ICON_URL;
-        img.className = 'prisoner-marker';
-        contentDiv.appendChild(img);
-    }
+    contentDiv.innerHTML = '';
+    const img = document.createElement('img');
+    img.src = PRISONER_ICON_URL;
+    img.className = 'prisoner-marker';
+    contentDiv.appendChild(img);
   }
   
   function addHoleMarker(cell) {
     const contentDiv = cell.querySelector('.cell-content');
     if (!contentDiv) return;
-    Array.from(contentDiv.childNodes).forEach(node => { if (node.nodeType === Node.TEXT_NODE) node.parentNode.removeChild(node); });
-    if (!contentDiv.querySelector('.hole-marker')) {
-        const img = document.createElement('div');
-        img.className = 'hole-marker';
-        contentDiv.appendChild(img);
-    }
+    contentDiv.innerHTML = '';
+    const img = document.createElement('div');
+    img.className = 'hole-marker';
+    contentDiv.appendChild(img);
   }
 
   function updateDiscoveriesLog() {
@@ -591,6 +608,8 @@
             } else if (info.potion) {
                 const collected = info.collected ? ' (raccolta)' : '';
                 lines.push(`Cella ${cellNum}: ${info.potion.name}${collected}`);
+            } else if (info.altar) {
+                lines.push(`Cella ${cellNum}: ${info.altar.name}`);
             } else if (info.prisonerFreed) {
                 lines.push(`Cella ${cellNum}: Prigioniero liberato`);
             } else if (gasActivatedPositions.has(cellNum)) {
@@ -622,10 +641,24 @@
         lines.push('\n--- Pozioni ---');
         potionsInInventory.forEach(p => lines.push(`- ${p.name}`));
     }
-
+    
+    lines.push('\n--- Effetti Attivi ---');
+    let hasEffects = false;
     if (gasEffect.active) {
         const remainingCells = GAS_EFFECT_DURATION_CELLS - gasEffect.newCellsVisited;
         lines.push(`- Gas Debolezza (-1 Atk per ${remainingCells} nuove celle)`);
+        hasEffects = true;
+    }
+    if (character && character.isCursed) {
+        lines.push("- Maledizione (-2 Attacco)");
+        hasEffects = true;
+    }
+    if (character && character.shadowBlessing) {
+        lines.push("- Benedizione (+1 Attacco vs Ombre)");
+        hasEffects = true;
+    }
+    if (!hasEffects) {
+        lines.push("(Nessuno)");
     }
     
     const collectedGemNames = character ? character.bonuses.map(b => b.name) : [];
@@ -646,9 +679,10 @@
   }
   
   function placeDiscoveries() {
-    enemyMap = {}; bonusMap = {}; potionMap = {}; prisonerMap = {}; 
+    enemyMap = {}; bonusMap = {}; potionMap = {}; prisonerMap = {}; altarMap = {};
     gasTrapPositions = new Set(); gasActivatedPositions = new Set(); holePositions = new Set();
     shadows = []; spawnedShadows = new Set();
+    prisonerQuests = { quests: {} };
     let availableCells = Array.from({length: CELL_COUNT}, (_, i) => i + 1);
     availableCells = availableCells.filter(cellNum => cellNum !== 1);
 
@@ -666,10 +700,51 @@
     DEFENSE_BONUS_ITEMS.forEach(item => { if(availableCells.length > 0) bonusMap[availableCells.pop()] = item; });
     POTIONS.forEach(potion => { if(availableCells.length > 0) potionMap[availableCells.pop()] = potion; });
     GEMS.forEach(gem => { if(availableCells.length > 0) bonusMap[availableCells.pop()] = gem; });
+    ALTARS.forEach(altar => { if(availableCells.length > 0) altarMap[availableCells.pop()] = altar; });
     if(availableCells.length > 0) bonusMap[availableCells.pop()] = GEM_DOOR;
-    for (let i = 0; i < PRISONER_COUNT; i++) { if(availableCells.length > 0) prisonerMap[availableCells.pop()] = true; }
+    let prisonerCells = [];
+    for (let i = 0; i < PRISONER_COUNT; i++) { 
+        if(availableCells.length > 0) {
+            const cell = availableCells.pop();
+            prisonerMap[cell] = true; 
+            prisonerCells.push(cell);
+        }
+    }
     for (let i = 0; i < GAS_TRAP_COUNT; i++) { 
         if (availableCells.length > 0) gasTrapPositions.add(availableCells.pop()); 
+    }
+
+    // Setup Prisoner Quests
+    if (prisonerCells.length >= 4) {
+        for (let i = prisonerCells.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [prisonerCells[i], prisonerCells[j]] = [prisonerCells[j], prisonerCells[i]];
+        }
+        
+        let questGiver1 = prisonerCells.pop();
+        let target1 = prisonerCells.find(c => c <= 36);
+        if (target1) {
+             prisonerCells.splice(prisonerCells.indexOf(target1), 1);
+             prisonerQuests.quests[questGiver1] = {
+                 type: 'brother',
+                 targetCell: target1,
+                 reward: { name: "Pozione (+5 PF)", value: 5, type: "heal" },
+                 status: 'inactive'
+             };
+             prisonerQuests.quests[target1] = { type: 'brother_target', giver: questGiver1 };
+        }
+
+        let questGiver2 = prisonerCells.pop();
+        let target2 = prisonerCells.find(c => c > 36);
+        if(target2) {
+             prisonerQuests.quests[questGiver2] = {
+                 type: 'father',
+                 targetCell: target2,
+                 reward: { name: "Pozione Fuoco", type: "fire" },
+                 status: 'inactive'
+             };
+             prisonerQuests.quests[target2] = { type: 'father_target', giver: questGiver2 };
+        }
     }
   }
 
@@ -680,6 +755,7 @@
       Object.keys(bonusMap).forEach(k => occupiedCells.add(Number(k)));
       Object.keys(potionMap).forEach(k => occupiedCells.add(Number(k)));
       Object.keys(prisonerMap).forEach(k => occupiedCells.add(Number(k)));
+      Object.keys(altarMap).forEach(k => occupiedCells.add(Number(k)));
       holePositions.forEach(k => occupiedCells.add(Number(k)));
 
       const freeCells = allCellNumbers.filter(num => !occupiedCells.has(num));
@@ -710,40 +786,43 @@
         
         const content = document.createElement('div');
         content.className = 'cell-content';
-        
         cellDiv.appendChild(content);
         
         if (visitedCells && visitedCells.has(String(i))) {
             cellDiv.classList.add('visited');
             const info = visitedCells.get(String(i));
+            
+            content.innerHTML = '';
+
             if (info.defeated) addSkullMarker(cellDiv);
             else if (info.prisonerFreed) addPrisonerMarker(cellDiv);
             else if (holePositions.has(i)) addHoleMarker(cellDiv);
+            else if (info.altar) {
+                const img = document.createElement('img');
+                img.src = info.altar.iconUrl;
+                img.className = 'item-marker';
+                content.appendChild(img);
+            }
+            else if (info.bonus && info.bonus.iconUrl) {
+                const img = document.createElement('img');
+                img.src = info.bonus.iconUrl;
+                img.className = 'item-marker';
+                content.appendChild(img);
+            }
+            else if (info.potion && info.potion.iconUrl) {
+                const img = document.createElement('img');
+                img.src = info.potion.iconUrl;
+                img.className = 'item-marker';
+                content.appendChild(img);
+            }
             else {
-                 content.textContent = i;
+                content.textContent = i;
             }
 
             if(info.enemy && !info.defeated) {
                 content.appendChild(Object.assign(document.createElement('div'), {className: 'enemy-marker'}));
             }
             
-            let itemToShow = null;
-            if (info.bonus && info.bonus.iconUrl) {
-                itemToShow = info.bonus;
-            } else if (info.potion && info.potion.iconUrl) {
-                itemToShow = info.potion;
-            }
-
-            if (itemToShow) {
-                Array.from(content.childNodes).forEach(node => {
-                    if (node.nodeType === Node.TEXT_NODE) node.parentNode.removeChild(node);
-                });
-                const img = document.createElement('img');
-                img.src = itemToShow.iconUrl;
-                img.className = 'item-marker';
-                content.appendChild(img);
-            }
-
             if (info.bonus && info.bonus.name === GEM_DOOR.name) cellDiv.classList.add('gem-door-marker');
         } else {
             content.textContent = i;
@@ -925,6 +1004,7 @@ function getValidMoves(steps) {
 
     if (isNewVisit) {
         if(holePositions.has(cellNum)) {
+            triggerScreenShake();
             messageQueue.push("Ti sloghi una caviglia in un buco! Perdi 5 PF.");
             addHoleMarker(cell);
             character.hp -= 5;
@@ -934,8 +1014,10 @@ function getValidMoves(steps) {
                 return;
             }
         }
-
-        gainEnergy(1);
+        
+        if (visitedCells.size > 0 && visitedCells.size % 2 === 0) {
+            gainEnergy(1);
+        }
         if (gasEffect.active) {
             gasEffect.newCellsVisited++;
             if (gasEffect.newCellsVisited >= GAS_EFFECT_DURATION_CELLS) {
@@ -948,18 +1030,19 @@ function getValidMoves(steps) {
         const enemyObj = enemyMap[cellNum];
         const bonusLabel = bonusMap[cellNum];
         const potionLabel = potionMap[cellNum];
+        const altar = altarMap[cellNum];
         const isPrisonerCell = prisonerMap[cellNum];
         let order = discoveryCounter++;
 
         visitedCells.set(String(cellNum), { 
-            enemy: enemyObj || null, bonus: bonusLabel || null, potion: potionLabel || null, 
+            enemy: enemyObj || null, bonus: bonusLabel || null, potion: potionLabel || null, altar: altar || null,
             prisonerFreed: false, collected: false, defeated: false, hp: 0, discoveryOrder: order
         });
         
         const exploredCount = visitedCells.size;
         if (exploredCount > 0 && exploredCount % 7 === 0) {
-            character.hp = Math.min(character.hp + 5, maxHP);
-            messageQueue.push("Il riposo ti ha fatto guadagnare 5 PF.");
+            character.hp = Math.min(character.hp + 2, maxHP);
+            messageQueue.push("Il riposo ti ha fatto guadagnare 2 PF.");
         }
         
         const info = visitedCells.get(String(cellNum));
@@ -1001,10 +1084,16 @@ function getValidMoves(steps) {
             messageQueue.push(`Hai trovato: ${info.potion.name}.`);
         }
 
+        if (info.altar) {
+            handleAltar(info.altar);
+            return; 
+        }
+
         if (isPrisonerCell) {
             character.prisonersFreed++;
             info.prisonerFreed = true;
             messageQueue.push("Hai liberato un prigioniero!");
+            handlePrisonerQuest(cellNum);
         }
 
     } else { 
@@ -1036,13 +1125,84 @@ function getValidMoves(steps) {
     if (info && info.enemy && info.defeated) {
         setMainMessage(`Qui giace un nemico sconfitto.`, '#a9a9a9');
     } 
-    else if (info && !info.enemy && !info.bonus && !info.potion && !prisonerMap[cellNum] && !holePositions.has(cellNum)) {
+    else if (info && !info.enemy && !info.bonus && !info.potion && !info.altar && !prisonerMap[cellNum] && !holePositions.has(cellNum)) {
         if (isNewVisit || cellNum === 1) { setMainMessage("Procedi tranquillo", 'lightgreen'); } 
         else { setMainMessage('Cella già visitata', '#ffffff'); }
     }
 
     updatePlayerInfo();
     updateDiscoveriesLog();
+  }
+  
+  function handleAltar(altar) {
+    if (altar.type === 'sacrificial') {
+        altarModal.style.display = 'block';
+        altarMessage.textContent = "Vedi un altare. Puoi sacrificare 5 PF per ricevere una benedizione.";
+        altarActions.innerHTML = '';
+        const yesBtn = document.createElement('button');
+        yesBtn.textContent = 'Sì';
+        yesBtn.onclick = () => {
+            character.hp -= 5;
+            character.shadowBlessing = true;
+            messageQueue.push("Hai ricevuto una benedizione! +1 al prossimo attacco contro le Ombre.");
+            if (character.hp <= 0) handleGameOver("sacrificandosi all'altare");
+            altarModal.style.display = 'none';
+            processCellContinuation();
+        };
+        const noBtn = document.createElement('button');
+        noBtn.textContent = 'No';
+        noBtn.onclick = () => {
+            altarModal.style.display = 'none';
+            processCellContinuation();
+        };
+        altarActions.appendChild(yesBtn);
+        altarActions.appendChild(noBtn);
+    } else if (altar.type === 'curse') {
+        character.isCursed = true;
+        messageQueue.push("Ora sei maledetto, hai -2 ai tuoi attacchi.\nDevi trovare l'altare della purificazione per toglierti la maledizione.");
+        processCellContinuation();
+    } else if (altar.type === 'purification') {
+        if (character.isCursed) {
+            character.isCursed = false;
+            messageQueue.push("Ora la maledizione non ha più effetto su di te!");
+        } else {
+            messageQueue.push("Trovi un altare della purificazione.");
+        }
+        processCellContinuation();
+    }
+  }
+  
+  function handlePrisonerQuest(cellNum) {
+      const quest = prisonerQuests.quests[cellNum];
+      if (!quest) return;
+      if (quest.status === 'inactive') { // Is a quest giver
+          quest.status = 'active';
+          const familyMember = quest.type === 'brother' ? 'fratello' : 'padre';
+          const direction = quest.type === 'brother' ? 'nord' : 'sud';
+          messageQueue.push(`"Grazie per avermi liberato! Mio ${familyMember} è nella parte ${direction} del dungeon. Se liberi anche lui (cella ${quest.targetCell}), ti ricompenserò!"`);
+      } else if (quest.type.includes('_target')) { // Is a quest target
+          const giverQuest = prisonerQuests.quests[quest.giver];
+          if (giverQuest && giverQuest.status === 'active') {
+              giverQuest.status = 'completed';
+              character.inventory.push(giverQuest.reward);
+              messageQueue.push(`Il prigioniero liberato ti ringrazia e ti dona una ${giverQuest.reward.name}!`);
+          }
+      }
+  }
+  
+  async function processCellContinuation() {
+      buildBoard();
+      processMessageQueue();
+      const info = visitedCells.get(currentCell.dataset.cellNumber);
+      const shadowAtLocation = shadows.find(s => s.position === parseInt(currentCell.dataset.cellNumber) && s.hp > 0);
+      if (shadowAtLocation) {
+          startBattle(shadowAtLocation);
+          return;
+      }
+      if (info && info.enemy && !info.defeated) handleEncounter(info.enemy);
+      else await handleShadowSpawnsAndTurns();
+      updatePlayerInfo();
+      updateDiscoveriesLog();
   }
 
   async function handleShadowSpawnsAndTurns() {
@@ -1278,8 +1438,9 @@ function setupBattleTurn(battleState, attacker, defender) {
     updateEnergyUI();
 
     const isPlayerAttacker = attacker.name === battleState.player.name;
+    const isEnemyShadow = battleState.enemy.isShadow || false;
     
-    const playerTotalAttackBonus = getAttackBonus() + (character.hasSpecialSword ? 1 : 0);
+    const playerTotalAttackBonus = getAttackBonus(isEnemyShadow) + (character.hasSpecialSword ? 1 : 0);
     const playerAttackDie = character.hasSpecialSword ? 12 : character.attackDie;
     const playerTotalDefenseBonus = getDefenseBonus();
     const playerDefenseDie = character.defenseDie;
@@ -1332,6 +1493,7 @@ function resolveBattleTurn() {
     specialAbilitiesContainer.style.visibility = 'hidden';
 
     const isPlayerAttacker = attacker.name === battleState.player.name;
+    const isEnemyShadow = battleState.enemy.isShadow || false;
 
     function animateAndRoll(targetEl, die, bonus, callback) {
         let flips = 10;
@@ -1367,7 +1529,7 @@ function resolveBattleTurn() {
         let totalDamage = 0;
         let logText = '';
         
-        animateAndRoll(battlePlayerDice, character.hasSpecialSword ? 12 : character.attackDie, getAttackBonus(), (attack1) => {
+        animateAndRoll(battlePlayerDice, character.hasSpecialSword ? 12 : character.attackDie, getAttackBonus(isEnemyShadow), (attack1) => {
             animateAndRoll(battleEnemyDice, battleState.enemy.defenseDie, (battleState.enemy.defenseBonus || 0), (defense1) => {
                 const damage1 = Math.max(0, attack1 - defense1);
                 if (damage1 > 3) { triggerScreenShake(); }
@@ -1375,7 +1537,7 @@ function resolveBattleTurn() {
                 logText += `Attacco 1: ${attack1} vs ${defense1}. Danno: ${damage1}\n`;
                 
                 setTimeout(() => {
-                    animateAndRoll(battlePlayerDice, character.hasSpecialSword ? 12 : character.attackDie, getAttackBonus(), (attack2) => {
+                    animateAndRoll(battlePlayerDice, character.hasSpecialSword ? 12 : character.attackDie, getAttackBonus(isEnemyShadow), (attack2) => {
                         animateAndRoll(battleEnemyDice, battleState.enemy.defenseDie, (battleState.enemy.defenseBonus || 0), (defense2) => {
                             const damage2 = Math.max(0, attack2 - defense2);
                             if (damage2 > 3) { triggerScreenShake(); }
@@ -1391,7 +1553,7 @@ function resolveBattleTurn() {
             });
         });
     } else if (activeAbility === 'powerStrike' && isPlayerAttacker) {
-        animateAndRoll(battlePlayerDice, character.hasSpecialSword ? 12 : character.attackDie, getAttackBonus(), (attackRoll) => {
+        animateAndRoll(battlePlayerDice, character.hasSpecialSword ? 12 : character.attackDie, getAttackBonus(isEnemyShadow), (attackRoll) => {
             battleEnemyDice.textContent = 'X';
             if (attackRoll > 3) { triggerScreenShake(); }
             defender.hp -= attackRoll;
@@ -1401,7 +1563,7 @@ function resolveBattleTurn() {
         });
     } else { 
         const attackDie = isPlayerAttacker ? (character.hasSpecialSword ? 12 : character.attackDie) : battleState.enemy.attackDie;
-        const attackBonus = isPlayerAttacker ? getAttackBonus() : (battleState.enemy.attackBonus || 0);
+        const attackBonus = isPlayerAttacker ? getAttackBonus(isEnemyShadow) : (battleState.enemy.attackBonus || 0);
         const defenseDie = isPlayerAttacker ? battleState.enemy.defenseDie : character.defenseDie;
         const defenseBonus = isPlayerAttacker ? (battleState.enemy.defenseBonus || 0) : getDefenseBonus();
 
@@ -1419,6 +1581,10 @@ function resolveBattleTurn() {
 function finalizeTurn(keepTurn = false) {
     const { battleState } = currentBattleTurn;
     activeAbility = null;
+    
+    if (battleState.enemy.isShadow) {
+        character.shadowBlessing = false;
+    }
 
     if (!battleState.enemy.isShadow) {
         const cellInfo = visitedCells.get(currentCell.dataset.cellNumber);
@@ -1515,9 +1681,17 @@ function finalizeTurn(keepTurn = false) {
       if (--flips <= 0) {
         clearInterval(timer);
         const moves = getValidMoves(Number(diceRes.textContent));
-        if (moves.length === 0) { 
-          setMainMessage("Tiro Bloccato", "#ff5555"); 
-          handleShadowSpawnsAndTurns();
+        if (moves.length === 0) {
+          triggerScreenShake();
+          messageQueue.push("Sei bloccato da delle rampicanti che ti infliggono 5 PF");
+          character.hp -= 5;
+          updatePlayerInfo();
+          if (character.hp <= 0) {
+            handleGameOver("intrappolato dai rampicanti");
+          } else {
+            processMessageQueue();
+            setTimeout(handleShadowSpawnsAndTurns, 1500);
+          }
         } 
         else { moves.forEach(cell => cell.classList.add('highlighted')); }
       }
@@ -1529,6 +1703,9 @@ function finalizeTurn(keepTurn = false) {
     character.inventory = character.inventory || [];
     character.hasSpecialSword = character.hasSpecialSword || false;
     character.prisonersFreed = character.prisonersFreed || 0;
+    character.isCursed = character.isCursed || false;
+    character.shadowBlessing = character.shadowBlessing || false;
+    character.activeQuests = character.activeQuests || [];
     
     visitedCells = new Map();
     enemiesDefeatedCount = 0;
@@ -1569,12 +1746,13 @@ function finalizeTurn(keepTurn = false) {
     const gameState = {
       character, maxHP, enemiesDefeatedCount, discoveryCounter,
       visitedCells: Array.from(visitedCells.entries()),
-      enemyMap, bonusMap, potionMap, prisonerMap,
+      enemyMap, bonusMap, potionMap, prisonerMap, altarMap,
       gasTrapPositions: Array.from(gasTrapPositions),
       gasActivatedPositions: Array.from(gasActivatedPositions),
       holePositions: Array.from(holePositions),
       gasEffect,
       shadows, spawnedShadows: Array.from(spawnedShadows),
+      prisonerQuests,
       currentCellNumber: currentCell.dataset.cellNumber
     };
     localStorage.setItem('dungeon72Save', JSON.stringify(gameState));
@@ -1593,13 +1771,14 @@ function finalizeTurn(keepTurn = false) {
     character = savedState.character; maxHP = savedState.maxHP;
     enemiesDefeatedCount = savedState.enemiesDefeatedCount; discoveryCounter = savedState.discoveryCounter;
     visitedCells = new Map(savedState.visitedCells);
-    enemyMap = savedState.enemyMap; bonusMap = savedState.bonusMap; potionMap = savedState.potionMap; prisonerMap = savedState.prisonerMap;
+    enemyMap = savedState.enemyMap; bonusMap = savedState.bonusMap; potionMap = savedState.potionMap; prisonerMap = savedState.prisonerMap; altarMap = savedState.altarMap;
     gasTrapPositions = new Set(savedState.gasTrapPositions);
     gasActivatedPositions = new Set(savedState.gasActivatedPositions);
     holePositions = new Set(savedState.holePositions || []);
     gasEffect = savedState.gasEffect;
     shadows = savedState.shadows;
     spawnedShadows = new Set(savedState.spawnedShadows || []);
+    prisonerQuests = savedState.prisonerQuests || { quests: {} };
     
     buildBoard();
     
@@ -1694,7 +1873,7 @@ function finalizeTurn(keepTurn = false) {
                   let log = `${potion.name} infligge ${damage} danni!`;
 
                   if (potion.type === 'ice') {
-                      const heroAttackRoll = Math.floor(Math.random() * (character.hasSpecialSword ? 12 : character.attackDie)) + 1 + getAttackBonus();
+                      const heroAttackRoll = Math.floor(Math.random() * (character.hasSpecialSword ? 12 : character.attackDie)) + 1 + getAttackBonus(enemy.isShadow || false);
                       if (heroAttackRoll > 3) { triggerScreenShake(); }
                       enemy.hp -= heroAttackRoll;
                       log += `\nIl nemico è congelato e subisce un colpo extra da ${heroAttackRoll} danni!`;
@@ -1744,7 +1923,10 @@ function finalizeTurn(keepTurn = false) {
           hasSpecialSword: false, 
           prisonersFreed: 0, 
           energy: energy, 
-          maxEnergy: maxEnergy 
+          maxEnergy: maxEnergy,
+          isCursed: false,
+          shadowBlessing: false,
+          activeQuests: []
       };
       
       startGame();
