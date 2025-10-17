@@ -316,6 +316,7 @@
     <p id="initiativeResult"></p>
     <div id="initiativeActionContainer">
         <button id="initiativeRollBtn">Lancia i dadi</button>
+        <button id="usePotionInitiativeBtn">Usa Pozione</button>
     </div>
   </div>
 
@@ -425,6 +426,7 @@
   const initiativeEnemyDice = document.getElementById('initiativeEnemyDice');
   const initiativeResult = document.getElementById('initiativeResult');
   const initiativeRollBtn = document.getElementById('initiativeRollBtn');
+  const usePotionInitiativeBtn = document.getElementById('usePotionInitiativeBtn');
   const battlePotionSelectModal = document.getElementById('battlePotionSelectModal');
   const battlePotionList = document.getElementById('battlePotionList');
   const closeBattlePotionSelectBtn = document.getElementById('closeBattlePotionSelectBtn');
@@ -452,6 +454,8 @@
   ];
   const POTIONS = [ 
       { name: "Pozione Fuoco", type: "fire", iconUrl: "https://i.imgur.com/U4jwiij.png" }, 
+      { name: "Pozione Fuoco", type: "fire", iconUrl: "https://i.imgur.com/U4jwiij.png" }, 
+      { name: "Pozione Ghiaccio", type: "ice", iconUrl: "https://i.imgur.com/UqxFF43.png" },
       { name: "Pozione Ghiaccio", type: "ice", iconUrl: "https://i.imgur.com/UqxFF43.png" },
       { name: "Pozione (+5 PF)", value: 5, type: "heal", iconUrl: "https://i.imgur.com/OpZJJ1f.png" }, 
       { name: "Pozione (+10 PF)", value: 10, type: "heal", iconUrl: "https://i.imgur.com/OpZJJ1f.png" }, 
@@ -538,8 +542,8 @@
       if (character.isCursed) {
           bonus -= 2;
       }
-      if (isAgainstShadow && character.shadowBlessing) {
-          bonus += 1;
+      if (isAgainstShadow && character.shadowSlayerBonus) {
+          bonus += character.shadowSlayerBonus;
       }
       return bonus;
   }
@@ -653,8 +657,8 @@
         lines.push("- Maledizione (-2 Attacco)");
         hasEffects = true;
     }
-    if (character && character.shadowBlessing) {
-        lines.push("- Benedizione (+1 Attacco vs Ombre)");
+    if (character && character.shadowSlayerBonus > 0) {
+        lines.push(`- Benedizione Sacrificale (+${character.shadowSlayerBonus} Attacco vs Ombre)`);
         hasEffects = true;
     }
     if (!hasEffects) {
@@ -715,7 +719,7 @@
     }
 
     // Setup Prisoner Quests
-    if (prisonerCells.length >= 4) {
+    if (prisonerCells.length >= 6) {
         for (let i = prisonerCells.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [prisonerCells[i], prisonerCells[j]] = [prisonerCells[j], prisonerCells[i]];
@@ -737,6 +741,7 @@
         let questGiver2 = prisonerCells.pop();
         let target2 = prisonerCells.find(c => c > 36);
         if(target2) {
+             prisonerCells.splice(prisonerCells.indexOf(target2), 1);
              prisonerQuests.quests[questGiver2] = {
                  type: 'father',
                  targetCell: target2,
@@ -744,6 +749,18 @@
                  status: 'inactive'
              };
              prisonerQuests.quests[target2] = { type: 'father_target', giver: questGiver2 };
+        }
+        
+        let questGiver3 = prisonerCells.pop();
+        let target3 = prisonerCells.pop();
+        if(questGiver3 && target3) {
+             prisonerQuests.quests[questGiver3] = {
+                 type: 'mother',
+                 targetCell: target3,
+                 reward: { name: "Fiala di Energia", type: "energy", iconUrl: "https://i.imgur.com/vjgNL2x.png" },
+                 status: 'inactive'
+             };
+             prisonerQuests.quests[target3] = { type: 'mother_target', giver: questGiver3 };
         }
     }
   }
@@ -1135,14 +1152,14 @@ function getValidMoves(steps) {
   function handleAltar(altar) {
     if (altar.type === 'sacrificial') {
         altarModal.style.display = 'block';
-        altarMessage.textContent = "Vedi un altare. Puoi sacrificare 5 PF per ricevere una benedizione.";
+        altarMessage.textContent = "Vedi un altare. Puoi sacrificare 4 PF per ricevere una benedizione (+2 Attacco vs Ombre).";
         altarActions.innerHTML = '';
         const yesBtn = document.createElement('button');
         yesBtn.textContent = 'Sì';
         yesBtn.onclick = () => {
-            character.hp -= 5;
-            character.shadowBlessing = true;
-            messageQueue.push("Hai ricevuto una benedizione! +1 al prossimo attacco contro le Ombre.");
+            character.hp -= 4;
+            character.shadowSlayerBonus = 2;
+            messageQueue.push("Hai ricevuto una benedizione! Ottieni +2 agli attacchi contro tutte le Ombre.");
             if (character.hp <= 0) handleGameOver("sacrificandosi all'altare");
             altarModal.style.display = 'none';
             processCellContinuation();
@@ -1173,11 +1190,22 @@ function getValidMoves(steps) {
   function handlePrisonerQuest(cellNum) {
       const quest = prisonerQuests.quests[cellNum];
       if (!quest) return;
+
       if (quest.status === 'inactive') { // Is a quest giver
           quest.status = 'active';
-          const familyMember = quest.type === 'brother' ? 'fratello' : 'padre';
-          const direction = quest.type === 'brother' ? 'nord' : 'sud';
-          messageQueue.push(`"Grazie per avermi liberato! Mio ${familyMember} è nella parte ${direction} del dungeon. Se liberi anche lui (cella ${quest.targetCell}), ti ricompenserò!"`);
+          let familyMember = '';
+          let locationInfo = '';
+          if (quest.type === 'brother') {
+              familyMember = 'fratello';
+              locationInfo = 'nella parte nord';
+          } else if (quest.type === 'father') {
+              familyMember = 'padre';
+              locationInfo = 'nella parte sud';
+          } else if (quest.type === 'mother') {
+              familyMember = 'madre';
+              locationInfo = 'qui vicino';
+          }
+          messageQueue.push(`"Grazie per avermi liberato! Mio/a ${familyMember} è ${locationInfo} del dungeon (cella ${quest.targetCell}). Se liberi anche lui/lei, ti ricompenserò!"`);
       } else if (quest.type.includes('_target')) { // Is a quest target
           const giverQuest = prisonerQuests.quests[quest.giver];
           if (giverQuest && giverQuest.status === 'active') {
@@ -1397,10 +1425,17 @@ function getValidMoves(steps) {
     initiativePlayerDice.textContent = '-';
     initiativeEnemyDice.textContent = '-';
     initiativeResult.textContent = '';
+    
+    initiativeRollBtn.style.display = 'block';
+    usePotionInitiativeBtn.style.display = 'block';
     initiativeRollBtn.disabled = false;
+    usePotionInitiativeBtn.disabled = character.inventory.filter(p => p.type === 'heal' || p.type === 'energy').length === 0;
+
+    usePotionInitiativeBtn.onclick = () => openInitiativePotionSelect(battleState);
 
     initiativeRollBtn.onclick = () => {
         initiativeRollBtn.disabled = true;
+        usePotionInitiativeBtn.style.display = 'none';
         let playerRoll, enemyRoll;
         let flips = 10;
         const timer = setInterval(() => {
@@ -1430,7 +1465,29 @@ function getValidMoves(steps) {
 
 function setupBattleTurn(battleState, attacker, defender) {
     currentBattleTurn = { battleState, attacker, defender };
+    let effectLogMessage = '';
 
+    // Processa effetti all'inizio del turno di un personaggio
+    if (attacker.effects && attacker.effects.length > 0) {
+        const stillActiveEffects = [];
+        attacker.effects.forEach(effect => {
+            let currentEffect = {...effect}; // Lavora con una copia per sicurezza
+            if (currentEffect.type === 'burn' && currentEffect.duration > 0) {
+                const burnDamage = currentEffect.damage.shift(); // Prende e rimuove il danno per questo turno
+                if (burnDamage !== undefined) {
+                    attacker.hp -= burnDamage;
+                    effectLogMessage += `${attacker.name} subisce ${burnDamage} danni da bruciatura.\n`;
+                }
+            }
+            currentEffect.duration--;
+            // Mantieni l'effetto solo se ha ancora durata e danni da fare
+            if (currentEffect.duration > 0 && currentEffect.damage.length > 0) {
+                stillActiveEffects.push(currentEffect);
+            }
+        });
+        attacker.effects = stillActiveEffects; // Aggiorna con gli effetti ancora attivi
+    }
+    
     battleModal.style.display = 'block';
     specialAbilitiesContainer.style.display = 'flex';
     updateEnergyUI();
@@ -1445,6 +1502,7 @@ function setupBattleTurn(battleState, attacker, defender) {
 
     battlePlayerName.textContent = character.name;
     battleEnemyName.textContent = battleState.enemy.name;
+    // Aggiorna PF dopo i danni da effetto
     battlePlayerPF.textContent = `PF: ${character.hp > 0 ? character.hp : 0} / ${maxHP}`;
     battleEnemyPF.textContent = `PF: ${battleState.enemy.hp > 0 ? battleState.enemy.hp : 0} / ${battleState.enemy.startHP}`;
     
@@ -1461,11 +1519,19 @@ function setupBattleTurn(battleState, attacker, defender) {
     battlePlayerDefense.style.display = isPlayerAttacker ? 'none' : 'block';
     battleEnemyAttack.style.display = !isPlayerAttacker ? 'block' : 'none';
     battleEnemyDefense.style.display = !isPlayerAttacker ? 'none' : 'block';
+    
+    // Controlla se qualcuno è morto a causa degli effetti
+    if (battleState.enemy.hp <= 0 || character.hp <= 0) {
+        battleLog.textContent = effectLogMessage;
+        battleResult.innerHTML = `${attacker.name} è stato sconfitto dagli effetti!`;
+        finalizeTurn();
+        return; // Interrompe l'impostazione del turno
+    }
 
     battlePlayerDice.textContent = '-';
     battleEnemyDice.textContent = '-';
     battleActionContainer.innerHTML = '';
-    battleLog.textContent = '';
+    battleLog.textContent = effectLogMessage; // Mostra i messaggi degli effetti nel log
     battleResult.innerHTML = `Tocca a ${attacker.name} attaccare!`;
 
     if (isPlayerAttacker) {
@@ -1509,7 +1575,7 @@ function resolveBattleTurn() {
     function processCombatResult(attackRoll, defenseRoll) {
         const damage = Math.max(0, attackRoll - defenseRoll);
         defender.hp -= damage;
-        battleLog.textContent = `${attacker.name} attacca con ${attackRoll}.\n${defender.name} difende con ${defenseRoll}.`;
+        battleLog.textContent += `${attacker.name} attacca con ${attackRoll}.\n${defender.name} difende con ${defenseRoll}.`;
         if (damage > 0) {
             if (isPlayerAttacker && damage > 3) {
                 triggerScreenShake();
@@ -1542,7 +1608,7 @@ function resolveBattleTurn() {
                             totalDamage += damage2;
                             logText += `Attacco 2: ${attack2} vs ${defense2}. Danno: ${damage2}`;
                             defender.hp -= totalDamage;
-                            battleLog.textContent = logText;
+                            battleLog.textContent += logText;
                             battleResult.innerHTML = `Doppio Attacco! Danno Totale: ${totalDamage}`;
                             finalizeTurn();
                         });
@@ -1555,7 +1621,7 @@ function resolveBattleTurn() {
             battleEnemyDice.textContent = 'X';
             if (attackRoll > 3) { triggerScreenShake(); }
             defender.hp -= attackRoll;
-            battleLog.textContent = `Colpo Potente! L'attacco ignora la difesa.`;
+            battleLog.textContent += `Colpo Potente! L'attacco ignora la difesa.`;
             battleResult.innerHTML = `Danno inflitto: ${attackRoll}`;
             finalizeTurn();
         });
@@ -1580,9 +1646,10 @@ function finalizeTurn(keepTurn = false) {
     const { battleState } = currentBattleTurn;
     activeAbility = null;
     
-    if (battleState.enemy.isShadow) {
-        character.shadowBlessing = false;
-    }
+    // Non resettare la benedizione permanente
+    // if (battleState.enemy.isShadow) {
+    //     character.shadowBlessing = false;
+    // }
 
     if (!battleState.enemy.isShadow) {
         const cellInfo = visitedCells.get(currentCell.dataset.cellNumber);
@@ -1703,7 +1770,7 @@ function finalizeTurn(keepTurn = false) {
     character.hasSpecialSword = character.hasSpecialSword || false;
     character.prisonersFreed = character.prisonersFreed || 0;
     character.isCursed = character.isCursed || false;
-    character.shadowBlessing = character.shadowBlessing || false;
+    character.shadowSlayerBonus = character.shadowSlayerBonus || 0;
     character.activeQuests = character.activeQuests || [];
     
     visitedCells = new Map();
@@ -1767,7 +1834,9 @@ function finalizeTurn(keepTurn = false) {
     }
     const savedState = JSON.parse(savedStateJSON);
     
-    character = savedState.character; maxHP = savedState.maxHP;
+    character = savedState.character; 
+    character.shadowSlayerBonus = character.shadowSlayerBonus || 0;
+    maxHP = savedState.maxHP;
     enemiesDefeatedCount = savedState.enemiesDefeatedCount; discoveryCounter = savedState.discoveryCounter;
     visitedCells = new Map(savedState.visitedCells);
     enemyMap = savedState.enemyMap; bonusMap = savedState.bonusMap; potionMap = savedState.potionMap; prisonerMap = savedState.prisonerMap; altarMap = savedState.altarMap;
@@ -1832,6 +1901,53 @@ function finalizeTurn(keepTurn = false) {
       battlePotionSelectModal.style.display = 'block';
   }
 
+    function openInitiativePotionSelect(battleState) {
+        battlePotionList.innerHTML = '';
+        const usablePotions = character.inventory
+            .map((potion, index) => ({ ...potion, originalIndex: index }))
+            .filter(p => p.type === 'heal' || p.type === 'energy');
+
+        if (usablePotions.length === 0) {
+            return;
+        }
+
+        usablePotions.forEach((potion) => {
+            const btn = document.createElement('button');
+            btn.textContent = potion.name;
+            btn.onclick = () => {
+                battlePotionSelectModal.style.display = 'none';
+                usePotionInInitiative(potion, potion.originalIndex, battleState);
+            };
+            battlePotionList.appendChild(btn);
+        });
+        battlePotionSelectModal.style.display = 'block';
+    }
+    
+    function usePotionInInitiative(potion, index, battleState) {
+        character.inventory.splice(index, 1);
+        let logMessage = '';
+
+        if (potion.type === 'heal') {
+            const oldHp = character.hp;
+            character.hp = Math.min(character.hp + potion.value, maxHP);
+            const healedAmount = character.hp - oldHp;
+            logMessage = `${character.name} usa ${potion.name} e recupera ${healedAmount} PF!`;
+        } else if (potion.type === 'energy') {
+            character.energy = character.maxEnergy;
+            logMessage = `${character.name} usa ${potion.name} e recupera tutta l'energia!`;
+        }
+
+        updatePlayerInfo();
+        updateDiscoveriesLog();
+        initiativePlayerStats.textContent = `PF: ${character.hp} | Energia: ${character.energy}`;
+        
+        initiativeResult.textContent = logMessage;
+        setTimeout(() => { if (initiativeResult.textContent === logMessage) initiativeResult.textContent = ''; }, 2000);
+
+        usePotionInitiativeBtn.disabled = character.inventory.filter(p => p.type === 'heal' || p.type === 'energy').length === 0;
+    }
+
+
   function usePotionInBattle(potion, index) {
       character.inventory.splice(index, 1);
       
@@ -1870,6 +1986,17 @@ function finalizeTurn(keepTurn = false) {
                   if (damage > 3) { triggerScreenShake(); }
                   enemy.hp -= damage;
                   let log = `${potion.name} infligge ${damage} danni!`;
+
+                  if (potion.type === 'fire') {
+                      enemy.effects = enemy.effects || [];
+                      enemy.effects = enemy.effects.filter(e => e.type !== 'burn'); 
+                      enemy.effects.push({
+                          type: 'burn',
+                          duration: 2,
+                          damage: [3, 2]
+                      });
+                      log += `\nIl nemico sta andando a fuoco!`;
+                  }
 
                   if (potion.type === 'ice') {
                       const heroAttackRoll = Math.floor(Math.random() * (character.hasSpecialSword ? 12 : character.attackDie)) + 1 + getAttackBonus(enemy.isShadow || false);
@@ -1924,7 +2051,7 @@ function finalizeTurn(keepTurn = false) {
           energy: energy, 
           maxEnergy: maxEnergy,
           isCursed: false,
-          shadowBlessing: false,
+          shadowSlayerBonus: 0,
           activeQuests: []
       };
       
