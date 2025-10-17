@@ -286,7 +286,7 @@
     <div>Classe:</div>
     <select id="charClass">
       <option value="Guerriero">Guerriero (+5 PF, +5 Energia)</option>
-      <option value="Esploratore">Esploratore (+1 Movimento, Rilancio)</option>
+      <option value="Esploratore">Esploratore (-1 buchi, -2 rampicanti, rilancio)</option>
       <option value="Ladro">Ladro (Furtività e Fuga Migliorate)</option>
     </select>
     <div style="display:flex; gap:8px; margin-top:10px;">
@@ -477,18 +477,18 @@
       { name: "Ombra Cattivissima", hp: 25, attackDie: 10, attackBonus: 1, defenseDie: 8, defenseBonus: 1, iconUrl: "https://i.imgur.com/rJg2v1t.png", spawnTurn: 55 }
   ];
   const ENEMY_DEFINITIONS = [
-    { name: "Orchetto 1", hp: 10, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 0 },
-    { name: "Orchetto 2", hp: 10, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 0 },
-    { name: "Orchetto 3", hp: 10, attackDie: 10, attackBonus: 0, defenseDie: 8, defenseBonus: 0 },
-    { name: "Orco 4", hp: 12, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 1 },
-    { name: "Orco 5", hp: 12, attackDie: 10, attackBonus: 1, defenseDie: 6, defenseBonus: 0 },
-    { name: "Orco 6", hp: 12, attackDie: 10, attackBonus: 0, defenseDie: 8, defenseBonus: 0 },
-    { name: "Orco 7", hp: 12, attackDie: 10, attackBonus: 1, defenseDie: 8, defenseBonus: 0 },
-    { name: "Orco 8", hp: 12, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 1 },
-    { name: "Orco 9", hp: 12, attackDie: 10, attackBonus: 1, defenseDie: 6, defenseBonus: 1 },
-    { name: "Troll 10", hp: 15, attackDie: 10, attackBonus: 0, defenseDie: 8, defenseBonus: 0 },
-    { name: "Troll 11", hp: 15, attackDie: 10, attackBonus: 1, defenseDie: 8, defenseBonus: 0 },
-    { name: "Troll 12", hp: 15, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 1 },
+    { name: "Orchetto", hp: 10, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 0 },
+    { name: "Orchetto", hp: 10, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 0 },
+    { name: "Orchetto", hp: 10, attackDie: 10, attackBonus: 0, defenseDie: 8, defenseBonus: 0 },
+    { name: "Orco", hp: 12, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 1 },
+    { name: "Orco", hp: 12, attackDie: 10, attackBonus: 1, defenseDie: 6, defenseBonus: 0 },
+    { name: "Orco", hp: 12, attackDie: 10, attackBonus: 0, defenseDie: 8, defenseBonus: 0 },
+    { name: "Orco", hp: 12, attackDie: 10, attackBonus: 1, defenseDie: 8, defenseBonus: 0 },
+    { name: "Orco", hp: 12, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 1 },
+    { name: "Orco", hp: 12, attackDie: 10, attackBonus: 1, defenseDie: 6, defenseBonus: 1 },
+    { name: "Troll", hp: 15, attackDie: 10, attackBonus: 0, defenseDie: 8, defenseBonus: 0 },
+    { name: "Troll", hp: 15, attackDie: 10, attackBonus: 1, defenseDie: 8, defenseBonus: 0 },
+    { name: "Troll", hp: 15, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 1 },
   ];
   const NEW_SKULL_ICON_URL = 'https://i.imgur.com/g9mN0pU.jpg';
   const PRISONER_ICON_URL = 'https://i.imgur.com/XW3fJxc.jpg';
@@ -858,10 +858,7 @@
 function getValidMoves(steps) {
     if (!currentCell) return [];
     const startRow = +currentCell.dataset.row, startCol = +currentCell.dataset.col;
-    let finalSteps = steps;
-    if(character.class === 'Esploratore') {
-        finalSteps += 1;
-    }
+    const finalSteps = steps;
     return [...board.querySelectorAll('.cell')].filter(cell => {
       if (cell === currentCell) return false;
       const r = +cell.dataset.row, c = +cell.dataset.col;
@@ -1005,9 +1002,10 @@ function getValidMoves(steps) {
     if (isNewVisit) {
         if(holePositions.has(cellNum)) {
             triggerScreenShake();
-            messageQueue.push("Ti sloghi una caviglia in un buco! Perdi 5 PF.");
+            const damage = character.class === 'Esploratore' ? 2 : 3;
+            messageQueue.push(`Ti sloghi una caviglia in un buco! Perdi ${damage} PF.`);
             addHoleMarker(cell);
-            character.hp -= 5;
+            character.hp -= damage;
             updatePlayerInfo();
             if(character.hp <= 0) {
                 handleGameOver("per una caviglia slogata");
@@ -1041,8 +1039,8 @@ function getValidMoves(steps) {
         
         const exploredCount = visitedCells.size;
         if (exploredCount > 0 && exploredCount % 7 === 0) {
-            character.hp = Math.min(character.hp + 2, maxHP);
-            messageQueue.push("Il riposo ti ha fatto guadagnare 2 PF.");
+            character.hp = Math.min(character.hp + 3, maxHP);
+            messageQueue.push("Il riposo ti ha fatto guadagnare 3 PF.");
         }
         
         const info = visitedCells.get(String(cellNum));
@@ -1683,8 +1681,9 @@ function finalizeTurn(keepTurn = false) {
         const moves = getValidMoves(Number(diceRes.textContent));
         if (moves.length === 0) {
           triggerScreenShake();
-          messageQueue.push("Sei bloccato da delle rampicanti che ti infliggono 5 PF");
-          character.hp -= 5;
+          const damage = character.class === 'Esploratore' ? 1 : 3;
+          messageQueue.push(`Sei bloccato da delle rampicanti che ti infliggono ${damage} PF`);
+          character.hp -= damage;
           updatePlayerInfo();
           if (character.hp <= 0) {
             handleGameOver("intrappolato dai rampicanti");
