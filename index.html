@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dungeon 72 Celle - Classi</title>
+  <title>Dungeon 72 Celle - Chiamata del Soccorso</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap" rel="stylesheet">
@@ -24,126 +24,47 @@
       box-sizing: border-box;
     }
     
-    /* Aggiunto per l'effetto terremoto */
     @keyframes screenShake {
-      0% { transform: translate(1px, 1px) rotate(0deg); }
-      10% { transform: translate(-1px, -2px) rotate(-1deg); }
-      20% { transform: translate(-3px, 0px) rotate(1deg); }
-      30% { transform: translate(3px, 2px) rotate(0deg); }
-      40% { transform: translate(1px, -1px) rotate(1deg); }
-      50% { transform: translate(-1px, 2px) rotate(-1deg); }
-      60% { transform: translate(-3px, 1px) rotate(0deg); }
-      70% { transform: translate(3px, 1px) rotate(-1deg); }
-      80% { transform: translate(-1px, -1px) rotate(1deg); }
-      90% { transform: translate(1px, 2px) rotate(0deg); }
-      100% { transform: translate(1px, -2px) rotate(-1deg); }
+      0% { transform: translate(1px, 1px) rotate(0deg); } 10% { transform: translate(-1px, -2px) rotate(-1deg); } 20% { transform: translate(-3px, 0px) rotate(1deg); } 30% { transform: translate(3px, 2px) rotate(0deg); } 40% { transform: translate(1px, -1px) rotate(1deg); } 50% { transform: translate(-1px, 2px) rotate(-1deg); } 60% { transform: translate(-3px, 1px) rotate(0deg); } 70% { transform: translate(3px, 1px) rotate(-1deg); } 80% { transform: translate(-1px, -1px) rotate(1deg); } 90% { transform: translate(1px, 2px) rotate(0deg); } 100% { transform: translate(1px, -2px) rotate(-1deg); }
     }
 
-    .shake {
-      animation: screenShake 0.5s;
-    }
+    .shake { animation: screenShake 0.5s; }
 
     #sticky-controls {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      background: #1a1915;
-      border-radius: 0 0 10px 10px;
-      z-index: 1000;
-      padding: 10px;
-      display: flex;
-      gap: 14px;
-      justify-content: center;
-      align-items: center;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.40);
-      transition: top 0.3s ease-in-out;
+      position: fixed; top: 0; left: 0; width: 100%; background: #1a1915; border-radius: 0 0 10px 10px; z-index: 1000; padding: 10px; display: flex; gap: 14px; justify-content: center; align-items: center; box-shadow: 0 2px 12px rgba(0,0,0,0.40); transition: top 0.3s ease-in-out;
     }
     
     #left, #right { width:240px; display:flex; flex-direction:column; gap:10px; }
     #center-column { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 482px; }
-    #board-wrapper {
-        width: 100%;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-    }
-    #center {
-      display: grid;
-      grid-template-columns: repeat(9, 50px);
-      gap: 4px;
-      width: fit-content;
-      background: rgba(20, 19, 15, 0.7);
-      border-radius:10px;
-      padding: 10px;
-      box-shadow:inset 0 0 12px #000;
-    }
+    #board-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    #center { display: grid; grid-template-columns: repeat(9, 50px); gap: 4px; width: fit-content; background: rgba(20, 19, 15, 0.7); border-radius:10px; padding: 10px; box-shadow:inset 0 0 12px #000; }
     #right { align-items:center; }
     button { padding:10px 16px; border:none; border-radius:8px; background:#5a8c56; color:#fff; cursor:pointer; font-size:16px; width:100%; box-sizing: border-box; }
     #left button { min-width: 150px; }
     button:hover { background:#7cb673; }
     button:disabled { background:#555; cursor:not-allowed; }
+    #sticky-controls button { width: auto; min-width: 120px; margin: 0; }
+    .intervention-btn { background-color: #c4832c; }
+    .intervention-btn:hover { background-color: #e6a243; }
+    .ignore-btn { background-color: #757575; }
+    .ignore-btn:hover { background-color: #9e9e9e; }
     
-    #sticky-controls button {
-      width: auto;
-      min-width: 120px;
-      margin: 0;
-    }
-    
-    .cell { 
-      position: relative;
-      width: 50px;
-      height: 50px;
-      border:2px solid #666; 
-      border-radius:6px; 
-      background:linear-gradient(145deg, rgba(74, 73, 63, 0.7), rgba(55, 55, 40, 0.7)); 
-      user-select:none; 
-      box-sizing: border-box;
-    }
-    .cell-content {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-        color: #bfc5a7;
-    }
-    .visited { 
-        background: linear-gradient(145deg, #304d30, #223822); 
-        border-color: #658665;
-    }
-    .current { background:linear-gradient(145deg, rgba(143, 173, 106, 0.8), rgba(110, 133, 71, 0.8)); border-color:#a0d535; color:#eff7d6; box-shadow:0 0 10px #a0d535; }
+    .cell { position: relative; width: 50px; height: 50px; border:2px solid #666; border-radius:6px; background:linear-gradient(145deg, rgba(74, 73, 63, 0.7), rgba(55, 55, 40, 0.7)); user-select:none; box-sizing: border-box; }
+    .cell-content { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #bfc5a7; }
+    .visited { background: linear-gradient(145deg, #304d30, #223822); border-color: #658665; }
+    .current-player-1 { background: linear-gradient(145deg, rgba(143, 173, 106, 0.8), rgba(110, 133, 71, 0.8)); border-color: #a0d535; color: #eff7d6; box-shadow: 0 0 10px #a0d535; }
+    .current-player-2 { background: linear-gradient(145deg, rgba(106, 143, 173, 0.8), rgba(71, 110, 133, 0.8)); border-color: #35a0d5; color: #d6eaff; box-shadow: 0 0 10px #35a0d5; }
     .highlighted { border: 3px solid white !important; cursor: pointer; }
     
     .enemy-marker, .gas-marker { position:absolute; width:10px; height:10px; border-radius:50%; border:1px solid #fff; }
     .enemy-marker { top:3px; right:3px; background:red; }
     .gas-marker { bottom:3px; left:3px; background:#808080;}
-    .hole-marker {
-        position:absolute; top:50%; left:50%; transform:translate(-50%, -50%);
-        width: 40px; height: 40px; border-radius: 0; border: none;
-        background-image: url('https://i.imgur.com/kG6JJlO.png');
-        background-size: contain;
-        background-repeat: no-repeat;
-        background-position: center;
-    }
+    .hole-marker { position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width: 40px; height: 40px; border-radius: 0; border: none; background-image: url('https://i.imgur.com/kG6JJlO.png'); background-size: contain; background-repeat: no-repeat; background-position: center; }
 
-    .skull-marker, .prisoner-marker, .shadow-marker, .hero-marker, .item-marker { 
-        position:absolute; 
-        top:50%; 
-        left:50%; 
-        transform: translate(-50%, -50%); 
-        width: 80%; 
-        height: 80%; 
-        pointer-events:none; 
-        opacity: 0.9;
-    }
+    .skull-marker, .prisoner-marker, .shadow-marker, .hero-marker, .item-marker { position:absolute; top:50%; left:50%; transform: translate(-50%, -50%); width: 80%; height: 80%; pointer-events:none; opacity: 0.9; }
     .item-marker { width: 70%; height: 70%; z-index: 6; }
     .skull-marker, .prisoner-marker { z-index: 5; }
     .hero-marker, .shadow-marker { z-index: 10; }
-
     .gem-door-marker { border: 3px solid deepskyblue !important; box-shadow: 0 0 15px deepskyblue; }
     
     #diceResult, #shadowDiceResult { width:80px; height:80px; font-size:48px; font-weight:bold; display:flex; align-items:center; justify-content:center; border:2px solid #a0d535; border-radius:10px; background:linear-gradient(145deg,#6e8547,#8fad6a); color:#d7f39b; }
@@ -152,26 +73,23 @@
     #shadowActionDisplay { display:none; min-height:24px; text-align:center; background-color: rgba(0,0,0,0.4); border-radius: 5px; padding: 5px; width:100%; box-sizing: border-box; margin-top: 10px; }
     
     #discoveriesLog { white-space: pre-line; background:rgba(58, 58, 43, 0.8); border-radius:8px; padding:10px; font-size:14px; min-height: 200px; width: 100%;}
-    #playerInfo { 
-        text-align:center; 
-        padding: 5px 10px; 
-        border:2px solid #a0d535; 
-        border-radius:10px; 
-        background:linear-gradient(145deg,#6e8547,#8fad6a); 
-        color:#eff7d6;
-        min-width: 180px;
-    }
-    
-    #charForm, #encounterModal, #battleModal, #messageModal, #initiativeModal, #potionDamageModal, #battlePotionSelectModal, #altarModal { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background: #3a3a2b; padding:20px; border-radius:10px; box-shadow:0 0 15px #000; z-index:1001; text-align:center; width: 300px; }
+    #playerInfo { text-align:center; padding: 5px 10px; border-radius:10px; min-width: 180px; font-weight: bold; }
+    .player-1-info { border: 2px solid #a0d535; background: linear-gradient(145deg, #6e8547, #8fad6a); color: #eff7d6; }
+    .player-2-info { border: 2px solid #35a0d5; background: linear-gradient(145deg, #476e85, #6a8fad); color: #d6eaff; }
+
+    #charForm, #encounterModal, #battleModal, #messageModal, #initiativeModal, #potionDamageModal, #battlePotionSelectModal, #altarModal, #allyChoiceModal, #supportAttackModal { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background: #3a3a2b; padding:20px; border-radius:10px; box-shadow:0 0 15px #000; z-index:1001; text-align:center; width: 300px; }
     #charForm input, #charForm select { width: calc(100% - 16px); padding:8px; margin:8px 0; border:none; border-radius:6px; font-size:16px; }
     
     #battleModal, #initiativeModal { z-index: 1050; }
     #potionDamageModal, #battlePotionSelectModal { z-index: 1060; }
     #altarModal { z-index: 1070; }
-    #altarActions { display: flex; gap: 10px; justify-content: center; margin-top: 15px; }
+    #allyChoiceModal { z-index: 1080; }
+    #supportAttackModal { z-index: 1090; }
+    #altarActions, #allyChoiceActions, #supportAttackActions { display: flex; gap: 10px; justify-content: center; margin-top: 15px; }
 
     .battle-unit { margin: 15px 0; border: 1px solid #555; padding: 10px; border-radius: 8px; }
     .battle-name { font-weight: bold; font-size: 18px; margin-bottom: 5px; color: #a0d535; }
+    #allyJoinedIndicator { font-size: 14px; color: #fdd835; font-weight: bold; }
     .battle-stats { font-size: 14px; color: #ccc; }
     .battle-pf, .battle-attack, .battle-defense { font-size: 16px; margin-bottom: 5px; }
     .battle-dice { font-size: 48px; font-weight: bold; min-height: 60px; display:flex; align-items:center; justify-content:center; }
@@ -180,18 +98,7 @@
     #specialAbilitiesContainer { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; justify-content: center;}
     #specialAbilitiesContainer button { font-size: 12px; padding: 8px 12px;}
     #initiativeResult { font-weight: bold; font-size: 18px; min-height: 24px; }
-    #battleLog {
-      min-height: 75px;
-      padding: 10px;
-      margin: 10px 0;
-      background: rgba(0,0,0,0.3);
-      border: 1px solid #444;
-      border-radius: 8px;
-      text-align: left;
-      white-space: pre-line;
-      font-size: 16px;
-      line-height: 1.4;
-    }
+    #battleLog { min-height: 75px; padding: 10px; margin: 10px 0; background: rgba(0,0,0,0.3); border: 1px solid #444; border-radius: 8px; text-align: left; white-space: pre-line; font-size: 16px; line-height: 1.4; }
 
     #messageModal { background: linear-gradient(135deg, #4a3c26, #2d1f0f); border: 4px solid #8b5e3c; color: #f5deb3; font-family: 'MedievalSharp', cursive; font-size: 22px; }
     #messageModal.victory-modal .modal-content { display: flex; flex-direction: column; align-items: center; }
@@ -202,56 +109,30 @@
     #messageModal button:hover { background-color: #a3764a; }
 
     @media (max-width: 1024px) {
-      body {
-        flex-direction: column;
-        padding: 10px;
-        padding-top: 160px;
-        gap: 10px;
-        align-items: stretch;
-      }
+      body { flex-direction: column; padding: 10px; padding-top: 160px; gap: 10px; align-items: stretch; }
       #right { order: 1; align-items: stretch; }
-      #center-column { 
-        order: 2;
-        width: 100%;
-        align-items: stretch;
-      }
+      #center-column { order: 2; width: 100%; align-items: stretch; }
       #left { order: 3; }
-      #left, #right {
-        width: 100%;
-        box-sizing: border-box;
-      }
-      #charForm, #encounterModal, #messageModal, #initiativeModal, #potionDamageModal, #battlePotionSelectModal, #altarModal { width: 90%; }
-      #battleModal {
-          padding: 10px;
-          justify-content: center;
-      }
+      #left, #right { width: 100%; box-sizing: border-box; }
+      #charForm, #encounterModal, #messageModal, #initiativeModal, #potionDamageModal, #battlePotionSelectModal, #altarModal, #allyChoiceModal, #supportAttackModal { width: 90%; }
+      #battleModal { padding: 10px; justify-content: center; }
       .battle-unit { margin: 10px 0; padding: 5px; }
       .battle-name { font-size: 18px; }
       .battle-pf, .battle-attack, .battle-defense { font-size: 14px; }
       .battle-dice { font-size: 40px; min-height: 50px; }
-      
-      #sticky-controls {
-        flex-wrap: wrap;
-        justify-content: space-around;
-      }
-      #sticky-controls button {
-        flex-basis: 45%;
-        min-width: auto;
-      }
-      #diceResult, #shadowDiceResult {
-        flex-basis: 45%;
-      }
-      #playerInfo {
-        flex-basis: 100%;
-        margin-top: 5px;
-      }
+      #sticky-controls { flex-wrap: wrap; justify-content: space-around; }
+      #sticky-controls button { flex-basis: 45%; min-width: auto; }
+      #diceResult, #shadowDiceResult { flex-basis: 45%; }
+      #playerInfo { flex-basis: 100%; margin-top: 5px; }
     }
   </style>
 </head>
 <body>
 
   <div id="sticky-controls">
-      <button id="diceRollBtn">Tira dado</button>
+      <div id="player-actions">
+        <button id="diceRollBtn">Tira dado</button>
+      </div>
       <div id="diceResult">-</div>
       <div id="playerInfo">Crea un personaggio</div>
       <div id="energyInfo" style="color: #4dd0e1; font-weight: bold;">Energia: <span id="energyValue">0</span></div>
@@ -279,11 +160,12 @@
   </div>
 
   <div id="charForm">
-    <div>Nome personaggio:</div>
+    <div id="charFormTitle">Crea Personaggio</div>
+    <div>Nome personaggio</div>
     <input type="text" id="charName" placeholder="Nome...">
-    <div>PF iniziali:</div>
+    <div>PF iniziali</div>
     <input type="number" id="charHP" value="30" min="1">
-    <div>Classe:</div>
+    <div>Classe</div>
     <select id="charClass">
       <option value="Guerriero">Guerriero (+5 PF, +5 Energia)</option>
       <option value="Esploratore">Esploratore (-1 buchi, -2 rampicanti, rilancio)</option>
@@ -323,6 +205,7 @@
  <div id="battleModal">
     <div class="battle-unit">
         <div id="battlePlayerName" class="battle-name"></div>
+        <div id="allyJoinedIndicator" style="display:none;">(Alleato in supporto)</div>
         <div id="battlePlayerPF" class="battle-pf"></div>
         <div id="battlePlayerAttack" class="battle-attack"></div>
         <div id="battlePlayerDefense" class="battle-defense"></div>
@@ -358,9 +241,20 @@
     <p id="altarMessage"></p>
     <div id="altarActions"></div>
   </div>
+  
+  <div id="allyChoiceModal">
+    <p id="allyChoiceMessage"></p>
+    <div id="allyChoiceActions"></div>
+  </div>
+  
+  <div id="supportAttackModal">
+      <p id="supportAttackMessage"></p>
+      <div id="supportAttackDice" class="battle-dice">-</div>
+      <div id="supportAttackActions"></div>
+  </div>
 
   <div id="battlePotionSelectModal">
-    <p>Seleziona una pozione da usare:</p>
+    <p>Seleziona una pozione da usare</p>
     <div id="battlePotionList"></div>
     <button id="closeBattlePotionSelectBtn" style="margin-top:15px;">Annulla</button>
   </div>
@@ -373,9 +267,10 @@
 
 
 <script>
+  // Elementi DOM
   const board = document.getElementById('center');
   const discoveriesLog = document.getElementById('discoveriesLog');
-  const diceBtn = document.getElementById('diceRollBtn');
+  const playerActions = document.getElementById('player-actions');
   const diceRes = document.getElementById('diceResult');
   const shadowActionDisplay = document.getElementById('shadowActionDisplay');
   const shadowTurnName = document.getElementById('shadowTurnName');
@@ -387,6 +282,7 @@
   const saveGameBtn = document.getElementById('saveGameBtn');
   const loadGameBtn = document.getElementById('loadGameBtn');
   const charForm = document.getElementById('charForm');
+  const charFormTitle = document.getElementById('charFormTitle');
   const startAdventureBtn = document.getElementById('startAdventureBtn');
   const cancelCharBtn = document.getElementById('cancelCharBtn');
   const encounterModal = document.getElementById('encounterModal');
@@ -395,6 +291,7 @@
   const encounterActionBtns = document.getElementById('encounterActionBtns');
   const battleModal = document.getElementById('battleModal');
   const battlePlayerName = document.getElementById('battlePlayerName');
+  const allyJoinedIndicator = document.getElementById('allyJoinedIndicator');
   const battlePlayerPF = document.getElementById('battlePlayerPF');
   const battlePlayerAttack = document.getElementById('battlePlayerAttack');
   const battlePlayerDefense = document.getElementById('battlePlayerDefense');
@@ -437,813 +334,331 @@
   const altarModal = document.getElementById('altarModal');
   const altarMessage = document.getElementById('altarMessage');
   const altarActions = document.getElementById('altarActions');
-
-
+  const allyChoiceModal = document.getElementById('allyChoiceModal');
+  const allyChoiceMessage = document.getElementById('allyChoiceMessage');
+  const allyChoiceActions = document.getElementById('allyChoiceActions');
+  const supportAttackModal = document.getElementById('supportAttackModal');
+  const supportAttackMessage = document.getElementById('supportAttackMessage');
+  const supportAttackDice = document.getElementById('supportAttackDice');
+  const supportAttackActions = document.getElementById('supportAttackActions');
+  
+  // Costanti di Gioco
   const COLS = 9, CELL_COUNT = 72, ENEMY_COUNT = 12, PRISONER_COUNT = 11, GAS_TRAP_COUNT = 2, HOLE_COUNT = 3, GAS_EFFECT_DURATION_CELLS = 5;
   const HOLE_IMAGE_URL = 'https://i.imgur.com/kG6JJlO.png';
-  
-  const ATTACK_BONUS_ITEMS = [
-    { name: "Elsa migliorata", iconUrl: "https://i.imgur.com/euz20nX.png" }, 
-    { name: "Guanti rinforzati", iconUrl: "https://i.imgur.com/aE8GVDY.png" },
-    { name: "Stivali", iconUrl: "https://i.imgur.com/BNy44sG.png" }
-  ];
-  const DEFENSE_BONUS_ITEMS = [
-    { name: "Scudo di ferro", iconUrl: "https://i.imgur.com/hF20xva.png" }, 
-    { name: "Elmo", iconUrl: "https://i.imgur.com/7Ur7oSX.png" }, 
-    { name: "Corazza", iconUrl: "https://i.imgur.com/vTBxHQI.png" }
-  ];
-  const POTIONS = [ 
-      { name: "Pozione Fuoco", type: "fire", iconUrl: "https://i.imgur.com/U4jwiij.png" }, 
-      { name: "Pozione Fuoco", type: "fire", iconUrl: "https://i.imgur.com/U4jwiij.png" }, 
-      { name: "Pozione Ghiaccio", type: "ice", iconUrl: "https://i.imgur.com/UqxFF43.png" },
-      { name: "Pozione Ghiaccio", type: "ice", iconUrl: "https://i.imgur.com/UqxFF43.png" },
-      { name: "Pozione (+5 PF)", value: 5, type: "heal", iconUrl: "https://i.imgur.com/OpZJJ1f.png" }, 
-      { name: "Pozione (+10 PF)", value: 10, type: "heal", iconUrl: "https://i.imgur.com/OpZJJ1f.png" }, 
-      { name: "Pozione (+15 PF)", value: 15, type: "heal", iconUrl: "https://i.imgur.com/OpZJJ1f.png" } 
-  ];
-  const GEMS = [
-      { name: "Gemma Blu", iconUrl: "https://i.imgur.com/cD8wDec.png" }, 
-      { name: "Gemma Verde", iconUrl: "https://i.imgur.com/h7dcivA.png" }, 
-      { name: "Gemma Viola", iconUrl: "https://i.imgur.com/yWygx8z.png" }
-  ];
+  const ATTACK_BONUS_ITEMS = [ { name: "Elsa migliorata", iconUrl: "https://i.imgur.com/euz20nX.png" }, { name: "Guanti rinforzati", iconUrl: "https://i.imgur.com/aE8GVDY.png" }, { name: "Stivali", iconUrl: "https://i.imgur.com/BNy44sG.png" } ];
+  const DEFENSE_BONUS_ITEMS = [ { name: "Scudo di ferro", iconUrl: "https://i.imgur.com/hF20xva.png" }, { name: "Elmo", iconUrl: "https://i.imgur.com/7Ur7oSX.png" }, { name: "Corazza", iconUrl: "https://i.imgur.com/vTBxHQI.png" } ];
+  const POTIONS = [ { name: "Pozione Fuoco", type: "fire", iconUrl: "https://i.imgur.com/U4jwiij.png" }, { name: "Pozione Fuoco", type: "fire", iconUrl: "https://i.imgur.com/U4jwiij.png" }, { name: "Pozione Ghiaccio", type: "ice", iconUrl: "https://i.imgur.com/UqxFF43.png" }, { name: "Pozione Ghiaccio", type: "ice", iconUrl: "https://i.imgur.com/UqxFF43.png" }, { name: "Pozione (+5 PF)", value: 5, type: "heal", iconUrl: "https://i.imgur.com/OpZJJ1f.png" }, { name: "Pozione (+10 PF)", value: 10, type: "heal", iconUrl: "https://i.imgur.com/OpZJJ1f.png" }, { name: "Pozione (+15 PF)", value: 15, type: "heal", iconUrl: "https://i.imgur.com/OpZJJ1f.png" } ];
+  const GEMS = [ { name: "Gemma Blu", iconUrl: "https://i.imgur.com/cD8wDec.png" }, { name: "Gemma Verde", iconUrl: "https://i.imgur.com/h7dcivA.png" }, { name: "Gemma Viola", iconUrl: "https://i.imgur.com/yWygx8z.png" } ];
   const GEM_DOOR = { name: "Porta di Gemme", iconUrl: "https://i.imgur.com/2u6BWSv.png" };
-
-  const ALTARS = [
-      { name: "Altare Sacrificale", type: 'sacrificial', iconUrl: "https://i.imgur.com/zR75xod.png" },
-      { name: "Altare della Maledizione", type: 'curse', iconUrl: "https://i.imgur.com/0XEOJdW.png" },
-      { name: "Altare della Purificazione", type: 'purification', iconUrl: "https://i.imgur.com/SNImGq0.png" }
-  ];
-
-  const SHADOW_SPAWNS = [
-      { name: "Ombra", hp: 10, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 1, iconUrl: "https://i.imgur.com/sgLJSln.png", spawnTurn: 10 },
-      { name: "Ombra Paurosa", hp: 15, attackDie: 10, attackBonus: 1, defenseDie: 8, defenseBonus: 0, iconUrl: "https://i.imgur.com/grZ66Ex.png", spawnTurn: 30 },
-      { name: "Ombra Cattiva", hp: 20, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 1, iconUrl: "https://i.imgur.com/Jo45qDz.png", spawnTurn: 45 },
-      { name: "Ombra Cattivissima", hp: 25, attackDie: 10, attackBonus: 1, defenseDie: 8, defenseBonus: 1, iconUrl: "https://i.imgur.com/rJg2v1t.png", spawnTurn: 55 }
-  ];
-  const ENEMY_DEFINITIONS = [
-    { name: "Orchetto", hp: 10, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 0 },
-    { name: "Orchetto", hp: 10, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 0 },
-    { name: "Orchetto", hp: 10, attackDie: 10, attackBonus: 0, defenseDie: 8, defenseBonus: 0 },
-    { name: "Orco", hp: 12, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 1 },
-    { name: "Orco", hp: 12, attackDie: 10, attackBonus: 1, defenseDie: 6, defenseBonus: 0 },
-    { name: "Orco", hp: 12, attackDie: 10, attackBonus: 0, defenseDie: 8, defenseBonus: 0 },
-    { name: "Orco", hp: 12, attackDie: 10, attackBonus: 1, defenseDie: 8, defenseBonus: 0 },
-    { name: "Orco", hp: 12, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 1 },
-    { name: "Orco", hp: 12, attackDie: 10, attackBonus: 1, defenseDie: 6, defenseBonus: 1 },
-    { name: "Troll", hp: 15, attackDie: 10, attackBonus: 0, defenseDie: 8, defenseBonus: 0 },
-    { name: "Troll", hp: 15, attackDie: 10, attackBonus: 1, defenseDie: 8, defenseBonus: 0 },
-    { name: "Troll", hp: 15, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 1 },
-  ];
+  const ALTARS = [ { name: "Altare Sacrificale", type: 'sacrificial', iconUrl: "https://i.imgur.com/zR75xod.png" }, { name: "Altare della Maledizione", type: 'curse', iconUrl: "https://i.imgur.com/0XEOJdW.png" }, { name: "Altare della Purificazione", type: 'purification', iconUrl: "https://i.imgur.com/SNImGq0.png" } ];
+  const SHADOW_SPAWNS = [ { name: "Ombra", hp: 10, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 1, iconUrl: "https://i.imgur.com/sgLJSln.png", spawnTurn: 10 }, { name: "Ombra Paurosa", hp: 15, attackDie: 10, attackBonus: 1, defenseDie: 8, defenseBonus: 0, iconUrl: "https://i.imgur.com/grZ66Ex.png", spawnTurn: 30 }, { name: "Ombra Cattiva", hp: 20, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 1, iconUrl: "https://i.imgur.com/Jo45qDz.png", spawnTurn: 45 }, { name: "Ombra Cattivissima", hp: 25, attackDie: 10, attackBonus: 1, defenseDie: 8, defenseBonus: 1, iconUrl: "https://i.imgur.com/rJg2v1t.png", spawnTurn: 55 } ];
+  const ENEMY_DEFINITIONS = [ { name: "Orchetto", hp: 10, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 0 }, { name: "Orchetto", hp: 10, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 0 }, { name: "Orchetto", hp: 10, attackDie: 10, attackBonus: 0, defenseDie: 8, defenseBonus: 0 }, { name: "Orco", hp: 12, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 1 }, { name: "Orco", hp: 12, attackDie: 10, attackBonus: 1, defenseDie: 6, defenseBonus: 0 }, { name: "Orco", hp: 12, attackDie: 10, attackBonus: 0, defenseDie: 8, defenseBonus: 0 }, { name: "Orco", hp: 12, attackDie: 10, attackBonus: 1, defenseDie: 8, defenseBonus: 0 }, { name: "Orco", hp: 12, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 1 }, { name: "Orco", hp: 12, attackDie: 10, attackBonus: 1, defenseDie: 6, defenseBonus: 1 }, { name: "Troll", hp: 15, attackDie: 10, attackBonus: 0, defenseDie: 8, defenseBonus: 0 }, { name: "Troll", hp: 15, attackDie: 10, attackBonus: 1, defenseDie: 8, defenseBonus: 0 }, { name: "Troll", hp: 15, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 1 }, ];
   const NEW_SKULL_ICON_URL = 'https://i.imgur.com/g9mN0pU.jpg';
   const PRISONER_ICON_URL = 'https://i.imgur.com/XW3fJxc.jpg';
-  const CLASS_ICONS = {
-    Guerriero: 'https://i.imgur.com/IcEVhov.png',
-    Esploratore: 'https://i.imgur.com/61wtgJ1.png',
-    Ladro: 'https://i.imgur.com/eY1Q0b5.png'
-  };
+  const CLASS_ICONS = { Guerriero: 'https://i.imgur.com/IcEVhov.png', Esploratore: 'https://i.imgur.com/61wtgJ1.png', Ladro: 'https://i.imgur.com/eY1Q0b5.png' };
 
-  let currentCell, character, maxHP, enemiesDefeatedCount, discoveryCounter;
+  // ---- STATO DEL GIOCO ----
+  let players = [];
+  let currentPlayerIndex = 0;
+  let numPlayers = 1;
+  let creatingPlayerIndex = 0;
+  
+  let enemiesDefeatedCount, discoveryCounter;
   let visitedCells, enemyMap, bonusMap, potionMap, prisonerMap, altarMap, gasTrapPositions, gasActivatedPositions, holePositions, shadows, spawnedShadows;
   let gasEffect = { active: false, newCellsVisited: 0 };
-  let prisonerQuests = {};
+  let prisonerQuests;
   let messageQueue = [];
-  let currentBattleTurn = {};
+  let activeBattleState = null;
   let activeAbility = null;
   
-  function triggerScreenShake() {
-    document.body.classList.add('shake');
-    setTimeout(() => {
-      document.body.classList.remove('shake');
-    }, 500);
-  }
-
+  // ---- FUNZIONI PRINCIPALI ----
+  function triggerScreenShake() { document.body.classList.add('shake'); setTimeout(() => document.body.classList.remove('shake'), 500); }
+  
   function updateEnergyUI() {
-    if (!character) return;
-    const cost = character.class === 'Guerriero' ? 4 : 5;
-    
-    energyValue.textContent = character.energy;
-    powerStrikeBtn.disabled = character.energy < cost;
-    doubleAttackBtn.disabled = character.energy < cost;
+      const character = players[currentPlayerIndex];
+      if (!character) return;
+      const cost = character.class === 'Guerriero' ? 4 : 5;
+      energyValue.textContent = character.energy;
+      powerStrikeBtn.disabled = character.energy < cost;
+      doubleAttackBtn.disabled = character.energy < cost;
   }
-  
+
   function gainEnergy(amount) {
-    if (!character) return;
-    character.energy = Math.min(character.energy + amount, character.maxEnergy);
-    updateEnergyUI();
+      const character = players[currentPlayerIndex];
+      if (!character) return;
+      character.energy = Math.min(character.energy + amount, character.maxEnergy);
+      updateEnergyUI();
   }
 
-  function getAttackBonus(isAgainstShadow = false) {
-      if (!character) return 0;
+  function getAttackBonus(player, isAgainstShadow = false) {
+      if (!player) return 0;
       const attackItemNames = ATTACK_BONUS_ITEMS.map(item => item.name);
-      let bonus = character.bonuses.filter(b => attackItemNames.includes(b.name)).length;
-      if (gasEffect.active) {
-          bonus -= 1;
-      }
-      if (character.isCursed) {
-          bonus -= 2;
-      }
-      if (isAgainstShadow && character.shadowSlayerBonus) {
-          bonus += character.shadowSlayerBonus;
-      }
+      let bonus = player.bonuses.filter(b => attackItemNames.includes(b.name)).length;
+      if (gasEffect.active && players.indexOf(player) === currentPlayerIndex) bonus -= 1;
+      if (player.isCursed) bonus -= 2;
+      if (isAgainstShadow && player.shadowSlayerBonus) bonus += player.shadowSlayerBonus;
       return bonus;
   }
 
-  function getDefenseBonus() {
-      if (!character) return 0;
+  function getDefenseBonus(player) {
+      if (!player) return 0;
       const defenseItemNames = DEFENSE_BONUS_ITEMS.map(item => item.name);
-      let bonus = character.bonuses.filter(b => defenseItemNames.includes(b.name)).length;
-      return bonus;
-  }
-
-  function addSkullMarker(cell) {
-    const contentDiv = cell.querySelector('.cell-content');
-    if (!contentDiv) return;
-    contentDiv.innerHTML = '';
-    const img = document.createElement('img');
-    img.src = NEW_SKULL_ICON_URL;
-    img.className = 'skull-marker';
-    contentDiv.appendChild(img);
-  }
-
-  function addPrisonerMarker(cell) {
-    const contentDiv = cell.querySelector('.cell-content');
-    if (!contentDiv) return;
-    contentDiv.innerHTML = '';
-    const img = document.createElement('img');
-    img.src = PRISONER_ICON_URL;
-    img.className = 'prisoner-marker';
-    contentDiv.appendChild(img);
+      return player.bonuses.filter(b => defenseItemNames.includes(b.name)).length;
   }
   
-  function addHoleMarker(cell) {
-    const contentDiv = cell.querySelector('.cell-content');
-    if (!contentDiv) return;
-    contentDiv.innerHTML = '';
-    const img = document.createElement('div');
-    img.className = 'hole-marker';
-    contentDiv.appendChild(img);
-  }
+  function addSkullMarker(cell) { const contentDiv = cell.querySelector('.cell-content'); if (!contentDiv) return; contentDiv.innerHTML = ''; const img = document.createElement('img'); img.src = NEW_SKULL_ICON_URL; img.className = 'skull-marker'; contentDiv.appendChild(img); }
+  function addPrisonerMarker(cell) { const contentDiv = cell.querySelector('.cell-content'); if (!contentDiv) return; contentDiv.innerHTML = ''; const img = document.createElement('img'); img.src = PRISONER_ICON_URL; img.className = 'prisoner-marker'; contentDiv.appendChild(img); }
+  function addHoleMarker(cell) { const contentDiv = cell.querySelector('.cell-content'); if (!contentDiv) return; contentDiv.innerHTML = ''; const img = document.createElement('div'); img.className = 'hole-marker'; contentDiv.appendChild(img); }
 
   function updateDiscoveriesLog() {
-    let lines = [];
-    const discoveries = [];
-
-    if(visitedCells) {
-        lines.push(`Celle esplorate: ${visitedCells.size}`);
-        visitedCells.forEach((info, cellNum) => {
-            if (info.discoveryOrder !== null && info.discoveryOrder !== undefined) {
-                discoveries.push({ cellNum: Number(cellNum), info: info, discoveryOrder: info.discoveryOrder });
-            }
-        });
-    }
-
-    const sortedDiscoveries = discoveries.sort((a, b) => a.discoveryOrder - b.discoveryOrder);
-      
-    if (sortedDiscoveries.length > 0) {
-        lines.push('\n--- Scoperte ---');
-        sortedDiscoveries.forEach(({ cellNum, info }) => {
-            if (info.enemy) {
-                const status = info.defeated ? ' (sconfitto)' : '';
-                const hpInfo = (!info.defeated && info.hp < (info.enemy.startHP || 0)) ? ` - PF: ${info.hp}` : '';
-                lines.push(`Cella ${cellNum}: ${info.enemy.name}${status}${hpInfo}`);
-            } else if (info.bonus) {
-                const collected = character.bonuses.some(b => b.name === info.bonus.name) ? ' (raccolto)' : '';
-                lines.push(`Cella ${cellNum}: ${info.bonus.name}${collected}`);
-            } else if (info.potion) {
-                const collected = info.collected ? ' (raccolta)' : '';
-                lines.push(`Cella ${cellNum}: ${info.potion.name}${collected}`);
-            } else if (info.altar) {
-                lines.push(`Cella ${cellNum}: ${info.altar.name}`);
-            } else if (info.prisonerFreed) {
-                lines.push(`Cella ${cellNum}: Prigioniero liberato`);
-            } else if (gasActivatedPositions.has(cellNum)) {
-                lines.push(`Cella ${cellNum}: Trappola a Gas (attiva)`);
-            } else if (holePositions.has(cellNum)) {
-                 lines.push(`Cella ${cellNum}: Buco`);
-            }
-        });
-    } else if (!visitedCells || visitedCells.size === 0) {
-        lines.push(`(Nessuna scoperta ancora)`);
-    }
-
-    const attackItemNames = ATTACK_BONUS_ITEMS.map(item => item.name);
-    const attackBonuses = character ? character.bonuses.filter(b => attackItemNames.includes(b.name)) : [];
-    if (attackBonuses.length > 0) {
-        lines.push('\n--- Bonus Attacco Attivi ---');
-        attackBonuses.forEach(b => lines.push(`- ${b.name} (+1)`));
-    }
-
-    const defenseItemNames = DEFENSE_BONUS_ITEMS.map(item => item.name);
-    const defenseBonuses = character ? character.bonuses.filter(b => defenseItemNames.includes(b.name)) : [];
-    if (defenseBonuses.length > 0) {
-        lines.push('\n--- Bonus Difesa Attivi ---');
-        defenseBonuses.forEach(b => lines.push(`- ${b.name} (+1)`));
-    }
-    
-    const potionsInInventory = character ? character.inventory : [];
-    if (potionsInInventory.length > 0) {
-        lines.push('\n--- Pozioni ---');
-        potionsInInventory.forEach(p => lines.push(`- ${p.name}`));
-    }
-    
-    lines.push('\n--- Effetti Attivi ---');
-    let hasEffects = false;
-    if (gasEffect.active) {
-        const remainingCells = GAS_EFFECT_DURATION_CELLS - gasEffect.newCellsVisited;
-        lines.push(`- Gas Debolezza (-1 Atk per ${remainingCells} nuove celle)`);
-        hasEffects = true;
-    }
-    if (character && character.isCursed) {
-        lines.push("- Maledizione (-2 Attacco)");
-        hasEffects = true;
-    }
-    if (character && character.shadowSlayerBonus > 0) {
-        lines.push(`- Benedizione Sacrificale (+${character.shadowSlayerBonus} Attacco vs Ombre)`);
-        hasEffects = true;
-    }
-    if (!hasEffects) {
-        lines.push("(Nessuno)");
-    }
-    
-    const collectedGemNames = character ? character.bonuses.map(b => b.name) : [];
-    const gemsToShow = GEMS.filter(g => collectedGemNames.includes(g.name));
-    if (character && gemsToShow.length > 0) {
-        lines.push('\n--- Gemme Raccolte ---');
-        gemsToShow.forEach(gem => { lines.push(`- ${gem.name}`); });
-    }
-    
-    if (character) {
-      if (character.prisonersFreed > 0) {
-          lines.push(`\nPrigionieri Liberati: ${character.prisonersFreed}`);
-      }
+      const lines = [];
+      lines.push(`Celle esplorate: ${visitedCells ? visitedCells.size : 0}`);
       lines.push(`Nemici Uccisi: ${enemiesDefeatedCount} / 12`);
-    }
+      lines.push('');
+      players.forEach((player, idx) => {
+          lines.push(`--- Giocatore ${idx + 1}: ${player.name} ---`);
+          lines.push(`PF: ${Math.max(0, player.hp)} / ${player.maxHP}`);
+          lines.push(`Energia: ${player.energy} / ${player.maxEnergy}`);
+          const attackItemNames = ATTACK_BONUS_ITEMS.map(item => item.name);
+          const attackBonuses = player.bonuses.filter(b => attackItemNames.includes(b.name));
+          if (attackBonuses.length > 0) { lines.push('Bonus Attacco:'); attackBonuses.forEach(b => lines.push(`- ${b.name} (+1)`)); }
+          const defenseItemNames = DEFENSE_BONUS_ITEMS.map(item => item.name);
+          const defenseBonuses = player.bonuses.filter(b => defenseItemNames.includes(b.name));
+          if (defenseBonuses.length > 0) { lines.push('Bonus Difesa:'); defenseBonuses.forEach(b => lines.push(`- ${b.name} (+1)`)); }
+          const potionsInInventory = player.inventory;
+          if (potionsInInventory.length > 0) { lines.push('Pozioni:'); potionsInInventory.forEach(p => lines.push(`- ${p.name}`)); }
+          const collectedGemNames = new Set(player.bonuses.map(b => b.name));
+          const gemsToShow = GEMS.filter(g => collectedGemNames.has(g.name));
+          if (gemsToShow.length > 0) { lines.push('Gemme:'); gemsToShow.forEach(gem => lines.push(`- ${gem.name}`)); }
+          lines.push('Effetti:');
+          let hasEffects = false;
+          if (idx === currentPlayerIndex && gasEffect.active) { const remainingCells = GAS_EFFECT_DURATION_CELLS - gasEffect.newCellsVisited; lines.push(`- Gas Debolezza (-1 Atk per ${remainingCells} celle)`); hasEffects = true; }
+          if (player.isCursed) { lines.push(`- Maledizione (-2 Attacco)`); hasEffects = true; }
+          if (player.shadowSlayerBonus > 0) { lines.push(`- Benedizione (+${player.shadowSlayerBonus} Attacco vs Ombre)`); hasEffects = true; }
+          if (!hasEffects) { lines.push('Nessuno'); }
+          lines.push(`Prigionieri Liberati: ${player.prisonersFreed}`);
+          lines.push('');
+      });
+      discoveriesLog.textContent = lines.join('\n');
+  }
 
-    discoveriesLog.textContent = lines.join('\n');
+  function placeDiscoveries() {
+      enemyMap = {}; bonusMap = {}; potionMap = {}; prisonerMap = {}; altarMap = {}; gasTrapPositions = new Set(); gasActivatedPositions = new Set(); holePositions = new Set(); shadows = []; spawnedShadows = new Set(); prisonerQuests = { quests: {} };
+      let availableCells = Array.from({length: CELL_COUNT}, (_, i) => i + 1).filter(cellNum => cellNum !== 1);
+      for (let i = availableCells.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [availableCells[i], availableCells[j]] = [availableCells[j], availableCells[i]]; }
+      for(let i=0; i<HOLE_COUNT; i++) { if(availableCells.length > 0) holePositions.add(availableCells.pop()); }
+      for(let i = 0; i < ENEMY_COUNT; i++) { if(availableCells.length > 0) enemyMap[availableCells.pop()] = { name: 'Nemico Casuale' }; }
+      ATTACK_BONUS_ITEMS.forEach(item => { if(availableCells.length > 0) bonusMap[availableCells.pop()] = item; });
+      DEFENSE_BONUS_ITEMS.forEach(item => { if(availableCells.length > 0) bonusMap[availableCells.pop()] = item; });
+      POTIONS.forEach(potion => { if(availableCells.length > 0) potionMap[availableCells.pop()] = potion; });
+      GEMS.forEach(gem => { if(availableCells.length > 0) bonusMap[availableCells.pop()] = gem; });
+      ALTARS.forEach(altar => { if(availableCells.length > 0) altarMap[availableCells.pop()] = altar; });
+      if(availableCells.length > 0) bonusMap[availableCells.pop()] = GEM_DOOR;
+      let prisonerCells = [];
+      for (let i = 0; i < PRISONER_COUNT; i++) { if (availableCells.length > 0) { const cell = availableCells.pop(); prisonerMap[cell] = true; prisonerCells.push(cell); } }
+      for (let i = 0; i < GAS_TRAP_COUNT; i++) { if (availableCells.length > 0) gasTrapPositions.add(availableCells.pop()); }
+      if (prisonerCells.length >= 6) {
+          for (let i = prisonerCells.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [prisonerCells[i], prisonerCells[j]] = [prisonerCells[j], prisonerCells[i]]; }
+          let questGiver1 = prisonerCells.pop(); let target1 = prisonerCells.find(c => c > 36);
+          if (target1) { prisonerCells.splice(prisonerCells.indexOf(target1), 1); prisonerQuests.quests[questGiver1] = { type: 'brother', targetCell: target1, reward: {name: 'Pozione (+5 PF)', value: 5, type: 'heal'}, status: 'inactive' }; prisonerQuests.quests[target1] = { type: 'brother-target', giver: questGiver1 }; }
+          let questGiver2 = prisonerCells.pop(); let target2 = prisonerCells.find(c => c < 36);
+          if (target2) { prisonerCells.splice(prisonerCells.indexOf(target2), 1); prisonerQuests.quests[questGiver2] = { type: 'father', targetCell: target2, reward: {name: 'Pozione Fuoco', type: 'fire'}, status: 'inactive' }; prisonerQuests.quests[target2] = { type: 'father-target', giver: questGiver2 }; }
+          let questGiver3 = prisonerCells.pop(); let target3 = prisonerCells.pop();
+          if (questGiver3 && target3) { prisonerQuests.quests[questGiver3] = { type: 'mother', targetCell: target3, reward: {name: 'Fiala di Energia', type: 'energy', iconUrl: 'https://i.imgur.com/vjgNL2x.png'}, status: 'inactive' }; prisonerQuests.quests[target3] = { type: 'mother-target', giver: questGiver3 }; }
+      }
   }
   
-  function placeDiscoveries() {
-    enemyMap = {}; bonusMap = {}; potionMap = {}; prisonerMap = {}; altarMap = {};
-    gasTrapPositions = new Set(); gasActivatedPositions = new Set(); holePositions = new Set();
-    shadows = []; spawnedShadows = new Set();
-    prisonerQuests = { quests: {} };
-    let availableCells = Array.from({length: CELL_COUNT}, (_, i) => i + 1);
-    availableCells = availableCells.filter(cellNum => cellNum !== 1);
-
-    for (let i = availableCells.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [availableCells[i], availableCells[j]] = [availableCells[j], availableCells[i]];
-    }
-
-    for(let i = 0; i < HOLE_COUNT; i++) {
-        if(availableCells.length > 0) holePositions.add(availableCells.pop());
-    }
-
-    for (let i = 0; i < ENEMY_COUNT; i++) { if(availableCells.length > 0) enemyMap[availableCells.pop()] = { name: `Nemico Casuale` }; }
-    ATTACK_BONUS_ITEMS.forEach(item => { if(availableCells.length > 0) bonusMap[availableCells.pop()] = item; });
-    DEFENSE_BONUS_ITEMS.forEach(item => { if(availableCells.length > 0) bonusMap[availableCells.pop()] = item; });
-    POTIONS.forEach(potion => { if(availableCells.length > 0) potionMap[availableCells.pop()] = potion; });
-    GEMS.forEach(gem => { if(availableCells.length > 0) bonusMap[availableCells.pop()] = gem; });
-    ALTARS.forEach(altar => { if(availableCells.length > 0) altarMap[availableCells.pop()] = altar; });
-    if(availableCells.length > 0) bonusMap[availableCells.pop()] = GEM_DOOR;
-    let prisonerCells = [];
-    for (let i = 0; i < PRISONER_COUNT; i++) { 
-        if(availableCells.length > 0) {
-            const cell = availableCells.pop();
-            prisonerMap[cell] = true; 
-            prisonerCells.push(cell);
-        }
-    }
-    for (let i = 0; i < GAS_TRAP_COUNT; i++) { 
-        if (availableCells.length > 0) gasTrapPositions.add(availableCells.pop()); 
-    }
-
-    // Setup Prisoner Quests
-    if (prisonerCells.length >= 6) {
-        for (let i = prisonerCells.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [prisonerCells[i], prisonerCells[j]] = [prisonerCells[j], prisonerCells[i]];
-        }
-        
-        let questGiver1 = prisonerCells.pop();
-        let target1 = prisonerCells.find(c => c <= 36);
-        if (target1) {
-             prisonerCells.splice(prisonerCells.indexOf(target1), 1);
-             prisonerQuests.quests[questGiver1] = {
-                 type: 'brother',
-                 targetCell: target1,
-                 reward: { name: "Pozione (+5 PF)", value: 5, type: "heal" },
-                 status: 'inactive'
-             };
-             prisonerQuests.quests[target1] = { type: 'brother_target', giver: questGiver1 };
-        }
-
-        let questGiver2 = prisonerCells.pop();
-        let target2 = prisonerCells.find(c => c > 36);
-        if(target2) {
-             prisonerCells.splice(prisonerCells.indexOf(target2), 1);
-             prisonerQuests.quests[questGiver2] = {
-                 type: 'father',
-                 targetCell: target2,
-                 reward: { name: "Pozione Fuoco", type: "fire" },
-                 status: 'inactive'
-             };
-             prisonerQuests.quests[target2] = { type: 'father_target', giver: questGiver2 };
-        }
-        
-        let questGiver3 = prisonerCells.pop();
-        let target3 = prisonerCells.pop();
-        if(questGiver3 && target3) {
-             prisonerQuests.quests[questGiver3] = {
-                 type: 'mother',
-                 targetCell: target3,
-                 reward: { name: "Fiala di Energia", type: "energy", iconUrl: "https://i.imgur.com/vjgNL2x.png" },
-                 status: 'inactive'
-             };
-             prisonerQuests.quests[target3] = { type: 'mother_target', giver: questGiver3 };
-        }
-    }
-  }
-
   function placeBoss() {
       const allCellNumbers = Array.from({length: CELL_COUNT}, (_, i) => i + 1);
       const occupiedCells = new Set(Array.from(visitedCells.keys()).map(Number));
-      Object.keys(enemyMap).forEach(k => occupiedCells.add(Number(k)));
-      Object.keys(bonusMap).forEach(k => occupiedCells.add(Number(k)));
-      Object.keys(potionMap).forEach(k => occupiedCells.add(Number(k)));
-      Object.keys(prisonerMap).forEach(k => occupiedCells.add(Number(k)));
-      Object.keys(altarMap).forEach(k => occupiedCells.add(Number(k)));
-      holePositions.forEach(k => occupiedCells.add(Number(k)));
-
+      Object.keys(enemyMap).forEach(k => occupiedCells.add(Number(k))); Object.keys(bonusMap).forEach(k => occupiedCells.add(Number(k))); Object.keys(potionMap).forEach(k => occupiedCells.add(Number(k))); Object.keys(prisonerMap).forEach(k => occupiedCells.add(Number(k))); Object.keys(altarMap).forEach(k => occupiedCells.add(Number(k))); holePositions.forEach(k => occupiedCells.add(Number(k)));
       const freeCells = allCellNumbers.filter(num => !occupiedCells.has(num));
-      
-      if (freeCells.length > 0) {
-          const bossCellNum = freeCells[Math.floor(Math.random() * freeCells.length)];
-          enemyMap[bossCellNum] = { name: "Boss Finale", isBoss: true };
-          messageQueue.push("Un'oscura presenza è apparsa nel dungeon...");
-      } else {
-          messageQueue.push({
-            endGame: true,
-            title: "Dungeon non depurato!",
-            subtitle: "Il Dungeon non è stato completamente depurato, prova ancora, avrai più fortuna.."
-          });
-      }
+      if (freeCells.length > 0) { const bossCellNum = freeCells[Math.floor(Math.random() * freeCells.length)]; enemyMap[bossCellNum] = { name: 'Boss Finale', isBoss: true }; messageQueue.push("Un'oscura presenza è apparsa nel dungeon..."); }
+      else { messageQueue.push({endGame: true, title: "Dungeon non depurato!", subtitle: "Il Dungeon non è stato completamente depurato, prova ancora, avrai più fortuna.."}); }
   }
 
   function buildBoard() {
-    board.innerHTML = '';
-    for (let i = 1; i <= CELL_COUNT; i++) {
-        const r = Math.floor((i - 1) / COLS);
-        const c = (i - 1) % COLS;
-        const cellDiv = document.createElement('div');
-        cellDiv.className = 'cell';
-        cellDiv.dataset.cellNumber = i;
-        cellDiv.dataset.row = r;
-        cellDiv.dataset.col = c;
-        
-        const content = document.createElement('div');
-        content.className = 'cell-content';
-        cellDiv.appendChild(content);
-        
-        if (visitedCells && visitedCells.has(String(i))) {
-            cellDiv.classList.add('visited');
-            const info = visitedCells.get(String(i));
-            
-            content.innerHTML = '';
-
-            if (info.defeated) addSkullMarker(cellDiv);
-            else if (info.prisonerFreed) addPrisonerMarker(cellDiv);
-            else if (holePositions.has(i)) addHoleMarker(cellDiv);
-            else if (info.altar) {
-                const img = document.createElement('img');
-                img.src = info.altar.iconUrl;
-                img.className = 'item-marker';
-                content.appendChild(img);
-            }
-            else if (info.bonus && info.bonus.iconUrl) {
-                const img = document.createElement('img');
-                img.src = info.bonus.iconUrl;
-                img.className = 'item-marker';
-                content.appendChild(img);
-            }
-            else if (info.potion && info.potion.iconUrl) {
-                const img = document.createElement('img');
-                img.src = info.potion.iconUrl;
-                img.className = 'item-marker';
-                content.appendChild(img);
-            }
-            else {
-                content.textContent = i;
-            }
-
-            if(info.enemy && !info.defeated) {
-                content.appendChild(Object.assign(document.createElement('div'), {className: 'enemy-marker'}));
-            }
-            
-            if (info.bonus && info.bonus.name === GEM_DOOR.name) cellDiv.classList.add('gem-door-marker');
-        } else {
-            content.textContent = i;
-        }
-        
-        const shadowHere = shadows.find(s => s.position === i && s.hp > 0);
-        if (shadowHere) {
-             const img = document.createElement('img');
-             img.src = shadowHere.iconUrl;
-             img.className = 'shadow-marker';
-             content.appendChild(img);
-        }
-
-        if (currentCell && parseInt(currentCell.dataset.cellNumber) === i && battleModal.style.display !== 'block') {
-            const img = document.createElement('img');
-            img.src = CLASS_ICONS[character.class];
-            img.className = 'hero-marker';
-            content.appendChild(img);
-        }
-        
-        if (gasActivatedPositions.has(i)) {
-             content.appendChild(Object.assign(document.createElement('div'), {className: 'gas-marker'}));
-        }
-
-        if (currentCell && parseInt(cellDiv.dataset.cellNumber) === parseInt(currentCell.dataset.cellNumber)) {
-            cellDiv.classList.add('current');
-        }
-
-        board.appendChild(cellDiv);
-    }
+      board.innerHTML = '';
+      for (let i = 1; i <= CELL_COUNT; i++) {
+          const r = Math.floor((i - 1) / COLS); const c = (i - 1) % COLS;
+          const cellDiv = document.createElement('div'); cellDiv.className = 'cell'; cellDiv.dataset.cellNumber = i; cellDiv.dataset.row = r; cellDiv.dataset.col = c;
+          const content = document.createElement('div'); content.className = 'cell-content'; cellDiv.appendChild(content);
+          if (visitedCells && visitedCells.has(String(i))) {
+              cellDiv.classList.add('visited'); const info = visitedCells.get(String(i)); content.innerHTML = '';
+              if (info.defeated) addSkullMarker(cellDiv);
+              else if (info.prisonerFreed) addPrisonerMarker(cellDiv);
+              else if (holePositions.has(i)) addHoleMarker(cellDiv);
+              else if (info.altar) { const img = document.createElement('img'); img.src = info.altar.iconUrl; img.className = 'item-marker'; content.appendChild(img); }
+              else if (info.bonus && info.bonus.iconUrl) { const img = document.createElement('img'); img.src = info.bonus.iconUrl; img.className = 'item-marker'; content.appendChild(img); }
+              else if (info.potion && info.potion.iconUrl) { const img = document.createElement('img'); img.src = info.potion.iconUrl; img.className = 'item-marker'; content.appendChild(img); }
+              else { content.textContent = i; }
+              if (info.enemy && !info.defeated) content.appendChild(Object.assign(document.createElement('div'), { className: 'enemy-marker' }));
+              if (info.bonus && info.bonus.name === GEM_DOOR.name) cellDiv.classList.add('gem-door-marker');
+          } else { content.textContent = i; }
+          const shadowHere = shadows.find(s => s.position === i && s.hp > 0);
+          if (shadowHere) { const img = document.createElement('img'); img.src = shadowHere.iconUrl; img.className = 'shadow-marker'; content.appendChild(img); }
+          players.forEach((p, index) => { if (p.position === i && (!activeBattleState || p.position !== activeBattleState.battleCellNum)) { const img = document.createElement('img'); img.src = CLASS_ICONS[p.class]; img.className = 'hero-marker'; content.appendChild(img); if (index === currentPlayerIndex && !activeBattleState) { cellDiv.classList.add(`current-player-${index + 1}`); } } });
+          if (gasActivatedPositions.has(i)) content.appendChild(Object.assign(document.createElement('div'), { className: 'gas-marker' }));
+          board.appendChild(cellDiv);
+      }
   }
-
-function getValidMoves(steps) {
-    if (!currentCell) return [];
-    const startRow = +currentCell.dataset.row, startCol = +currentCell.dataset.col;
-    const finalSteps = steps;
-    return [...board.querySelectorAll('.cell')].filter(cell => {
-      if (cell === currentCell) return false;
-      const r = +cell.dataset.row, c = +cell.dataset.col;
-      const dr = Math.abs(r - startRow), dc = Math.abs(c - startCol);
-      return Math.max(dr, dc) === finalSteps;
-    });
+  
+  function getValidMoves(steps) {
+      const character = players[currentPlayerIndex];
+      if (!character) return [];
+      const startCell = board.querySelector(`[data-cell-number="${character.position}"]`);
+      if (!startCell) return [];
+      const startRow = startCell.dataset.row, startCol = startCell.dataset.col;
+      return [...board.querySelectorAll('.cell')].filter(cell => {
+          if (cell === startCell) return false;
+          const r = cell.dataset.row, c = cell.dataset.col;
+          const dr = Math.abs(r - startRow), dc = Math.abs(c - startCol);
+          return Math.max(dr, dc) === steps;
+      });
   }
+  
+  function clearHighlights() { board.querySelectorAll('.highlighted').forEach(el => el.classList.remove('highlighted')); }
+  
+  function getPrisonerStatusMessage(character) { const freed = character.prisonersFreed; if (freed === 11) return `Prigionieri liberati: ${freed}. Sei stato portato a festa come un eroe liberatore!`; if (freed >= 9) return `Prigionieri liberati: ${freed}. Un cittadino piange il figlio perduto sulla sua tomba.`; if (freed >= 5) return `Prigionieri liberati: ${freed}. I cittadini sono tristi per i prigionieri non liberati.`; return `Prigionieri liberati: ${freed}. I cittadini piangono i loro cari non liberati.`; }
 
-  function clearHighlights() {
-    board.querySelectorAll('.highlighted').forEach(el => el.classList.remove('highlighted'));
+  function processMessageQueue(onComplete) {
+      messageModal.classList.remove('victory-modal'); victorySubText.textContent = ''; prisonerStatusText.textContent = '';
+      if (messageQueue.length > 0) {
+          const message = messageQueue.shift();
+          if (typeof message === 'object' && message.victory) { messageModal.classList.add('victory-modal'); messageModalText.textContent = message.title; victorySubText.textContent = message.subtitle; prisonerStatusText.textContent = message.prisonerStatus; }
+          else if (typeof message === 'object' && message.endGame) { messageModal.classList.add('victory-modal'); messageModalText.innerHTML = message.title; victorySubText.textContent = message.subtitle; messageModal.style.display = 'block'; playerActions.innerHTML = ''; messageModalOkBtn.onclick = () => { messageModal.style.display = 'none'; promptForNewGame(); }; return; }
+          else { messageModalText.innerHTML = message; }
+          messageModal.style.display = 'block';
+          messageModalOkBtn.onclick = () => {
+              messageModal.style.display = 'none';
+              processMessageQueue(onComplete);
+          };
+          messageModalOkBtn.focus();
+      } else {
+          messageModal.style.display = 'none';
+          if (onComplete) onComplete();
+      }
   }
-
-  function getPrisonerStatusMessage() {
-      const freed = character.prisonersFreed;
-      if (freed === 11) return `Prigionieri liberati: ${freed}. Sei stato portato a festa come un eroe liberatore!`;
-      if (freed >= 9) return `Prigionieri liberati: ${freed}. Un cittadino piange il figlio perduto sulla sua tomba.`;
-      if (freed >= 5) return `Prigionieri liberati: ${freed}. I cittadini sono tristi per i prigionieri non liberati.`;
-      return `Prigionieri liberati: ${freed}. I cittadini piangono i loro cari non liberati.`;
-  }
-
-  function processMessageQueue() {
-    messageModal.classList.remove('victory-modal');
-    victorySubText.textContent = ''; prisonerStatusText.textContent = '';
-    if (messageQueue.length > 0) {
-        const message = messageQueue.shift();
-        if (typeof message === 'object' && message.victory) {
-            messageModal.classList.add('victory-modal');
-            messageModalText.textContent = message.title;
-            victorySubText.textContent = message.subtitle;
-            prisonerStatusText.textContent = message.prisonerStatus;
-        } else if (typeof message === 'object' && message.endGame) {
-            messageModal.classList.add('victory-modal');
-            messageModalText.textContent = message.title;
-            victorySubText.textContent = message.subtitle;
-            messageModal.style.display = 'block';
-            diceBtn.disabled = true;
-            messageModalOkBtn.onclick = () => {
-                messageModal.style.display = 'none';
-                promptForNewGame();
-            };
-            return; 
-        } else {
-            messageModalText.textContent = message;
-        }
-        messageModal.style.display = 'block';
-        messageModalOkBtn.onclick = processMessageQueue;
-        messageModalOkBtn.focus();
-    } else {
-        messageModal.style.display = 'none';
-        updatePlayerInfo();
-        updateDiscoveriesLog();
-    }
-  }
-
-  function setMainMessage(text, color = '#ffcc00') {
-      mainMessageDisplay.textContent = text;
-      mainMessageDisplay.style.color = color;
-      mainMessageDisplay.style.visibility = text ? 'visible' : 'hidden';
-  }
-
-  function resetMessages() {
-      setMainMessage('');
-  }
-
+  
+  function setMainMessage(text, color = '#ffcc00') { mainMessageDisplay.textContent = text; mainMessageDisplay.style.color = color; mainMessageDisplay.style.visibility = text ? 'visible' : 'hidden'; }
+  function resetMessages() { setMainMessage(''); }
+  
   function setBattleMode(isBattle) {
       if (isBattle) {
           stickyControls.style.top = '-200px';
       } else {
+          activeBattleState = null;
           stickyControls.style.top = '0';
       }
-      buildBoard(); 
+      buildBoard();
   }
 
   function findPath(start, end) {
-      let queue = [[start]];
-      let visited = new Set([start]);
+      let queue = [[start]]; let visited = new Set([start]);
       while(queue.length > 0) {
-          let path = queue.shift();
-          let pos = path[path.length - 1];
-          if(pos === end) return path;
-
-          let neighbors = [pos - 1, pos + 1, pos - COLS, pos + COLS].filter(n => {
+          let path = queue.shift(); let pos = path[path.length - 1]; if(pos === end) return path;
+          let neighbors = [pos - 1, pos + 1, pos - COLS, pos + COLS, pos-COLS-1, pos-COLS+1, pos+COLS-1, pos+COLS+1].filter(n => {
               if (n < 1 || n > CELL_COUNT || visited.has(n)) return false;
               const r1 = Math.floor((pos - 1) / COLS), c1 = (pos - 1) % COLS;
               const r2 = Math.floor((n - 1) / COLS), c2 = (n - 1) % COLS;
-              return Math.abs(r1 - r2) + Math.abs(c1 - c2) === 1;
+              return Math.abs(r1 - r2) <= 1 && Math.abs(c1 - c2) <= 1;
           });
-
-          neighbors.sort((a, b) => {
-              const distA = Math.abs(Math.floor((a - 1) / COLS) - Math.floor((end - 1) / COLS)) + Math.abs(((a - 1) % COLS) - ((end - 1) % COLS));
-              const distB = Math.abs(Math.floor((b - 1) / COLS) - Math.floor((end - 1) / COLS)) + Math.abs(((b - 1) % COLS) - ((end - 1) % COLS));
+          neighbors.sort((a,b) => {
+              const distA = Math.abs(Math.floor((a-1)/COLS) - Math.floor((end-1)/COLS)) + Math.abs(((a-1)%COLS) - ((end-1)%COLS));
+              const distB = Math.abs(Math.floor((b-1)/COLS) - Math.floor((end-1)/COLS)) + Math.abs(((b-1)%COLS) - ((end-1)%COLS));
               return distA - distB;
           });
-
-          for(const neighbor of neighbors) {
-              if (!visited.has(neighbor)) {
-                visited.add(neighbor);
-                let newPath = [...path, neighbor];
-                queue.push(newPath);
-              }
-          }
+          for (const neighbor of neighbors) { if (!visited.has(neighbor)) { visited.add(neighbor); let newPath = [...path, neighbor]; queue.push(newPath); } }
       }
-      return []; 
+      return null;
   }
   
   async function animateAndSetCurrent(destinationCell) {
-    diceBtn.disabled = true;
-    clearHighlights();
-    diceRes.textContent = '-';
-
-    const startNum = parseInt(currentCell.dataset.cellNumber);
-    const endNum = parseInt(destinationCell.dataset.cellNumber);
-    const path = findPath(startNum, endNum);
-
-    if (!path || path.length <= 1) {
-        currentCell = destinationCell;
-        await processCellLogic(destinationCell);
-        return;
-    }
-
-    for (let i = 1; i < path.length; i++) {
-        await new Promise(resolve => setTimeout(resolve, 150));
-        const nextCellNum = path[i];
-        const nextCellNode = board.querySelector(`[data-cell-number="${nextCellNum}"]`);
-        
-        if (currentCell) currentCell.classList.remove('current');
-        currentCell = nextCellNode;
-        if (currentCell) currentCell.classList.add('current');
-        buildBoard();
-    }
-    
-    await processCellLogic(destinationCell);
+      playerActions.innerHTML = '<button id="diceRollBtn" disabled>Tira dado</button>';
+      clearHighlights(); diceRes.textContent = '-'; const character = players[currentPlayerIndex];
+      const startNum = character.position; const endNum = parseInt(destinationCell.dataset.cellNumber); const path = findPath(startNum, endNum);
+      if (!path || path.length <= 1) { character.position = endNum; processCellLogic(destinationCell); return; }
+      for (let i = 1; i < path.length; i++) { await new Promise(resolve => setTimeout(resolve, 150)); character.position = path[i]; buildBoard(); }
+      processCellLogic(destinationCell);
   }
 
-  async function processCellLogic(cell) {
-    const cellNum = parseInt(cell.dataset.cellNumber);
-    currentCell = cell; 
-    resetMessages();
-    const isNewVisit = !visitedCells.has(String(cellNum));
+  function processCellLogic(cell) {
+      const character = players[currentPlayerIndex];
+      const cellNum = parseInt(cell.dataset.cellNumber);
+      character.position = cellNum;
+      resetMessages();
+      const isNewVisit = !visitedCells.has(String(cellNum));
+      let subsequentAction = () => endTurnSequence();
 
-    if (isNewVisit) {
-        if(holePositions.has(cellNum)) {
-            triggerScreenShake();
-            const damage = character.class === 'Esploratore' ? 2 : 3;
-            messageQueue.push(`Ti sloghi una caviglia in un buco! Perdi ${damage} PF.`);
-            addHoleMarker(cell);
-            character.hp -= damage;
-            updatePlayerInfo();
-            if(character.hp <= 0) {
-                handleGameOver("per una caviglia slogata");
-                return;
-            }
-        }
-        
-        if (visitedCells.size > 0 && visitedCells.size % 2 === 0) {
-            gainEnergy(1);
-        }
-        if (gasEffect.active) {
-            gasEffect.newCellsVisited++;
-            if (gasEffect.newCellsVisited >= GAS_EFFECT_DURATION_CELLS) {
-                gasEffect.active = false;
-                gasEffect.newCellsVisited = 0;
-                messageQueue.push("L'effetto del gas di debolezza è svanito!");
-            }
-        }
-        
-        const enemyObj = enemyMap[cellNum];
-        const bonusLabel = bonusMap[cellNum];
-        const potionLabel = potionMap[cellNum];
-        const altar = altarMap[cellNum];
-        const isPrisonerCell = prisonerMap[cellNum];
-        let order = discoveryCounter++;
+      if (isNewVisit) {
+          discoveryCounter++;
+          visitedCells.set(String(cellNum), { enemy: null, bonus: null, potion: null, altar: null, prisonerFreed: false, collected: false, defeated: false, hp: 0, discoveryOrder: discoveryCounter });
+          
+          const info = visitedCells.get(String(cellNum));
+          info.enemy = enemyMap[cellNum] ? { ...enemyMap[cellNum] } : null;
+          info.bonus = bonusMap[cellNum] ? { ...bonusMap[cellNum] } : null;
+          info.potion = potionMap[cellNum] ? { ...potionMap[cellNum] } : null;
+          info.altar = altarMap[cellNum] ? { ...altarMap[cellNum] } : null;
 
-        visitedCells.set(String(cellNum), { 
-            enemy: enemyObj || null, bonus: bonusLabel || null, potion: potionLabel || null, altar: altar || null,
-            prisonerFreed: false, collected: false, defeated: false, hp: 0, discoveryOrder: order
-        });
-        
-        const exploredCount = visitedCells.size;
-        if (exploredCount > 0 && exploredCount % 7 === 0) {
-            character.hp = Math.min(character.hp + 3, maxHP);
-            messageQueue.push("Il riposo ti ha fatto guadagnare 3 PF.");
-        }
-        
-        const info = visitedCells.get(String(cellNum));
-        
-        if (gasTrapPositions.has(cellNum) && !gasActivatedPositions.has(cellNum)) {
-            messageQueue.push(`Sei finito in una trappola a gas! Attacco -1 finché non scopri ${GAS_EFFECT_DURATION_CELLS} nuove celle.`);
-            gasEffect.active = true;
-            gasEffect.newCellsVisited = 0;
-            gasActivatedPositions.add(cellNum);
-        }
-
-        if (info.bonus && !character.bonuses.some(b => b.name === info.bonus.name)) {
-            character.bonuses.push(info.bonus);
-            
-            const gemNames = GEMS.map(g => g.name);
-            const attackItemNames = ATTACK_BONUS_ITEMS.map(i => i.name);
-            const defenseItemNames = DEFENSE_BONUS_ITEMS.map(i => i.name);
-
-            if (gemNames.includes(info.bonus.name)) { 
-                messageQueue.push(`Hai trovato una ${info.bonus.name}!`); 
-            } else if (info.bonus.name === GEM_DOOR.name) {
-                 const collectedGemNames = new Set(character.bonuses.map(b => b.name));
-                 const hasAllGems = GEMS.every(gem => collectedGemNames.has(gem.name));
-                 if (hasAllGems && !character.hasSpecialSword) {
-                     character.hasSpecialSword = true;
-                     messageQueue.push("La Porta si apre! Hai trovato la Spada Speciale (1D12+1).");
-                 } else if (character.hasSpecialSword) { setMainMessage("La porta di gemme è vuota.", '#ffffff'); } 
-                 else { messageQueue.push("Trovi una porta incastonata di gemme. È sigillata."); }
-            } else if (attackItemNames.includes(info.bonus.name)) {
-                messageQueue.push(`Hai trovato: ${info.bonus.name}! Ottieni +1 in attacco.`); 
-            } else if (defenseItemNames.includes(info.bonus.name)) {
-                messageQueue.push(`Hai trovato: ${info.bonus.name}! Ottieni +1 in difesa.`);
-            }
-        }
-        
-        if (info.potion && !info.collected) {
-            character.inventory.push(info.potion);
-            info.collected = true;
-            messageQueue.push(`Hai trovato: ${info.potion.name}.`);
-        }
-
-        if (info.altar) {
-            handleAltar(info.altar);
-            return; 
-        }
-
-        if (isPrisonerCell) {
-            character.prisonersFreed++;
-            info.prisonerFreed = true;
-            messageQueue.push("Hai liberato un prigioniero!");
-            handlePrisonerQuest(cellNum);
-        }
-
-    } else { 
-        const info = visitedCells.get(String(cellNum));
-        if (info && info.bonus && info.bonus.name === GEM_DOOR.name) {
-            const collectedGemNames = new Set(character.bonuses.map(b => b.name));
-            const hasAllGems = GEMS.every(gem => collectedGemNames.has(gem.name));
-            if (hasAllGems && !character.hasSpecialSword) {
-                character.hasSpecialSword = true;
-                messageQueue.push("Usi le gemme. La Porta si apre! Trovi la Spada Speciale (1D12+1).");
-            }
-        }
-    }
-    
-    buildBoard();
-    processMessageQueue();
-    const info = visitedCells.get(String(cellNum));
-    
-    const shadowAtLocation = shadows.find(s => s.position === cellNum && s.hp > 0);
-    if (shadowAtLocation) {
-        startBattle(shadowAtLocation);
-        return;
-    }
-
-    if (info && info.enemy && !info.defeated) { handleEncounter(info.enemy); } else {
-        await handleShadowSpawnsAndTurns();
-    }
-    
-    if (info && info.enemy && info.defeated) {
-        setMainMessage(`Qui giace un nemico sconfitto.`, '#a9a9a9');
-    } 
-    else if (info && !info.enemy && !info.bonus && !info.potion && !info.altar && !prisonerMap[cellNum] && !holePositions.has(cellNum)) {
-        if (isNewVisit || cellNum === 1) { setMainMessage("Procedi tranquillo", 'lightgreen'); } 
-        else { setMainMessage('Cella già visitata', '#ffffff'); }
-    }
-
-    updatePlayerInfo();
-    updateDiscoveriesLog();
-  }
-  
-  function handleAltar(altar) {
-    if (altar.type === 'sacrificial') {
-        altarModal.style.display = 'block';
-        altarMessage.textContent = "Vedi un altare. Puoi sacrificare 4 PF per ricevere una benedizione (+2 Attacco vs Ombre).";
-        altarActions.innerHTML = '';
-        const yesBtn = document.createElement('button');
-        yesBtn.textContent = 'Sì';
-        yesBtn.onclick = () => {
-            character.hp -= 4;
-            character.shadowSlayerBonus = 2;
-            messageQueue.push("Hai ricevuto una benedizione! Ottieni +2 agli attacchi contro tutte le Ombre.");
-            if (character.hp <= 0) handleGameOver("sacrificandosi all'altare");
-            altarModal.style.display = 'none';
-            processCellContinuation();
-        };
-        const noBtn = document.createElement('button');
-        noBtn.textContent = 'No';
-        noBtn.onclick = () => {
-            altarModal.style.display = 'none';
-            processCellContinuation();
-        };
-        altarActions.appendChild(yesBtn);
-        altarActions.appendChild(noBtn);
-    } else if (altar.type === 'curse') {
-        character.isCursed = true;
-        messageQueue.push("Ora sei maledetto, hai -2 ai tuoi attacchi.\nDevi trovare l'altare della purificazione per toglierti la maledizione.");
-        processCellContinuation();
-    } else if (altar.type === 'purification') {
-        if (character.isCursed) {
-            character.isCursed = false;
-            messageQueue.push("Ora la maledizione non ha più effetto su di te!");
-        } else {
-            messageQueue.push("Trovi un altare della purificazione.");
-        }
-        processCellContinuation();
-    }
-  }
-  
-  function handlePrisonerQuest(cellNum) {
-      const quest = prisonerQuests.quests[cellNum];
-      if (!quest) return;
-
-      if (quest.status === 'inactive') { // Is a quest giver
-          quest.status = 'active';
-          let familyMember = '';
-          let locationInfo = '';
-          if (quest.type === 'brother') {
-              familyMember = 'fratello';
-              locationInfo = 'nella parte nord';
-          } else if (quest.type === 'father') {
-              familyMember = 'padre';
-              locationInfo = 'nella parte sud';
-          } else if (quest.type === 'mother') {
-              familyMember = 'madre';
-              locationInfo = 'qui vicino';
-          }
-          messageQueue.push(`"Grazie per avermi liberato! Mio/a ${familyMember} è ${locationInfo} del dungeon (cella ${quest.targetCell}). Se liberi anche lui/lei, ti ricompenserò!"`);
-      } else if (quest.type.includes('_target')) { // Is a quest target
-          const giverQuest = prisonerQuests.quests[quest.giver];
-          if (giverQuest && giverQuest.status === 'active') {
-              giverQuest.status = 'completed';
-              character.inventory.push(giverQuest.reward);
-              messageQueue.push(`Il prigioniero liberato ti ringrazia e ti dona una ${giverQuest.reward.name}!`);
-          }
+          if (holePositions.has(cellNum)) { const damage = character.class === 'Esploratore' ? 2 : 3; messageQueue.push(`Ti sloghi una caviglia in un buco! Perdi ${damage} PF.`); triggerScreenShake(); addHoleMarker(cell); character.hp -= damage; if (character.hp <= 0) { subsequentAction = () => handleGameOver("per una caviglia slogata", character); } }
+          if (subsequentAction.toString().includes('handleGameOver')) { processMessageQueue(subsequentAction); return; }
+          if (visitedCells.size > 0 && visitedCells.size % 20 === 0) gainEnergy(1);
+          if (gasEffect.active) { gasEffect.newCellsVisited++; if (gasEffect.newCellsVisited >= GAS_EFFECT_DURATION_CELLS) { gasEffect.active = false; gasEffect.newCellsVisited = 0; messageQueue.push("L'effetto del gas di debolezza è svanito!"); } }
+          if (visitedCells.size > 0 && visitedCells.size % 7 === 0) { character.hp = Math.min(character.hp + 3, character.maxHP); messageQueue.push("Il riposo ti ha fatto guadagnare 3 PF."); }
+          if (gasTrapPositions.has(cellNum) && !gasActivatedPositions.has(cellNum)) { messageQueue.push(`Sei finito in una trappola a gas! Attacco -1 finché non scopri ${GAS_EFFECT_DURATION_CELLS} nuove celle.`); gasEffect.active = true; gasEffect.newCellsVisited = 0; gasActivatedPositions.add(cellNum); }
+          if (info.bonus) { if (!character.bonuses.some(b => b.name === info.bonus.name)) { character.bonuses.push(info.bonus); const gemNames = GEMS.map(g => g.name); if (gemNames.includes(info.bonus.name)) messageQueue.push(`Hai trovato una ${info.bonus.name}!`); else if (info.bonus.name === GEM_DOOR.name) { const hasAllGems = GEMS.every(gem => character.bonuses.some(b => b.name === gem.name)); if(hasAllGems && !character.hasSpecialSword) { character.hasSpecialSword = true; messageQueue.push("La Porta si apre! Hai trovato la Spada Speciale 1D12+1."); } else if (!character.hasSpecialSword) { messageQueue.push("Trovi una porta incastonata di gemme. È sigillata."); } } else messageQueue.push(`Hai trovato ${info.bonus.name}!`); } }
+          if (info.potion) { if (!info.collected) { character.inventory.push(info.potion); info.collected = true; messageQueue.push(`Hai trovato ${info.potion.name}.`); } }
+          if (info.altar) subsequentAction = () => handleAltar(info.altar);
+          if (prisonerMap[cellNum]) { if(!visitedCells.get(String(cellNum)).prisonerFreed) { character.prisonersFreed++; info.prisonerFreed = true; messageQueue.push('Hai liberato un prigioniero!'); handlePrisonerQuest(cellNum); }}
+      } else {
+          const info = visitedCells.get(String(cellNum));
+          if (info && info.bonus && info.bonus.name === GEM_DOOR.name) { const hasAllGems = GEMS.every(gem => character.bonuses.some(b => b.name === gem.name)); if (hasAllGems && !character.hasSpecialSword) { character.hasSpecialSword = true; messageQueue.push("Usi le gemme. La Porta si apre! Trovi la Spada Speciale 1D12+1."); } }
       }
+
+      const finalInfo = visitedCells.get(String(cellNum));
+      const shadowAtLocation = shadows.find(s => s.position === cellNum && s.hp > 0);
+      if (shadowAtLocation) subsequentAction = () => startBattle(shadowAtLocation);
+      else if (finalInfo && finalInfo.enemy && !finalInfo.defeated) subsequentAction = () => handleEncounter(finalInfo.enemy);
+      else { if (finalInfo && finalInfo.enemy && finalInfo.defeated) setMainMessage('Qui giace un nemico sconfitto.', '#a9a9a9'); else if (isNewVisit && cellNum !== 1) setMainMessage('Procedi tranquillo', 'lightgreen'); else if (!isNewVisit) setMainMessage('Cella già visitata', '#ffffff'); }
+      
+      updatePlayerInfo(); updateDiscoveriesLog(); buildBoard();
+      processMessageQueue(subsequentAction);
+  }
+
+  function handleAltar(altar) {
+      const character = players[currentPlayerIndex];
+      if (altar.type === 'sacrificial') { altarModal.style.display = 'block'; altarMessage.textContent = "Vedi un altare. Puoi sacrificare 4 PF per ricevere una benedizione (+2 Attacco vs Ombre)."; altarActions.innerHTML = ''; const yesBtn = document.createElement('button'); yesBtn.textContent = 'Sì'; yesBtn.onclick = () => { character.hp -= 4; character.shadowSlayerBonus = 2; messageQueue.push("Hai ricevuto una benedizione! Ottieni +2 agli attacchi contro tutte le Ombre."); altarModal.style.display = 'none'; processMessageQueue(() => { if (character.hp <= 0) handleGameOver("sacrificandosi all'altare", character); else processCellContinuation(); }); }; const noBtn = document.createElement('button'); noBtn.textContent = 'No'; noBtn.onclick = () => { altarModal.style.display = 'none'; processCellContinuation(); }; altarActions.appendChild(yesBtn); altarActions.appendChild(noBtn); }
+      else if (altar.type === 'curse') { character.isCursed = true; messageQueue.push("Ora sei maledetto, hai -2 ai tuoi attacchi. trovare l'altare della purificazione per toglierti la maledizione."); processMessageQueue(processCellContinuation); }
+      else if (altar.type === 'purification') { if (character.isCursed) { character.isCursed = false; messageQueue.push("Ora la maledizione non ha più effetto su di te!"); } else { messageQueue.push("Trovi un altare della purificazione."); } processMessageQueue(processCellContinuation); }
+  }
+
+  function handlePrisonerQuest(cellNum) {
+      const character = players[currentPlayerIndex]; const quest = prisonerQuests.quests[cellNum]; if (!quest) return;
+      if (quest.status === 'inactive') { quest.status = 'active'; let familyMember = ''; let locationInfo = ''; if(quest.type === 'brother'){ familyMember = 'fratello'; locationInfo = 'nella parte nord'; } else if (quest.type === 'father') { familyMember = 'padre'; locationInfo = 'nella parte sud'; } else if (quest.type === 'mother') { familyMember = 'madre'; locationInfo = 'qui vicino'; } messageQueue.push(`Grazie per avermi liberato! Mio/a ${familyMember} è ${locationInfo} del dungeon (cella ${quest.targetCell}). Se liberi anche lui/lei, ti ricompenserò!`); }
+      else if (quest.type.includes('-target')) { const giverQuest = prisonerQuests.quests[quest.giver]; if (giverQuest && giverQuest.status === 'active') { giverQuest.status = 'completed'; character.inventory.push(giverQuest.reward); messageQueue.push(`Il prigioniero liberato ti ringrazia e ti dona una ${giverQuest.reward.name}!`); } }
   }
   
   async function processCellContinuation() {
-      buildBoard();
-      processMessageQueue();
-      const info = visitedCells.get(currentCell.dataset.cellNumber);
-      const shadowAtLocation = shadows.find(s => s.position === parseInt(currentCell.dataset.cellNumber) && s.hp > 0);
-      if (shadowAtLocation) {
-          startBattle(shadowAtLocation);
-          return;
-      }
-      if (info && info.enemy && !info.defeated) handleEncounter(info.enemy);
-      else await handleShadowSpawnsAndTurns();
-      updatePlayerInfo();
-      updateDiscoveriesLog();
+      buildBoard(); const character = players[currentPlayerIndex]; const info = visitedCells.get(String(character.position)); const shadowAtLocation = shadows.find(s => s.position === character.position && s.hp > 0);
+      if (shadowAtLocation) { startBattle(shadowAtLocation); return; }
+      if (info && info.enemy && !info.defeated) { handleEncounter(info.enemy); } else { await endTurnSequence(); }
+      updatePlayerInfo(); updateDiscoveriesLog();
   }
 
-  async function handleShadowSpawnsAndTurns() {
+  async function endTurnSequence() {
+      if (activeBattleState) return;
+
       let battleStarted = false;
       const exploredCount = visitedCells.size;
-
       for (const spawn of SHADOW_SPAWNS) {
           if (exploredCount >= spawn.spawnTurn && !spawnedShadows.has(spawn.name)) {
               spawnedShadows.add(spawn.name);
-              let freeCells = Array.from({length: CELL_COUNT}, (_, i) => i + 1).filter(c => c !== parseInt(currentCell.dataset.cellNumber) && !shadows.some(s => s.position === c));
-              if (freeCells.length > 0) {
+              let freeCells = Array.from({length: CELL_COUNT}, (_, i) => i + 1).filter(c => c !== players[currentPlayerIndex].position && !shadows.some(s => s.position === c));
+              if(freeCells.length > 0) {
                   const pos = freeCells[Math.floor(Math.random() * freeCells.length)];
                   shadows.push({ ...spawn, hp: spawn.hp, startHP: spawn.hp, position: pos, isShadow: true });
                   messageQueue.push(`${spawn.name} è apparsa nel dungeon!`);
-                  processMessageQueue();
+                  await new Promise(resolve => processMessageQueue(resolve));
                   buildBoard();
               }
           }
@@ -1252,99 +667,101 @@ function getValidMoves(steps) {
       if (shadows.some(s => s.hp > 0)) {
           shadowActionDisplay.style.display = 'block';
           for (const shadow of shadows) {
-            if (shadow.hp > 0) {
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                shadowTurnName.textContent = shadow.name;
-                const moveRoll = Math.floor(Math.random() * 6) + 1;
-                shadowDiceRes.textContent = moveRoll;
-                await new Promise(resolve => setTimeout(resolve, 500));
-
-                for (let i = 0; i < moveRoll; i++) {
-                    if (battleStarted) break;
-                    let path = findPath(shadow.position, parseInt(currentCell.dataset.cellNumber));
-                    if (path.length > 1) {
-                        shadow.position = path[1];
-                        buildBoard();
-                        await new Promise(resolve => setTimeout(resolve, 200));
-                        if (shadow.position === parseInt(currentCell.dataset.cellNumber)) {
-                            startBattle(shadow);
-                            battleStarted = true;
-                            break;
-                        }
-                    }
-                }
-            }
-            if(battleStarted) break;
+              if (shadow.hp > 0) {
+                  await new Promise(resolve => setTimeout(resolve, 1000));
+                  shadowTurnName.textContent = shadow.name;
+                  const moveRoll = Math.floor(Math.random() * 6) + 1;
+                  shadowDiceRes.textContent = moveRoll;
+                  await new Promise(resolve => setTimeout(resolve, 500));
+                  for(let i=0; i<moveRoll; i++) {
+                      if (battleStarted) break;
+                      let path = findPath(shadow.position, players[currentPlayerIndex].position);
+                      if (path && path.length > 1) {
+                          shadow.position = path[1];
+                          buildBoard();
+                          await new Promise(resolve => setTimeout(resolve, 200));
+                      }
+                      if (shadow.position === players[currentPlayerIndex].position) {
+                          startBattle(shadow);
+                          battleStarted = true;
+                          break;
+                      }
+                  }
+                  if(battleStarted) break;
+              }
           }
           shadowActionDisplay.style.display = 'none';
       }
-      
-      if (!battleStarted) diceBtn.disabled = false;
+
+      if (!battleStarted) {
+          endTurnAndSwitchPlayer();
+      }
   }
 
-  function handleEncounter(enemy) {
-    diceBtn.disabled = true;
-    encounterModal.style.display = 'block';
-    encounterMessage.textContent = `Nemico! Scegli la tua azione.`;
-    encounterActionBtns.innerHTML = ''; 
-
-    const rollBtn = document.createElement('button');
-    rollBtn.textContent = 'Tenta di nasconderti (D6)';
-    rollBtn.onclick = () => {
-        rollBtn.disabled = true; battleBtn.disabled = true;
-        let flips = 10;
-        const timer = setInterval(() => {
-            encounterDiceResult.textContent = Math.floor(Math.random() * 6) + 1;
-            if (--flips <= 0) {
-                clearInterval(timer);
-                let roll = Number(encounterDiceResult.textContent);
-                let success = roll > 3; // Standard: 4, 5, 6
-                if(character.class === 'Ladro') {
-                    success = roll > 2; // Ladro: 3, 4, 5, 6
-                }
-                
-                encounterActionBtns.innerHTML = '';
-                const closeBtn = document.createElement('button');
-                if (success) {
-                    encounterMessage.textContent = 'Sei riuscito a nasconderti!';
-                    closeBtn.textContent = 'Chiudi e continua';
-                    closeBtn.onclick = async () => { 
-                        encounterModal.style.display = 'none'; 
-                        await handleShadowSpawnsAndTurns();
-                    };
-                } else {
-                    encounterMessage.textContent = `Sei stato visto! Inizia la battaglia.`;
-                    closeBtn.textContent = 'Vai alla Battaglia';
-                    closeBtn.onclick = () => { encounterModal.style.display = 'none'; startBattle(enemy); };
-                }
-                encounterActionBtns.appendChild(closeBtn);
-            }
-        }, 100);
-    };
-
-    const battleBtn = document.createElement('button');
-    battleBtn.textContent = 'Vai in battaglia';
-    battleBtn.onclick = () => { encounterModal.style.display = 'none'; startBattle(enemy); };
-    encounterActionBtns.appendChild(rollBtn);
-    encounterActionBtns.appendChild(battleBtn);
+  function endTurnAndSwitchPlayer() {
+      currentPlayerIndex = (currentPlayerIndex + 1) % numPlayers;
+      updatePlayerInfo();
+      updateDiscoveriesLog();
+      buildBoard();
+      updatePlayerActions();
+      setMainMessage(`Tocca a ${players[currentPlayerIndex].name}!`, '#ffeb3b');
   }
   
-  function handleGameOver(source) {
-      const prisonerMessage = getPrisonerStatusMessage();
-      messageModal.classList.remove('victory-modal');
-      messageModalText.innerHTML = `GAME OVER<br>Sei stato sconfitto ${source}.<br>Nemici uccisi: ${enemiesDefeatedCount}<br>${prisonerMessage}`;
-      victorySubText.textContent = '';
-      prisonerStatusText.textContent = '';
-      messageModal.style.display = 'block';
-      diceBtn.disabled = true;
-      
-      messageModalOkBtn.onclick = () => {
-          messageModal.style.display = 'none';
-          promptForNewGame();
+  function handleEncounter(enemy) {
+      playerActions.innerHTML = '';
+      encounterModal.style.display = 'block';
+      encounterMessage.textContent = 'Nemico! Scegli la tua azione.';
+      encounterActionBtns.innerHTML = '';
+      const rollBtn = document.createElement('button');
+      rollBtn.textContent = 'Tenta di nasconderti (D6)';
+      rollBtn.onclick = () => {
+          rollBtn.disabled = true;
+          battleBtn.disabled = true;
+          let flips = 10;
+          const timer = setInterval(() => {
+              encounterDiceResult.textContent = Math.floor(Math.random() * 6) + 1;
+              if (--flips === 0) {
+                  clearInterval(timer);
+                  let roll = Number(encounterDiceResult.textContent);
+                  let success = roll >= 4;
+                  if (players[currentPlayerIndex].class === 'Ladro') {
+                      success = roll >= 3;
+                  }
+                  encounterActionBtns.innerHTML = '';
+                  const closeBtn = document.createElement('button');
+                  if (success) {
+                      encounterMessage.textContent = "Sei riuscito a nasconderti!";
+                      closeBtn.textContent = "Chiudi e continua";
+                      closeBtn.onclick = async () => {
+                          encounterModal.style.display = 'none';
+                          await endTurnSequence();
+                      };
+                  } else {
+                      encounterMessage.textContent = "Sei stato visto! Inizia la battaglia.";
+                      closeBtn.textContent = "Vai alla Battaglia";
+                      closeBtn.onclick = () => {
+                          encounterModal.style.display = 'none';
+                          startBattle(enemy);
+                      };
+                  }
+                  encounterActionBtns.appendChild(closeBtn);
+              }
+          }, 100);
       };
-      
-      battleModal.style.display = 'none';
-      initiativeModal.style.display = 'none';
+      const battleBtn = document.createElement('button');
+      battleBtn.textContent = 'Vai in battaglia';
+      battleBtn.onclick = () => {
+          encounterModal.style.display = 'none';
+          startBattle(enemy);
+      };
+      encounterActionBtns.appendChild(rollBtn);
+      encounterActionBtns.appendChild(battleBtn);
+  }
+  
+  function handleGameOver(source, deadPlayer) {
+      const prisonerMessage = getPrisonerStatusMessage(deadPlayer);
+      messageQueue.push({endGame: true, title: `GAME OVER<br>${deadPlayer.name} è stato sconfitto ${source}.`, subtitle: `Nemici uccisi: ${enemiesDefeatedCount}<br>${prisonerMessage}`});
+      processMessageQueue();
       setBattleMode(false);
   }
 
@@ -1355,215 +772,224 @@ function getValidMoves(steps) {
       battleResult.innerHTML = 'Tenti la fuga...';
       battleResult.style.color = '#ffcc00';
       battleResult.style.fontSize = '18px';
+      const character = players[activeBattleState.primaryCombatantIndex];
       let flips = 10;
       const timer = setInterval(() => {
           let dieSize = character.class === 'Ladro' ? 4 : 6;
           battlePlayerDice.textContent = Math.floor(Math.random() * dieSize) + 1;
-          if (--flips <= 0) {
+          if (--flips === 0) {
               clearInterval(timer);
               const damageRoll = Number(battlePlayerDice.textContent);
               character.hp -= damageRoll;
               updatePlayerInfo();
               if (character.hp <= 0) {
-                  handleGameOver("durante la fuga");
+                  handleGameOver("durante la fuga", character);
               } else {
                   battleModal.style.display = 'none';
                   setBattleMode(false);
-                  
-                  messageModalText.textContent = `Fuga riuscita! Ma hai perso ${damageRoll} PF.`;
-                  victorySubText.textContent = '';
-                  prisonerStatusText.textContent = '';
-                  messageModal.classList.remove('victory-modal');
-                  messageModal.style.display = 'block';
-
-                  messageModalOkBtn.onclick = () => {
-                      messageModal.style.display = 'none';
-                      handleShadowSpawnsAndTurns();
-                  };
+                  messageQueue.push(`Fuga riuscita! Ma hai perso ${damageRoll} PF.`);
+                  processMessageQueue(async () => await endTurnSequence());
               }
           }
       }, 100);
   }
 
   function startBattle(enemy) {
-    diceBtn.disabled = true;
-    setBattleMode(true);
-    if (!character) return;
-
-    if (!enemy.isShadow) {
-        if (enemy.isBoss) { 
-            enemy.startHP = 30; 
-            enemy.attackDie = 10; enemy.attackBonus = 2;
-            enemy.defenseDie = 8; enemy.defenseBonus = 2;
-        } else {
-            const definition = ENEMY_DEFINITIONS[enemiesDefeatedCount];
-            enemy = {...enemy, ...definition};
-            enemy.startHP = definition.hp;
-            enemy.name = definition.name;
-        }
-    }
-    
-    const cellInfo = visitedCells.get(currentCell.dataset.cellNumber);
-    let currentEnemyHP = enemy.isShadow ? enemy.hp : (cellInfo && cellInfo.hp > 0 ? cellInfo.hp : enemy.startHP);
-    if (cellInfo && !enemy.isShadow) cellInfo.hp = currentEnemyHP;
-    
-    const battleState = {
-        player: character,
-        enemy: { ...enemy, hp: currentEnemyHP, startHP: enemy.startHP }
-    };
-
-    startInitiativePhase(battleState);
+      setBattleMode(true);
+      const character = players[currentPlayerIndex];
+      if (!character) return;
+      if (!enemy.isShadow) {
+          if (enemy.isBoss) {
+              enemy.startHP = 30; enemy.attackDie = 10; enemy.attackBonus = 2; enemy.defenseDie = 8; enemy.defenseBonus = 2;
+          } else {
+              const definition = ENEMY_DEFINITIONS[enemiesDefeatedCount];
+              enemy = { ...enemy, ...definition };
+              enemy.startHP = definition.hp;
+              enemy.name = definition.name;
+          }
+      }
+      const cellInfo = visitedCells.get(String(character.position));
+      let currentEnemyHP = enemy.isShadow ? enemy.hp : (cellInfo && cellInfo.hp > 0 ? cellInfo.hp : enemy.startHP);
+      if (cellInfo && !enemy.isShadow) {
+          cellInfo.hp = currentEnemyHP;
+      }
+      activeBattleState = {
+          enemy: { ...enemy, hp: currentEnemyHP, startHP: enemy.startHP },
+          primaryCombatantIndex: currentPlayerIndex,
+          battleCellNum: character.position,
+          isAllyJoined: false,
+          helpRequested: false
+      };
+      startInitiativePhase();
+  }
+  
+  function startInitiativePhase() {
+      initiativeModal.style.display = 'block';
+      battleModal.style.display = 'none';
+      const character = players[activeBattleState.primaryCombatantIndex];
+      initiativePlayerName.textContent = character.name;
+      initiativePlayerStats.textContent = `PF: ${character.hp} | Energia: ${character.energy}`;
+      initiativeEnemyName.textContent = activeBattleState.enemy.name;
+      initiativeEnemyStats.textContent = `PF: ${activeBattleState.enemy.hp}`;
+      initiativePlayerDice.textContent = '-';
+      initiativeEnemyDice.textContent = '-';
+      initiativeResult.textContent = '';
+      initiativeRollBtn.style.display = 'block';
+      usePotionInitiativeBtn.style.display = 'block';
+      initiativeRollBtn.disabled = false;
+      usePotionInitiativeBtn.disabled = character.inventory.filter(p => p.type === 'heal' || p.type === 'energy').length === 0;
+      usePotionInitiativeBtn.onclick = () => openInitiativePotionSelect();
+      initiativeRollBtn.onclick = () => {
+          initiativeRollBtn.disabled = true;
+          usePotionInitiativeBtn.style.display = 'none';
+          let playerRoll, enemyRoll;
+          let flips = 10;
+          const timer = setInterval(() => {
+              playerRoll = Math.floor(Math.random() * 6) + 1;
+              enemyRoll = Math.floor(Math.random() * 6) + 1;
+              initiativePlayerDice.textContent = playerRoll;
+              initiativeEnemyDice.textContent = enemyRoll;
+              if (--flips === 0) {
+                  clearInterval(timer);
+                  activeBattleState.playerHasInitiative = playerRoll >= enemyRoll;
+                  const winnerName = activeBattleState.playerHasInitiative ? character.name : activeBattleState.enemy.name;
+                  initiativeResult.textContent = `${winnerName} inizia!`;
+                  setTimeout(() => {
+                      initiativeModal.style.display = 'none';
+                      setupBattleTurn();
+                  }, 1500);
+              }
+          }, 100);
+      };
   }
 
-  function startInitiativePhase(battleState) {
-    initiativeModal.style.display = 'block';
-    battleModal.style.display = 'none';
-    initiativePlayerName.textContent = battleState.player.name;
-    initiativePlayerStats.textContent = `PF: ${battleState.player.hp} | Energia: ${character.energy}`;
-    initiativeEnemyName.textContent = battleState.enemy.name;
-    initiativeEnemyStats.textContent = `PF: ${battleState.enemy.hp}`;
-    initiativePlayerDice.textContent = '-';
-    initiativeEnemyDice.textContent = '-';
-    initiativeResult.textContent = '';
-    
-    initiativeRollBtn.style.display = 'block';
-    usePotionInitiativeBtn.style.display = 'block';
-    initiativeRollBtn.disabled = false;
-    usePotionInitiativeBtn.disabled = character.inventory.filter(p => p.type === 'heal' || p.type === 'energy').length === 0;
+  async function setupBattleTurn() {
+    if (!activeBattleState) return;
+    const combatant = players[activeBattleState.primaryCombatantIndex];
+    const enemy = activeBattleState.enemy;
+    const isPlayerTurn = activeBattleState.playerHasInitiative;
 
-    usePotionInitiativeBtn.onclick = () => openInitiativePotionSelect(battleState);
-
-    initiativeRollBtn.onclick = () => {
-        initiativeRollBtn.disabled = true;
-        usePotionInitiativeBtn.style.display = 'none';
-        let playerRoll, enemyRoll;
-        let flips = 10;
-        const timer = setInterval(() => {
-            playerRoll = Math.floor(Math.random() * 6) + 1;
-            enemyRoll = Math.floor(Math.random() * 6) + 1;
-            initiativePlayerDice.textContent = playerRoll;
-            initiativeEnemyDice.textContent = enemyRoll;
-            if (--flips <= 0) {
-                clearInterval(timer);
-                if (playerRoll >= enemyRoll) {
-                    initiativeResult.textContent = `${battleState.player.name} inizia!`;
-                    setTimeout(() => {
-                        initiativeModal.style.display = 'none';
-                        setupBattleTurn(battleState, battleState.player, battleState.enemy);
-                    }, 1500);
-                } else {
-                    initiativeResult.textContent = `${battleState.enemy.name} inizia!`;
-                    setTimeout(() => {
-                        initiativeModal.style.display = 'none';
-                        setupBattleTurn(battleState, battleState.enemy, battleState.player);
-                    }, 1500);
-                }
-            }
-        }, 100);
-    };
-  }
-
-function setupBattleTurn(battleState, attacker, defender) {
-    currentBattleTurn = { battleState, attacker, defender };
-    let effectLogMessage = '';
-
-    // Processa effetti all'inizio del turno di un personaggio
-    if (attacker.effects && attacker.effects.length > 0) {
-        const stillActiveEffects = [];
-        attacker.effects.forEach(effect => {
-            let currentEffect = {...effect}; // Lavora con una copia per sicurezza
-            if (currentEffect.type === 'burn' && currentEffect.duration > 0) {
-                const burnDamage = currentEffect.damage.shift(); // Prende e rimuove il danno per questo turno
-                if (burnDamage !== undefined) {
-                    attacker.hp -= burnDamage;
-                    effectLogMessage += `${attacker.name} subisce ${burnDamage} danni da bruciatura.\n`;
-                }
-            }
-            currentEffect.duration--;
-            // Mantieni l'effetto solo se ha ancora durata e danni da fare
-            if (currentEffect.duration > 0 && currentEffect.damage.length > 0) {
-                stillActiveEffects.push(currentEffect);
-            }
-        });
-        attacker.effects = stillActiveEffects; // Aggiorna con gli effetti ancora attivi
-    }
-    
     battleModal.style.display = 'block';
     specialAbilitiesContainer.style.display = 'flex';
     updateEnergyUI();
+    allyJoinedIndicator.style.display = activeBattleState.isAllyJoined ? 'block' : 'none';
 
-    const isPlayerAttacker = attacker.name === battleState.player.name;
-    const isEnemyShadow = battleState.enemy.isShadow || false;
-    
-    const playerTotalAttackBonus = getAttackBonus(isEnemyShadow) + (character.hasSpecialSword ? 1 : 0);
-    const playerAttackDie = character.hasSpecialSword ? 12 : character.attackDie;
-    const playerTotalDefenseBonus = getDefenseBonus();
-    const playerDefenseDie = character.defenseDie;
+    const playerTotalAttackBonus = getAttackBonus(combatant, enemy.isShadow) + (combatant.hasSpecialSword ? 1 : 0);
+    const playerAttackDie = combatant.hasSpecialSword ? 12 : combatant.attackDie;
+    const playerTotalDefenseBonus = getDefenseBonus(combatant);
 
-    battlePlayerName.textContent = character.name;
-    battleEnemyName.textContent = battleState.enemy.name;
-    // Aggiorna PF dopo i danni da effetto
-    battlePlayerPF.textContent = `PF: ${character.hp > 0 ? character.hp : 0} / ${maxHP}`;
-    battleEnemyPF.textContent = `PF: ${battleState.enemy.hp > 0 ? battleState.enemy.hp : 0} / ${battleState.enemy.startHP}`;
-    
-    const cost = character.class === 'Guerriero' ? 4 : 5;
+    battlePlayerName.textContent = combatant.name;
+    battleEnemyName.textContent = enemy.name;
+    battlePlayerPF.textContent = `PF: ${Math.max(0, combatant.hp)} / ${combatant.maxHP}`;
+    battleEnemyPF.textContent = `PF: ${Math.max(0, enemy.hp)} / ${enemy.startHP}`;
+    const cost = combatant.class === 'Guerriero' ? 4 : 5;
     powerStrikeBtn.textContent = `Colpo Potente (${cost})`;
     doubleAttackBtn.textContent = `Doppio Attacco (${cost})`;
-
     battlePlayerAttack.textContent = `Attacco: 1D${playerAttackDie}${playerTotalAttackBonus >= 0 ? '+' + playerTotalAttackBonus : playerTotalAttackBonus}`;
-    battlePlayerDefense.textContent = `Difesa: 1D${playerDefenseDie}+${playerTotalDefenseBonus}`;
-    battleEnemyAttack.textContent = `Attacco: 1D${battleState.enemy.attackDie}+${battleState.enemy.attackBonus || 0}`;
-    battleEnemyDefense.textContent = `Difesa: 1D${battleState.enemy.defenseDie}+${battleState.enemy.defenseBonus || 0}`;
-    
-    battlePlayerAttack.style.display = isPlayerAttacker ? 'block' : 'none';
-    battlePlayerDefense.style.display = isPlayerAttacker ? 'none' : 'block';
-    battleEnemyAttack.style.display = !isPlayerAttacker ? 'block' : 'none';
-    battleEnemyDefense.style.display = !isPlayerAttacker ? 'none' : 'block';
-    
-    // Controlla se qualcuno è morto a causa degli effetti
-    if (battleState.enemy.hp <= 0 || character.hp <= 0) {
-        battleLog.textContent = effectLogMessage;
-        battleResult.innerHTML = `${attacker.name} è stato sconfitto dagli effetti!`;
-        finalizeTurn();
-        return; // Interrompe l'impostazione del turno
-    }
+    battlePlayerDefense.textContent = `Difesa: 1D${combatant.defenseDie}+${playerTotalDefenseBonus}`;
+    battleEnemyAttack.textContent = `Attacco: 1D${enemy.attackDie}+${enemy.attackBonus || 0}`;
+    battleEnemyDefense.textContent = `Difesa: 1D${enemy.defenseDie}+${enemy.defenseBonus || 0}`;
 
     battlePlayerDice.textContent = '-';
     battleEnemyDice.textContent = '-';
     battleActionContainer.innerHTML = '';
-    battleLog.textContent = effectLogMessage; // Mostra i messaggi degli effetti nel log
-    battleResult.innerHTML = `Tocca a ${attacker.name} attaccare!`;
+    battleLog.textContent = '';
+    battleResult.innerHTML = `Tocca a ${isPlayerTurn ? combatant.name : enemy.name} attaccare!`;
 
-    if (isPlayerAttacker) {
-        const rollBtn = document.createElement('button');
-        rollBtn.textContent = 'Attacco Normale';
-        rollBtn.onclick = () => {
-            activeAbility = null;
-            resolveBattleTurn();
-        };
-        battleActionContainer.appendChild(rollBtn);
-        
-        usePotionBattleBtn.disabled = character.inventory.length === 0;
+    if (isPlayerTurn) {
         specialAbilitiesContainer.style.visibility = 'visible';
+        if (activeBattleState.isAllyJoined) {
+            await performSupportAttack();
+            if (activeBattleState.enemy.hp <= 0) {
+                finalizeBattle();
+                return;
+            }
+        }
+        const attackBtn = document.createElement('button');
+        attackBtn.textContent = 'Attacco Normale';
+        attackBtn.onclick = () => {
+            activeAbility = null;
+            resolveBattleTurn(combatant, enemy);
+        };
+        battleActionContainer.appendChild(attackBtn);
+
+        if (numPlayers > 1 && !activeBattleState.isAllyJoined && !activeBattleState.helpRequested) {
+            const askHelpBtn = document.createElement('button');
+            askHelpBtn.textContent = 'Chiedi Soccorso';
+            askHelpBtn.classList.add('intervention-btn');
+            askHelpBtn.onclick = askForHelp;
+            battleActionContainer.appendChild(askHelpBtn);
+        }
+        if (!enemy.isShadow) {
+            const escapeBtn = document.createElement('button');
+            escapeBtn.textContent = `Fuggi (subisci 1D${combatant.class === 'Ladro' ? 4 : 6} PF)`;
+            escapeBtn.onclick = attemptEscape;
+            battleActionContainer.appendChild(escapeBtn);
+        }
     } else {
         specialAbilitiesContainer.style.visibility = 'hidden';
-        setTimeout(resolveBattleTurn, 1500);
+        setTimeout(() => resolveBattleTurn(enemy, combatant), 1500);
     }
 }
+  
+  function performSupportAttack() {
+      return new Promise(resolve => {
+          const allyIndex = (activeBattleState.primaryCombatantIndex + 1) % numPlayers;
+          const ally = players[allyIndex];
+          const enemy = activeBattleState.enemy;
 
-function resolveBattleTurn() {
-    const { battleState, attacker, defender } = currentBattleTurn;
-    battleActionContainer.innerHTML = '';
-    specialAbilitiesContainer.style.visibility = 'hidden';
+          supportAttackModal.style.display = 'block';
+          supportAttackMessage.textContent = `Attacco di supporto: ${ally.name}`;
+          supportAttackDice.textContent = '-';
+          supportAttackActions.innerHTML = '';
 
-    const isPlayerAttacker = attacker.name === battleState.player.name;
-    const isEnemyShadow = battleState.enemy.isShadow || false;
+          const rollBtn = document.createElement('button');
+          rollBtn.textContent = 'Lancia per Attaccare';
+          supportAttackActions.appendChild(rollBtn);
 
-    function animateAndRoll(targetEl, die, bonus, callback) {
+          rollBtn.onclick = () => {
+              rollBtn.disabled = true;
+              animateAndRoll(supportAttackDice, ally.hasSpecialSword ? 12 : ally.attackDie, getAttackBonus(ally, enemy.isShadow), (attackRoll) => {
+                  animateAndRoll(battleEnemyDice, enemy.defenseDie, enemy.defenseBonus || 0, (defenseRoll) => {
+                      const damage = Math.max(0, attackRoll - defenseRoll);
+                      enemy.hp -= damage;
+                      if (damage > 0) {
+                          if (damage >= 3) triggerScreenShake();
+                          supportAttackMessage.textContent = `${enemy.name} subisce ${damage} danni!`;
+                          battleLog.textContent += `\nAttacco di supporto: ${attackRoll} vs ${defenseRoll}. ${enemy.name} subisce ${damage} danni!`;
+                      } else {
+                          supportAttackMessage.textContent = `Parato!`;
+                          battleLog.textContent += `\nAttacco di supporto: ${attackRoll} vs ${defenseRoll}. Parato!`;
+                      }
+                      battleEnemyPF.textContent = `PF: ${Math.max(0, enemy.hp)} / ${enemy.startHP}`;
+                      setTimeout(() => {
+                          supportAttackModal.style.display = 'none';
+                          resolve();
+                      }, 2000);
+                  });
+              });
+          };
+      });
+  }
+
+  function animateMainDice(callback) {
+      let flips = 10;
+      const timer = setInterval(() => {
+          diceRes.textContent = Math.floor(Math.random() * 6) + 1;
+          if (--flips === 0) {
+              clearInterval(timer);
+              const finalRoll = Math.floor(Math.random() * 6) + 1;
+              diceRes.textContent = finalRoll;
+              callback(finalRoll);
+          }
+      }, 100);
+  }
+
+  function animateAndRoll(targetEl, die, bonus, callback) {
         let flips = 10;
         const timer = setInterval(() => {
             targetEl.textContent = Math.floor(Math.random() * die) + 1;
-            if (--flips <= 0) {
+            if (--flips === 0) {
                 clearInterval(timer);
                 const finalRoll = Math.floor(Math.random() * die) + 1 + bonus;
                 targetEl.textContent = finalRoll;
@@ -1572,519 +998,397 @@ function resolveBattleTurn() {
         }, 80);
     }
     
-    function processCombatResult(attackRoll, defenseRoll) {
-        const damage = Math.max(0, attackRoll - defenseRoll);
-        defender.hp -= damage;
-        battleLog.textContent += `${attacker.name} attacca con ${attackRoll}.\n${defender.name} difende con ${defenseRoll}.`;
-        if (damage > 0) {
-            if (isPlayerAttacker && damage > 3) {
-                triggerScreenShake();
-            }
-            battleResult.innerHTML = `${defender.name} subisce ${damage} danni!`;
-            battleResult.style.color = isPlayerAttacker ? 'lightgreen' : 'red';
-        } else {
-            battleResult.innerHTML = `Attacco parato!`;
-            battleResult.style.color = 'deepskyblue';
-        }
-        finalizeTurn();
-    }
-    
-    if (activeAbility === 'doubleAttack' && isPlayerAttacker) {
-        let totalDamage = 0;
-        let logText = '';
-        
-        animateAndRoll(battlePlayerDice, character.hasSpecialSword ? 12 : character.attackDie, getAttackBonus(isEnemyShadow), (attack1) => {
-            animateAndRoll(battleEnemyDice, battleState.enemy.defenseDie, (battleState.enemy.defenseBonus || 0), (defense1) => {
-                const damage1 = Math.max(0, attack1 - defense1);
-                if (damage1 > 3) { triggerScreenShake(); }
-                totalDamage += damage1;
-                logText += `Attacco 1: ${attack1} vs ${defense1}. Danno: ${damage1}\n`;
-                
-                setTimeout(() => {
-                    animateAndRoll(battlePlayerDice, character.hasSpecialSword ? 12 : character.attackDie, getAttackBonus(isEnemyShadow), (attack2) => {
-                        animateAndRoll(battleEnemyDice, battleState.enemy.defenseDie, (battleState.enemy.defenseBonus || 0), (defense2) => {
-                            const damage2 = Math.max(0, attack2 - defense2);
-                            if (damage2 > 3) { triggerScreenShake(); }
-                            totalDamage += damage2;
-                            logText += `Attacco 2: ${attack2} vs ${defense2}. Danno: ${damage2}`;
-                            defender.hp -= totalDamage;
-                            battleLog.textContent += logText;
-                            battleResult.innerHTML = `Doppio Attacco! Danno Totale: ${totalDamage}`;
-                            finalizeTurn();
-                        });
-                    });
-                }, 800);
-            });
+  function resolveBattleTurn(attacker, defender) {
+      battleActionContainer.innerHTML = '';
+      specialAbilitiesContainer.style.visibility = 'hidden';
+      const combatant = players[activeBattleState.primaryCombatantIndex];
+      const isPlayerAttacker = attacker.name === combatant.name;
+
+      function processCombatResult(attackRoll, defenseRoll) {
+          const damage = Math.max(0, attackRoll - defenseRoll);
+          defender.hp -= damage;
+          battleLog.textContent += `\n${attacker.name} attacca con ${attackRoll}. ${defender.name} difende con ${defenseRoll}.`;
+          if (damage > 0) {
+              if (isPlayerAttacker && damage >= 3) triggerScreenShake();
+              battleResult.innerHTML = `${defender.name} subisce ${damage} danni!`;
+              battleResult.style.color = isPlayerAttacker ? 'lightgreen' : 'red';
+          } else {
+              battleResult.innerHTML = `Attacco parato!`;
+              battleResult.style.color = 'deepskyblue';
+          }
+          finalizeBattle();
+      }
+
+      if (activeAbility === 'doubleAttack' && isPlayerAttacker) {
+          let totalDamage = 0;
+          let logText = "";
+          animateAndRoll(battlePlayerDice, combatant.hasSpecialSword ? 12 : combatant.attackDie, getAttackBonus(combatant, defender.isShadow), (attack1) => {
+              animateAndRoll(battleEnemyDice, defender.defenseDie, (defender.defenseBonus || 0), (defense1) => {
+                  const damage1 = Math.max(0, attack1 - defense1);
+                  if (damage1 >= 3) triggerScreenShake();
+                  totalDamage += damage1;
+                  logText += `\nAttacco 1: ${attack1} vs ${defense1}. Danno: ${damage1}`;
+                  setTimeout(() => {
+                      animateAndRoll(battlePlayerDice, combatant.hasSpecialSword ? 12 : combatant.attackDie, getAttackBonus(combatant, defender.isShadow), (attack2) => {
+                          animateAndRoll(battleEnemyDice, defender.defenseDie, (defender.defenseBonus || 0), (defense2) => {
+                              const damage2 = Math.max(0, attack2 - defense2);
+                              if (damage2 >= 3) triggerScreenShake();
+                              totalDamage += damage2;
+                              logText += `\nAttacco 2: ${attack2} vs ${defense2}. Danno: ${damage2}`;
+                              defender.hp -= totalDamage;
+                              battleLog.textContent += logText;
+                              battleResult.innerHTML = `Doppio Attacco! Danno Totale: ${totalDamage}`;
+                              finalizeBattle();
+                          });
+                      });
+                  }, 800);
+              });
+          });
+      } else if (activeAbility === 'powerStrike' && isPlayerAttacker) {
+          animateAndRoll(battlePlayerDice, combatant.hasSpecialSword ? 12 : combatant.attackDie, getAttackBonus(combatant, defender.isShadow), (attackRoll) => {
+              battleEnemyDice.textContent = 'X';
+              if (attackRoll >= 3) triggerScreenShake();
+              defender.hp -= attackRoll;
+              battleLog.textContent += `\nColpo Potente! L'attacco ignora la difesa.`;
+              battleResult.innerHTML = `Danno inflitto: ${attackRoll}`;
+              finalizeBattle();
+          });
+      } else {
+          const attackDie = isPlayerAttacker ? (combatant.hasSpecialSword ? 12 : combatant.attackDie) : attacker.attackDie;
+          const attackBonus = isPlayerAttacker ? getAttackBonus(combatant, defender.isShadow) : (attacker.attackBonus || 0);
+          const defenseDie = isPlayerAttacker ? defender.defenseDie : combatant.defenseDie;
+          const defenseBonus = isPlayerAttacker ? (defender.defenseBonus || 0) : getDefenseBonus(combatant);
+          const attackerDiceEl = isPlayerAttacker ? battlePlayerDice : battleEnemyDice;
+          const defenderDiceEl = isPlayerAttacker ? battleEnemyDice : battlePlayerDice;
+          animateAndRoll(attackerDiceEl, attackDie, attackBonus, (attackRoll) => {
+              animateAndRoll(defenderDiceEl, defenseDie, defenseBonus, (defenseRoll) => {
+                  processCombatResult(attackRoll, defenseRoll);
+              });
+          });
+      }
+  }
+
+  function finalizeBattle() {
+      if (!activeBattleState) return;
+      const combatant = players[activeBattleState.primaryCombatantIndex];
+      const enemy = activeBattleState.enemy;
+      activeAbility = null;
+
+      if (!enemy.isShadow) {
+          const cellInfo = visitedCells.get(String(combatant.position));
+          if (cellInfo) cellInfo.hp = enemy.hp;
+      }
+
+      battlePlayerPF.textContent = `PF: ${Math.max(0, combatant.hp)} / ${combatant.maxHP}`;
+      battleEnemyPF.textContent = `PF: ${Math.max(0, enemy.hp)} / ${enemy.startHP}`;
+      updatePlayerInfo();
+
+      setTimeout(() => {
+          if (enemy.hp <= 0) {
+              gainEnergy(3);
+              battleResult.innerHTML = "VITTORIA!<br>Hai sconfitto il nemico.";
+              battleResult.style.color = 'lightgreen';
+              battleActionContainer.innerHTML = '';
+              if (enemy.isShadow) {
+                  shadows = shadows.filter(s => s.name !== enemy.name);
+              } else {
+                  const cellInfo = visitedCells.get(String(combatant.position));
+                  cellInfo.defeated = true;
+                  if (enemy.isBoss) {
+                      messageQueue.push({
+                          victory: true,
+                          title: "Dungeon liberato!",
+                          subtitle: "Hai sconfitto tutti i nemici!",
+                          prisonerStatus: getPrisonerStatusMessage(combatant)
+                      });
+                      processMessageQueue(() => setBattleMode(false));
+                      return;
+                  } else {
+                      enemiesDefeatedCount++;
+                      if (enemiesDefeatedCount === ENEMY_COUNT) placeBoss();
+                  }
+              }
+              updateDiscoveriesLog();
+              const closeBtn = document.createElement('button');
+              closeBtn.textContent = 'Continua...';
+              closeBtn.onclick = async () => {
+                  battleModal.style.display = 'none';
+                  setBattleMode(false);
+                  await endTurnSequence();
+              };
+              battleActionContainer.appendChild(closeBtn);
+          } else if (combatant.hp <= 0) {
+              handleGameOver("in combattimento", combatant);
+          } else {
+              activeBattleState.playerHasInitiative = !activeBattleState.playerHasInitiative;
+              setupBattleTurn();
+          }
+      }, 1000);
+  }
+  
+  function askForHelp() {
+      if (!activeBattleState) return;
+      activeBattleState.helpRequested = true;
+      battleActionContainer.innerHTML = '';
+      battleResult.innerHTML = 'Hai chiesto aiuto...';
+      
+      currentPlayerIndex = (currentPlayerIndex + 1) % numPlayers;
+      updatePlayerInfo();
+      updatePlayerActions();
+  }
+
+  function showAllyChoiceModal() {
+      battleModal.style.display = 'none';
+      allyChoiceModal.style.display = 'block';
+  }
+
+  function updatePlayerActions() {
+      playerActions.innerHTML = '';
+      const diceButton = document.createElement('button');
+      diceButton.id = 'diceRollBtn';
+      diceButton.textContent = 'Tira dado';
+      diceButton.onclick = rollDice;
+      playerActions.appendChild(diceButton);
+
+      if (activeBattleState) {
+          diceButton.disabled = true;
+          if (currentPlayerIndex !== activeBattleState.primaryCombatantIndex && activeBattleState.helpRequested) {
+              showAllyChoiceModal();
+              allyChoiceMessage.textContent = `${players[activeBattleState.primaryCombatantIndex].name} chiede il tuo aiuto! Cosa fai?`;
+              allyChoiceActions.innerHTML = '';
+
+              const interveneBtn = document.createElement('button');
+              interveneBtn.textContent = 'Intervieni';
+              interveneBtn.classList.add('intervention-btn');
+              interveneBtn.onclick = () => {
+                  attemptIntervention();
+              };
+              allyChoiceActions.appendChild(interveneBtn);
+
+              const ignoreBtn = document.createElement('button');
+              ignoreBtn.textContent = 'Ignora';
+              ignoreBtn.classList.add('ignore-btn');
+              ignoreBtn.onclick = () => {
+                  activeBattleState.helpRequested = false;
+                  setMainMessage('Hai ignorato la richiesta di aiuto.', 'orange');
+                  currentPlayerIndex = activeBattleState.primaryCombatantIndex;
+                  updatePlayerInfo();
+                  activeBattleState.playerHasInitiative = false;
+                  allyChoiceModal.style.display = 'none';
+                  battleModal.style.display = 'block';
+                  setupBattleTurn();
+              };
+              allyChoiceActions.appendChild(ignoreBtn);
+
+          }
+      }
+  }
+
+  async function attemptIntervention() {
+    allyChoiceActions.innerHTML = '';
+    const ally = players[currentPlayerIndex];
+    const battleCellNum = activeBattleState.battleCellNum;
+    const path = findPath(ally.position, battleCellNum);
+    const distance = path ? path.length - 1 : -1;
+
+    if (distance <= 0) {
+        messageQueue.push("Sei già sul posto!");
+        allyChoiceModal.style.display = 'none';
+        processMessageQueue(() => {
+            activeBattleState.isAllyJoined = true;
+            activeBattleState.helpRequested = false;
+            currentPlayerIndex = activeBattleState.primaryCombatantIndex;
+            updatePlayerInfo();
+            activeBattleState.playerHasInitiative = true;
+            setupBattleTurn();
         });
-    } else if (activeAbility === 'powerStrike' && isPlayerAttacker) {
-        animateAndRoll(battlePlayerDice, character.hasSpecialSword ? 12 : character.attackDie, getAttackBonus(isEnemyShadow), (attackRoll) => {
-            battleEnemyDice.textContent = 'X';
-            if (attackRoll > 3) { triggerScreenShake(); }
-            defender.hp -= attackRoll;
-            battleLog.textContent += `Colpo Potente! L'attacco ignora la difesa.`;
-            battleResult.innerHTML = `Danno inflitto: ${attackRoll}`;
-            finalizeTurn();
-        });
-    } else { 
-        const attackDie = isPlayerAttacker ? (character.hasSpecialSword ? 12 : character.attackDie) : battleState.enemy.attackDie;
-        const attackBonus = isPlayerAttacker ? getAttackBonus(isEnemyShadow) : (battleState.enemy.attackBonus || 0);
-        const defenseDie = isPlayerAttacker ? battleState.enemy.defenseDie : character.defenseDie;
-        const defenseBonus = isPlayerAttacker ? (battleState.enemy.defenseBonus || 0) : getDefenseBonus();
-
-        const attackerDiceEl = isPlayerAttacker ? battlePlayerDice : battleEnemyDice;
-        const defenderDiceEl = isPlayerAttacker ? battleEnemyDice : battlePlayerDice;
-
-        animateAndRoll(attackerDiceEl, attackDie, attackBonus, (attackRoll) => {
-            animateAndRoll(defenderDiceEl, defenseDie, defenseBonus, (defenseRoll) => {
-                processCombatResult(attackRoll, defenseRoll);
-            });
-        });
-    }
-}
-
-function finalizeTurn(keepTurn = false) {
-    const { battleState } = currentBattleTurn;
-    activeAbility = null;
-    
-    // Non resettare la benedizione permanente
-    // if (battleState.enemy.isShadow) {
-    //     character.shadowBlessing = false;
-    // }
-
-    if (!battleState.enemy.isShadow) {
-        const cellInfo = visitedCells.get(currentCell.dataset.cellNumber);
-        if (cellInfo) cellInfo.hp = battleState.enemy.hp;
+        return;
     }
 
-    battlePlayerPF.textContent = `PF: ${character.hp > 0 ? character.hp : 0} / ${maxHP}`;
-    battleEnemyPF.textContent = `PF: ${battleState.enemy.hp > 0 ? battleState.enemy.hp : 0} / ${battleState.enemy.startHP}`;
-    updatePlayerInfo();
+    allyChoiceMessage.textContent = `Ti serve un ${distance} o più per raggiungere la battaglia!`;
+    const rollBtn = document.createElement('button');
+    rollBtn.textContent = 'Lancia per Intervenire';
+    allyChoiceActions.appendChild(rollBtn);
 
-    if (battleState.enemy.hp <= 0) {
-        gainEnergy(3);
-        battleResult.innerHTML = 'VITTORIA!<br>Hai sconfitto il nemico.';
-        battleResult.style.color = 'lightgreen';
-        battleActionContainer.innerHTML = '';
-        if (battleState.enemy.isShadow) {
-            shadows = shadows.filter(s => s.name !== battleState.enemy.name);
-        } else {
-            const cellInfo = visitedCells.get(currentCell.dataset.cellNumber);
-            cellInfo.defeated = true;
-            if (battleState.enemy.isBoss) {
-                messageQueue.push({victory: true, title: "Dungeon liberato!", subtitle: "Hai sconfitto tutti i nemici!", prisonerStatus: getPrisonerStatusMessage()});
-                diceBtn.disabled = true;
+    rollBtn.onclick = () => {
+        rollBtn.disabled = true;
+        animateMainDice(async (roll) => {
+            allyChoiceMessage.textContent = `Hai ottenuto: ${roll}`;
+            await new Promise(resolve => setTimeout(resolve, 1500));
+
+            if (roll >= distance) {
+                // SUCCESS
+                allyChoiceModal.style.display = 'none';
+                messageQueue.push("Sei arrivato in tempo! Ti unisci alla lotta!");
+                const movePath = path;
+                for (let i = 1; i < movePath.length; i++) {
+                    await new Promise(resolve => setTimeout(resolve, 150));
+                    ally.position = movePath[i];
+                    buildBoard();
+                }
+                activeBattleState.isAllyJoined = true;
+                activeBattleState.helpRequested = false;
+                processMessageQueue(() => {
+                    currentPlayerIndex = activeBattleState.primaryCombatantIndex;
+                    updatePlayerInfo();
+                    activeBattleState.playerHasInitiative = true;
+                    setupBattleTurn();
+                });
             } else {
-                enemiesDefeatedCount++;
-                if (enemiesDefeatedCount === ENEMY_COUNT) { placeBoss(); }
+                // FAILURE
+                allyChoiceModal.style.display = 'none';
+                messageQueue.push(`Non sei abbastanza veloce! Percorri ${roll} caselle ma la battaglia continua senza di te.`);
+                const movePath = path.slice(0, roll + 1);
+                if (movePath.length > 1) {
+                  for (let i = 1; i < movePath.length; i++) {
+                      await new Promise(resolve => setTimeout(resolve, 150));
+                      ally.position = movePath[i];
+                      buildBoard();
+                  }
+                }
+                activeBattleState.helpRequested = false;
+                processMessageQueue(() => {
+                    currentPlayerIndex = activeBattleState.primaryCombatantIndex;
+                    updatePlayerInfo();
+                    activeBattleState.playerHasInitiative = false;
+                    battleModal.style.display = 'block';
+                    setupBattleTurn();
+                });
             }
-        }
-        updateDiscoveriesLog();
-        const closeBtn = document.createElement('button');
-        closeBtn.textContent = 'Continua...';
-        closeBtn.onclick = async () => { 
-            battleModal.style.display = 'none';
-            specialAbilitiesContainer.style.display = 'none';
-            setBattleMode(false);
-            if (!battleState.enemy.isBoss) await handleShadowSpawnsAndTurns();
-            else processMessageQueue(); 
-        };
-        battleActionContainer.appendChild(closeBtn);
-    } else if (character.hp <= 0) {
-        handleGameOver("in combattimento");
-    } else {
-        battleActionContainer.innerHTML = '';
-        const nextRoundBtn = document.createElement('button');
-        nextRoundBtn.textContent = 'Prossimo Turno';
-        if (keepTurn) {
-            nextRoundBtn.onclick = () => setupBattleTurn(battleState, battleState.player, battleState.enemy);
-        } else {
-            nextRoundBtn.onclick = () => startInitiativePhase(battleState);
-        }
-
-        if (!battleState.enemy.isShadow) {
-            const escapeBtn = document.createElement('button');
-            escapeBtn.textContent = 'Fuggi (subisci 1D' + (character.class === 'Ladro' ? '4' : '6') + ' PF)';
-            escapeBtn.onclick = attemptEscape;
-            battleActionContainer.appendChild(escapeBtn);
-        }
-        battleActionContainer.appendChild(nextRoundBtn);
-    }
+        });
+    };
 }
 
 
   function updatePlayerInfo() {
-    if (character) {
-      playerInfo.textContent = `${character.name} | PF: ${character.hp > 0 ? character.hp : 0} / ${maxHP}`;
-      updateEnergyUI();
-    } else {
-      playerInfo.textContent = 'Crea un personaggio';
-      energyValue.textContent = '0';
-    }
+      if (players.length === 0 || !players[currentPlayerIndex]) { playerInfo.textContent = 'Crea un personaggio'; energyValue.textContent = '0'; return; }
+      const character = players[currentPlayerIndex]; playerInfo.textContent = `${character.name} (G${currentPlayerIndex+1}) | PF: ${Math.max(0, character.hp)} / ${character.maxHP}`; playerInfo.className = `player-1-info`; if (currentPlayerIndex === 1) playerInfo.className = `player-2-info`; updateEnergyUI();
   }
 
-  function wireCellListeners() {
-    board.addEventListener('click', (event) => {
-      const target = event.target.closest('.cell');
-      if (target && target.classList.contains('highlighted')) {
-        animateAndSetCurrent(target);
-      }
-    });
-  }
+  function wireCellListeners() { board.addEventListener('click', event => { const target = event.target.closest('.cell'); if (target && target.classList.contains('highlighted')) { animateAndSetCurrent(target); } }); }
   
   function rollDice() {
-    if (diceBtn.disabled) return;
-    diceBtn.disabled = true; 
+    const btn = document.getElementById('diceRollBtn');
+    if (!btn || btn.disabled) return;
+    btn.disabled = true;
     resetMessages();
-    let flips = 10;
-    const timer = setInterval(() => {
-      let roll = Math.floor(Math.random() * 6) + 1;
-      if(character.class === 'Esploratore' && (roll === 1 || roll === 2) && Math.random() < 0.25) {
-          setMainMessage("Rilancio Esploratore!", "cyan");
-          roll = Math.floor(Math.random() * 6) + 1;
-      }
-      diceRes.textContent = roll;
-      if (--flips <= 0) {
-        clearInterval(timer);
-        const moves = getValidMoves(Number(diceRes.textContent));
+    animateMainDice((roll) => {
+        const moves = getValidMoves(roll);
         if (moves.length === 0) {
-          triggerScreenShake();
-          const damage = character.class === 'Esploratore' ? 1 : 3;
-          messageQueue.push(`Sei bloccato da delle rampicanti che ti infliggono ${damage} PF`);
-          character.hp -= damage;
-          updatePlayerInfo();
-          if (character.hp <= 0) {
-            handleGameOver("intrappolato dai rampicanti");
-          } else {
-            processMessageQueue();
-            setTimeout(handleShadowSpawnsAndTurns, 1500);
-          }
-        } 
-        else { moves.forEach(cell => cell.classList.add('highlighted')); }
-      }
-    }, 100);
-  }
-
+            triggerScreenShake();
+            const character = players[currentPlayerIndex];
+            const damage = character.class === 'Esploratore' ? 1 : 3;
+            messageQueue.push(`Sei bloccato da delle rampicanti che ti infliggono ${damage} PF`);
+            processMessageQueue(() => {
+                character.hp -= damage;
+                updatePlayerInfo();
+                if (character.hp <= 0) {
+                    handleGameOver("intrappolato dai rampicanti", character);
+                } else {
+                    setTimeout(() => endTurnSequence(), 500);
+                }
+            });
+        } else {
+            moves.forEach(cell => cell.classList.add('highlighted'));
+        }
+    });
+}
+  
   async function startGame() {
-    character.bonuses = character.bonuses || [];
-    character.inventory = character.inventory || [];
-    character.hasSpecialSword = character.hasSpecialSword || false;
-    character.prisonersFreed = character.prisonersFreed || 0;
-    character.isCursed = character.isCursed || false;
-    character.shadowSlayerBonus = character.shadowSlayerBonus || 0;
-    character.activeQuests = character.activeQuests || [];
-    
-    visitedCells = new Map();
-    enemiesDefeatedCount = 0;
-    discoveryCounter = 1;
-    gasEffect = { active: false, newCellsVisited: 0 };
-    shadows = []; 
-    spawnedShadows = new Set();
-    
-    placeDiscoveries();
-    buildBoard();
-    currentCell = board.querySelector('[data-cell-number="1"]');
-    
-    await processCellLogic(currentCell);
-
-    updateLayout();
-    updatePlayerInfo();
-    updateDiscoveriesLog();
-    charForm.style.display = 'none';
-    diceBtn.disabled = false;
+      players.forEach(p => { p.position = 1; p.bonuses = p.bonuses || []; p.inventory = p.inventory || []; p.hasSpecialSword = p.hasSpecialSword || false; p.prisonersFreed = p.prisonersFreed || 0; p.isCursed = p.isCursed || false; p.shadowSlayerBonus = p.shadowSlayerBonus || 0; p.activeQuests = p.activeQuests || []; });
+      visitedCells = new Map(); enemiesDefeatedCount = 0; discoveryCounter = 1; gasEffect = { active: false, newCellsVisited: 0 }; shadows = []; spawnedShadows = new Set(); messageQueue = [];
+      placeDiscoveries(); buildBoard();
+      const firstPlayer = players[0]; const startCell = board.querySelector(`[data-cell-number="${firstPlayer.position}"]`);
+      processCellLogic(startCell);
+      updateLayout(); updatePlayerInfo(); updateDiscoveriesLog(); charForm.style.display = 'none';
   }
   
   function promptForNewGame() {
-    resetMessages();
-    board.innerHTML = '';
-    discoveriesLog.textContent = '';
-    character = null;
-    updatePlayerInfo();
-    diceRes.textContent = '-';
-    diceBtn.disabled = true;
-    charForm.style.display = 'block';
+      resetMessages(); board.innerHTML = ''; discoveriesLog.textContent = ''; players = []; currentPlayerIndex = 0; activeBattleState = null; updatePlayerInfo(); diceRes.textContent = '-'; updatePlayerActions();
+      const numInput = prompt("Quanti giocatori? (1 o 2)", "1"); numPlayers = (numInput === '2') ? 2 : 1;
+      creatingPlayerIndex = 0; showCharacterCreationForm();
   }
+
+  function showCharacterCreationForm() { charFormTitle.textContent = `Crea Personaggio per Giocatore ${creatingPlayerIndex + 1}`; document.getElementById('charName').value = ''; document.getElementById('charHP').value = 30; charForm.style.display = 'block'; }
 
   function saveGame() {
-    if (!character) {
-      alert('Nessun gioco da salvare. Inizia una nuova partita prima.');
-      return;
-    }
-    const gameState = {
-      character, maxHP, enemiesDefeatedCount, discoveryCounter,
-      visitedCells: Array.from(visitedCells.entries()),
-      enemyMap, bonusMap, potionMap, prisonerMap, altarMap,
-      gasTrapPositions: Array.from(gasTrapPositions),
-      gasActivatedPositions: Array.from(gasActivatedPositions),
-      holePositions: Array.from(holePositions),
-      gasEffect,
-      shadows, spawnedShadows: Array.from(spawnedShadows),
-      prisonerQuests,
-      currentCellNumber: currentCell.dataset.cellNumber
-    };
-    localStorage.setItem('dungeon72Save', JSON.stringify(gameState));
-    alert('Partita salvata!');
-    loadGameBtn.style.display = 'block';
+      if (players.length === 0) { alert("Nessun gioco da salvare. Inizia una nuova partita prima."); return; }
+      const gameState = { players, currentPlayerIndex, numPlayers, enemiesDefeatedCount, discoveryCounter, visitedCells: Array.from(visitedCells.entries()), enemyMap, bonusMap, potionMap, prisonerMap, altarMap, gasTrapPositions: Array.from(gasTrapPositions), gasActivatedPositions: Array.from(gasActivatedPositions), holePositions: Array.from(holePositions), gasEffect, shadows, spawnedShadows: Array.from(spawnedShadows), prisonerQuests, activeBattleState };
+      localStorage.setItem('dungeon72Save', JSON.stringify(gameState)); alert('Partita salvata!'); loadGameBtn.style.display = 'block';
   }
-  
+
   async function loadGame() {
-    const savedStateJSON = localStorage.getItem('dungeon72Save');
-    if (!savedStateJSON) {
-      promptForNewGame();
-      return;
-    }
-    const savedState = JSON.parse(savedStateJSON);
-    
-    character = savedState.character; 
-    character.shadowSlayerBonus = character.shadowSlayerBonus || 0;
-    maxHP = savedState.maxHP;
-    enemiesDefeatedCount = savedState.enemiesDefeatedCount; discoveryCounter = savedState.discoveryCounter;
-    visitedCells = new Map(savedState.visitedCells);
-    enemyMap = savedState.enemyMap; bonusMap = savedState.bonusMap; potionMap = savedState.potionMap; prisonerMap = savedState.prisonerMap; altarMap = savedState.altarMap;
-    gasTrapPositions = new Set(savedState.gasTrapPositions);
-    gasActivatedPositions = new Set(savedState.gasActivatedPositions);
-    holePositions = new Set(savedState.holePositions || []);
-    gasEffect = savedState.gasEffect;
-    shadows = savedState.shadows;
-    spawnedShadows = new Set(savedState.spawnedShadows || []);
-    prisonerQuests = savedState.prisonerQuests || { quests: {} };
-    
-    buildBoard();
-    
-    currentCell = board.querySelector(`[data-cell-number="${savedState.currentCellNumber}"]`);
-    
-    updateLayout();
-    
-    if(currentCell) currentCell.classList.add('current');
-    buildBoard();
-    
-    updatePlayerInfo();
-    updateDiscoveriesLog();
-    resetMessages();
-    
-    charForm.style.display = 'none';
-    diceBtn.disabled = false;
-    alert('Partita caricata!');
+      const savedStateJSON = localStorage.getItem('dungeon72Save'); if (!savedStateJSON) { promptForNewGame(); return; }
+      const savedState = JSON.parse(savedStateJSON);
+      players = savedState.players; currentPlayerIndex = savedState.currentPlayerIndex; numPlayers = savedState.numPlayers; enemiesDefeatedCount = savedState.enemiesDefeatedCount; discoveryCounter = savedState.discoveryCounter; visitedCells = new Map(savedState.visitedCells);
+      enemyMap = savedState.enemyMap; bonusMap = savedState.bonusMap; potionMap = savedState.potionMap; prisonerMap = savedState.prisonerMap; altarMap = savedState.altarMap; gasTrapPositions = new Set(savedState.gasTrapPositions); gasActivatedPositions = new Set(savedState.gasActivatedPositions); holePositions = new Set(savedState.holePositions); gasEffect = savedState.gasEffect; shadows = savedState.shadows; spawnedShadows = new Set(savedState.spawnedShadows); prisonerQuests = savedState.prisonerQuests; activeBattleState = savedState.activeBattleState;
+      messageQueue = []; buildBoard(); updateLayout(); updatePlayerInfo(); updateDiscoveriesLog(); resetMessages(); charForm.style.display = 'none';
+      if (activeBattleState) { setBattleMode(true); setupBattleTurn(); }
+      else { updatePlayerActions(); }
+      alert('Partita caricata!');
   }
 
-  function updateLayout() {
-      const discoveriesLog = document.getElementById('discoveriesLog');
-      const leftColumn = document.getElementById('left');
-      const centerColumn = document.getElementById('center-column');
-      const isDesktop = window.innerWidth > 1024;
-
-      if (isDesktop) {
-          if (discoveriesLog.parentElement !== leftColumn) {
-              leftColumn.appendChild(discoveriesLog);
-          }
-      } else {
-          if (discoveriesLog.parentElement !== centerColumn) {
-              centerColumn.appendChild(discoveriesLog);
-          }
-      }
-  }
-
+  function updateLayout() { const discoveriesLog = document.getElementById('discoveriesLog'); const leftColumn = document.getElementById('left'); const centerColumn = document.getElementById('center-column'); const isDesktop = window.innerWidth > 1024; if (isDesktop) { if (discoveriesLog.parentElement !== leftColumn) { leftColumn.appendChild(discoveriesLog); } } else { if (discoveriesLog.parentElement !== centerColumn) { centerColumn.appendChild(discoveriesLog); } } }
+  
   function openBattlePotionSelect() {
-      battlePotionList.innerHTML = '';
-      if(character.inventory.length === 0) {
-          return;
-      }
-
-      character.inventory.forEach((potion, index) => {
-          const btn = document.createElement('button');
-          btn.textContent = potion.name;
-          btn.onclick = () => {
-              battlePotionSelectModal.style.display = 'none';
-              usePotionInBattle(potion, index);
-          };
-          battlePotionList.appendChild(btn);
-      });
+      const character = players[activeBattleState.primaryCombatantIndex]; battlePotionList.innerHTML = ''; if (character.inventory.length === 0) return;
+      character.inventory.forEach((potion, index) => { const btn = document.createElement('button'); btn.textContent = potion.name; btn.onclick = () => { battlePotionSelectModal.style.display = 'none'; usePotionInBattle(potion, index); }; battlePotionList.appendChild(btn); });
       battlePotionSelectModal.style.display = 'block';
   }
 
-    function openInitiativePotionSelect(battleState) {
-        battlePotionList.innerHTML = '';
-        const usablePotions = character.inventory
-            .map((potion, index) => ({ ...potion, originalIndex: index }))
-            .filter(p => p.type === 'heal' || p.type === 'energy');
-
-        if (usablePotions.length === 0) {
-            return;
-        }
-
-        usablePotions.forEach((potion) => {
-            const btn = document.createElement('button');
-            btn.textContent = potion.name;
-            btn.onclick = () => {
-                battlePotionSelectModal.style.display = 'none';
-                usePotionInInitiative(potion, potion.originalIndex, battleState);
-            };
-            battlePotionList.appendChild(btn);
-        });
-        battlePotionSelectModal.style.display = 'block';
-    }
-    
-    function usePotionInInitiative(potion, index, battleState) {
-        character.inventory.splice(index, 1);
-        let logMessage = '';
-
-        if (potion.type === 'heal') {
-            const oldHp = character.hp;
-            character.hp = Math.min(character.hp + potion.value, maxHP);
-            const healedAmount = character.hp - oldHp;
-            logMessage = `${character.name} usa ${potion.name} e recupera ${healedAmount} PF!`;
-        } else if (potion.type === 'energy') {
-            character.energy = character.maxEnergy;
-            logMessage = `${character.name} usa ${potion.name} e recupera tutta l'energia!`;
-        }
-
-        updatePlayerInfo();
-        updateDiscoveriesLog();
-        initiativePlayerStats.textContent = `PF: ${character.hp} | Energia: ${character.energy}`;
-        
-        initiativeResult.textContent = logMessage;
-        setTimeout(() => { if (initiativeResult.textContent === logMessage) initiativeResult.textContent = ''; }, 2000);
-
-        usePotionInitiativeBtn.disabled = character.inventory.filter(p => p.type === 'heal' || p.type === 'energy').length === 0;
-    }
-
-
+  function openInitiativePotionSelect() {
+      const character = players[activeBattleState.primaryCombatantIndex]; battlePotionList.innerHTML = ''; const usablePotions = character.inventory.map((potion, index) => ({...potion, originalIndex: index})).filter(p => p.type === 'heal' || p.type === 'energy');
+      if (usablePotions.length === 0) return;
+      usablePotions.forEach((potion) => { const btn = document.createElement('button'); btn.textContent = potion.name; btn.onclick = () => { battlePotionSelectModal.style.display = 'none'; usePotionInInitiative(potion, potion.originalIndex); }; battlePotionList.appendChild(btn); });
+      battlePotionSelectModal.style.display = 'block';
+  }
+  
+  function usePotionInInitiative(potion, index){
+      const character = players[activeBattleState.primaryCombatantIndex]; character.inventory.splice(index, 1); let logMessage = '';
+      if (potion.type === 'heal') { const oldHp = character.hp; character.hp = Math.min(character.hp + potion.value, character.maxHP); const healedAmount = character.hp - oldHp; logMessage = `${character.name} usa ${potion.name} e recupera ${healedAmount} PF!`; }
+      else if (potion.type === 'energy') { character.energy = character.maxEnergy; logMessage = `${character.name} usa ${potion.name} e recupera tutta l'energia!`; }
+      updatePlayerInfo(); updateDiscoveriesLog(); initiativePlayerStats.textContent = `PF: ${character.hp} | Energia: ${character.energy}`; initiativeResult.textContent = logMessage; setTimeout(() => { if (initiativeResult.textContent === logMessage) { initiativeResult.textContent = ''; } }, 2000); usePotionInitiativeBtn.disabled = character.inventory.filter(p => p.type === 'heal' || p.type === 'energy').length === 0;
+  }
+  
   function usePotionInBattle(potion, index) {
-      character.inventory.splice(index, 1);
-      
-      if (potion.type === 'heal') {
-          const oldHp = character.hp;
-          character.hp = Math.min(character.hp + potion.value, maxHP);
-          const healedAmount = character.hp - oldHp;
-          
-          updatePlayerInfo();
-          battlePlayerPF.textContent = `PF: ${character.hp > 0 ? character.hp : 0} / ${maxHP}`;
-          updateDiscoveriesLog();
-
-          battleLog.textContent = `${character.name} usa ${potion.name} e recupera ${healedAmount} PF!`;
-          battleResult.innerHTML = `Ora hai ${character.hp} PF.`;
-          
-          finalizeTurn(true); 
-      } else if (potion.type === 'fire' || potion.type === 'ice') {
-          potionDamageModal.style.display = 'block';
-          potionDamageTitle.textContent = `Usa ${potion.name}`;
-          potionDamageDice.textContent = '-';
-          potionDamageRollBtn.disabled = false;
-
-          potionDamageRollBtn.onclick = () => {
-              potionDamageRollBtn.disabled = true;
-              let flips = 10;
-              const timer = setInterval(() => {
-                potionDamageDice.textContent = Math.floor(Math.random() * 6) + 1;
-                if (--flips <= 0) {
-                  clearInterval(timer);
-                  const damage = Number(potionDamageDice.textContent);
-                  potionDamageModal.style.display = 'none';
-                  
-                  const { battleState } = currentBattleTurn;
-                  const enemy = battleState.enemy;
-                  
-                  if (damage > 3) { triggerScreenShake(); }
-                  enemy.hp -= damage;
-                  let log = `${potion.name} infligge ${damage} danni!`;
-
-                  if (potion.type === 'fire') {
-                      enemy.effects = enemy.effects || [];
-                      enemy.effects = enemy.effects.filter(e => e.type !== 'burn'); 
-                      enemy.effects.push({
-                          type: 'burn',
-                          duration: 2,
-                          damage: [3, 2]
-                      });
-                      log += `\nIl nemico sta andando a fuoco!`;
-                  }
-
-                  if (potion.type === 'ice') {
-                      const heroAttackRoll = Math.floor(Math.random() * (character.hasSpecialSword ? 12 : character.attackDie)) + 1 + getAttackBonus(enemy.isShadow || false);
-                      if (heroAttackRoll > 3) { triggerScreenShake(); }
-                      enemy.hp -= heroAttackRoll;
-                      log += `\nIl nemico è congelato e subisce un colpo extra da ${heroAttackRoll} danni!`;
-                  }
-                  
-                  battleLog.textContent = log;
-                  updateDiscoveriesLog();
-                  finalizeTurn();
-                }
-              }, 100);
-          };
+      const character = players[activeBattleState.primaryCombatantIndex]; character.inventory.splice(index, 1);
+      if (potion.type === 'heal') { const oldHp = character.hp; character.hp = Math.min(character.hp + potion.value, character.maxHP); const healedAmount = character.hp - oldHp; updatePlayerInfo(); battlePlayerPF.textContent = `PF: ${Math.max(0, character.hp)} / ${character.maxHP}`; updateDiscoveriesLog(); battleLog.textContent = `${character.name} usa ${potion.name} e recupera ${healedAmount} PF!`; battleResult.innerHTML = `Ora hai ${character.hp} PF.`; finalizeBattle(); }
+      else if (potion.type === 'fire' || potion.type === 'ice') {
+           potionDamageModal.style.display = 'block'; potionDamageTitle.textContent = `Usa ${potion.name}`; potionDamageDice.textContent = '-'; potionDamageRollBtn.disabled = false;
+           potionDamageRollBtn.onclick = () => {
+               potionDamageRollBtn.disabled = true; let flips = 10;
+               const timer = setInterval(() => { potionDamageDice.textContent = Math.floor(Math.random() * 6) + 1; if (--flips === 0) { clearInterval(timer); const damage = Number(potionDamageDice.textContent); potionDamageModal.style.display = 'none'; const enemy = activeBattleState.enemy; if (damage >= 3) triggerScreenShake(); enemy.hp -= damage; let log = `${potion.name} infligge ${damage} danni!`; if (potion.type === 'fire') { enemy.effects = enemy.effects || []; enemy.effects = enemy.effects.filter(e => e.type !== 'burn'); enemy.effects.push({ type: 'burn', duration: 2, damage: [3, 2] }); log += `\nIl nemico sta andando a fuoco!`; } else if (potion.type === 'ice') { const heroAttackRoll = Math.floor(Math.random() * (character.hasSpecialSword ? 12 : character.attackDie) + 1) + getAttackBonus(character, enemy.isShadow); if (heroAttackRoll >= 3) triggerScreenShake(); enemy.hp -= heroAttackRoll; log += `\nIl nemico è congelato e subisce un colpo extra da ${heroAttackRoll} danni!`; } battleLog.textContent = log; updateDiscoveriesLog(); finalizeBattle(); } }, 100);
+           }
       }
   }
-
+  
   newGameBtn.addEventListener('click', promptForNewGame);
   saveGameBtn.addEventListener('click', saveGame);
   loadGameBtn.addEventListener('click', loadGame);
-  diceBtn.addEventListener('click', rollDice); 
   cancelCharBtn.addEventListener('click', () => { charForm.style.display = 'none'; });
   closeBattlePotionSelectBtn.addEventListener('click', () => { battlePotionSelectModal.style.display = 'none'; });
 
   startAdventureBtn.addEventListener('click', () => {
-    const name = document.getElementById('charName').value.trim();
-    const hpInput = document.getElementById('charHP').value;
-    const charClass = document.getElementById('charClass').value;
-    
-    if (name && hpInput) {
-      let hp = parseInt(hpInput);
-      let energy = 0;
-      let maxEnergy = 10;
-      
-      if(charClass === 'Guerriero') {
-          hp += 5;
-          energy = 5;
-          maxEnergy = 12;
-      }
-      maxHP = hp;
-
-      character = { 
-          name, 
-          hp: hp,
-          class: charClass,
-          attackDie: 10,
-          defenseDie: 6,
-          bonuses: [], 
-          inventory: [], 
-          hasSpecialSword: false, 
-          prisonersFreed: 0, 
-          energy: energy, 
-          maxEnergy: maxEnergy,
-          isCursed: false,
-          shadowSlayerBonus: 0,
-          activeQuests: []
-      };
-      
-      startGame();
-    } else { alert('Inserisci un nome valido e i PF.'); }
+      const name = document.getElementById('charName').value.trim(); const hpInput = document.getElementById('charHP').value; const charClass = document.getElementById('charClass').value;
+      if (name && hpInput) {
+          let hp = parseInt(hpInput); let energy = 0; let maxEnergy = 10; if(charClass === 'Guerriero'){ hp += 5; energy = 5; maxEnergy = 12; }
+          players[creatingPlayerIndex] = { name, hp, maxHP: hp, class: charClass, attackDie: 10, defenseDie: 6, bonuses: [], inventory: [], hasSpecialSword: false, prisonersFreed: 0, energy, maxEnergy, isCursed: false, shadowSlayerBonus: 0, activeQuests: [], position: 1 };
+          creatingPlayerIndex++;
+          if (creatingPlayerIndex < numPlayers) { showCharacterCreationForm(); }
+          else { startGame(); }
+      } else { alert('Inserisci un nome valido e i PF.'); }
   });
   
-  powerStrikeBtn.addEventListener('click', () => {
-      const cost = character.class === 'Guerriero' ? 4 : 5;
-      if(character.energy >= cost) {
-          character.energy -= cost;
-          activeAbility = 'powerStrike';
-          resolveBattleTurn();
-      }
-  });
-  doubleAttackBtn.addEventListener('click', () => {
-      const cost = character.class === 'Guerriero' ? 4 : 5;
-      if(character.energy >= cost) {
-          character.energy -= cost;
-          activeAbility = 'doubleAttack';
-          resolveBattleTurn();
-      }
-  });
+  powerStrikeBtn.addEventListener('click', () => { const character = players[activeBattleState.primaryCombatantIndex]; const cost = character.class === 'Guerriero' ? 4 : 5; if (character.energy >= cost) { character.energy -= cost; activeAbility = 'powerStrike'; resolveBattleTurn(players[activeBattleState.primaryCombatantIndex], activeBattleState.enemy); } });
+  doubleAttackBtn.addEventListener('click', () => { const character = players[activeBattleState.primaryCombatantIndex]; const cost = character.class === 'Guerriero' ? 4 : 5; if (character.energy >= cost) { character.energy -= cost; activeAbility = 'doubleAttack'; resolveBattleTurn(players[activeBattleState.primaryCombatantIndex], activeBattleState.enemy); } });
   usePotionBattleBtn.addEventListener('click', openBattlePotionSelect);
 
   function init() {
-    wireCellListeners();
-    if (localStorage.getItem('dungeon72Save')) {
-        loadGameBtn.style.display = 'block';
-    }
-    window.addEventListener('resize', updateLayout);
-    updateLayout();
-    promptForNewGame(); 
+      wireCellListeners();
+      if (localStorage.getItem('dungeon72Save')) { loadGameBtn.style.display = 'block'; }
+      window.addEventListener('resize', updateLayout);
+      updateLayout();
+      promptForNewGame();
   }
 
   init();
