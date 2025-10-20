@@ -518,8 +518,6 @@
   }
   
   function clearHighlights() { board.querySelectorAll('.highlighted').forEach(el => el.classList.remove('highlighted')); }
-  
-  function getPrisonerStatusMessage(character) { const freed = character.prisonersFreed; if (freed === 11) return `Prigionieri liberati: ${freed}. Sei stato portato a festa come un eroe liberatore!`; if (freed >= 9) return `Prigionieri liberati: ${freed}. Un cittadino piange il figlio perduto sulla sua tomba.`; if (freed >= 5) return `Prigionieri liberati: ${freed}. I cittadini sono tristi per i prigionieri non liberati.`; return `Prigionieri liberati: ${freed}. I cittadini piangono i loro cari non liberati.`; }
 
   function processMessageQueue(onComplete) {
       messageModal.classList.remove('victory-modal'); victorySubText.textContent = ''; prisonerStatusText.textContent = '';
@@ -758,11 +756,41 @@
       encounterActionBtns.appendChild(battleBtn);
   }
   
+  function getFinalPrisonerMessage() {
+    const totalPrisonersFreed = players.reduce((sum, p) => sum + (p.prisonersFreed || 0), 0);
+    let message;
+    if (totalPrisonersFreed === 11) {
+        message = `Prigionieri liberati: ${totalPrisonersFreed}. Siete stati portati a festa come eroi liberatori!`;
+    } else if (totalPrisonersFreed >= 9) {
+        message = `Prigionieri liberati: ${totalPrisonersFreed}. Un cittadino piange il figlio perduto sulla sua tomba.`;
+    } else if (totalPrisonersFreed >= 5) {
+        message = `Prigionieri liberati: ${totalPrisonersFreed}. I cittadini sono tristi per i prigionieri non liberati.`;
+    } else {
+        message = `Prigionieri liberati: ${totalPrisonersFreed}. I cittadini piangono i loro cari non liberati.`;
+    }
+    return message;
+  }
+
   function handleGameOver(source, deadPlayer) {
-      const prisonerMessage = getPrisonerStatusMessage(deadPlayer);
-      messageQueue.push({endGame: true, title: `GAME OVER<br>${deadPlayer.name} è stato sconfitto ${source}.`, subtitle: `Nemici uccisi: ${enemiesDefeatedCount}<br>${prisonerMessage}`});
+      // Hide all possible modals to clean the screen
+      battleModal.style.display = 'none';
+      initiativeModal.style.display = 'none';
+      allyChoiceModal.style.display = 'none';
+      supportAttackModal.style.display = 'none';
+      setBattleMode(false); // This will also reset battle state
+
+      const prisonerMessage = getFinalPrisonerMessage();
+      
+      const gameOverTitle = `GAME OVER<br>${deadPlayer.name} è stato sconfitto ${source}.`;
+      const gameOverSubtitle = `Nemici uccisi: ${enemiesDefeatedCount}<br>${prisonerMessage}`;
+      
+      messageQueue.push({
+          endGame: true,
+          title: gameOverTitle,
+          subtitle: gameOverSubtitle
+      });
+      
       processMessageQueue();
-      setBattleMode(false);
   }
 
   function attemptEscape() {
@@ -900,8 +928,8 @@
         specialAbilitiesContainer.style.visibility = 'visible';
         if (activeBattleState.isAllyJoined) {
             await performSupportAttack();
-            if (activeBattleState.enemy.hp <= 0) {
-                finalizeBattle();
+            if (!activeBattleState || activeBattleState.enemy.hp <= 0) { // Check if battle ended
+                if(activeBattleState) finalizeBattle();
                 return;
             }
         }
@@ -962,6 +990,16 @@
                           battleLog.textContent += `\nAttacco di supporto: ${attackRoll} vs ${defenseRoll}. Parato!`;
                       }
                       battleEnemyPF.textContent = `PF: ${Math.max(0, enemy.hp)} / ${enemy.startHP}`;
+                      updatePlayerInfo(); 
+                      
+                      if (enemy.hp <= 0) {
+                        setTimeout(() => {
+                          supportAttackModal.style.display = 'none';
+                          resolve(); 
+                        }, 1500);
+                        return;
+                      }
+
                       setTimeout(() => {
                           supportAttackModal.style.display = 'none';
                           resolve();
@@ -1079,11 +1117,25 @@
           if (cellInfo) cellInfo.hp = enemy.hp;
       }
 
-      battlePlayerPF.textContent = `PF: ${Math.max(0, combatant.hp)} / ${combatant.maxHP}`;
+      players.forEach(p => {
+        if (p.name === combatant.name) {
+            battlePlayerPF.textContent = `PF: ${Math.max(0, p.hp)} / ${p.maxHP}`;
+        }
+      });
       battleEnemyPF.textContent = `PF: ${Math.max(0, enemy.hp)} / ${enemy.startHP}`;
       updatePlayerInfo();
 
+      for (const player of players) {
+        if (player.hp <= 0) {
+          setTimeout(() => {
+            handleGameOver("in combattimento", player);
+          }, 500);
+          return;
+        }
+      }
+
       setTimeout(() => {
+          if (!activeBattleState) return;
           if (enemy.hp <= 0) {
               gainEnergy(3);
               battleResult.innerHTML = "VITTORIA!<br>Hai sconfitto il nemico.";
@@ -1098,8 +1150,8 @@
                       messageQueue.push({
                           victory: true,
                           title: "Dungeon liberato!",
-                          subtitle: "Hai sconfitto tutti i nemici!",
-                          prisonerStatus: getPrisonerStatusMessage(combatant)
+                          subtitle: "Hai sconfitto il Boss Finale!",
+                          prisonerStatus: getFinalPrisonerMessage()
                       });
                       processMessageQueue(() => setBattleMode(false));
                       return;
@@ -1117,8 +1169,6 @@
                   await endTurnSequence();
               };
               battleActionContainer.appendChild(closeBtn);
-          } else if (combatant.hp <= 0) {
-              handleGameOver("in combattimento", combatant);
           } else {
               activeBattleState.playerHasInitiative = !activeBattleState.playerHasInitiative;
               setupBattleTurn();
@@ -1217,7 +1267,6 @@
             await new Promise(resolve => setTimeout(resolve, 1500));
 
             if (roll >= distance) {
-                // SUCCESS
                 allyChoiceModal.style.display = 'none';
                 messageQueue.push("Sei arrivato in tempo! Ti unisci alla lotta!");
                 const movePath = path;
@@ -1235,7 +1284,6 @@
                     setupBattleTurn();
                 });
             } else {
-                // FAILURE
                 allyChoiceModal.style.display = 'none';
                 messageQueue.push(`Non sei abbastanza veloce! Percorri ${roll} caselle ma la battaglia continua senza di te.`);
                 const movePath = path.slice(0, roll + 1);
