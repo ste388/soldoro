@@ -96,7 +96,7 @@
     #battleResult { font-size: 18px; font-weight: bold; min-height: 24px; margin-top: 10px; transition: font-size 0.2s; line-height: 1.2; }
     #battleActionContainer, #initiativeActionContainer { display:flex; flex-direction:column; gap:10px; margin-top: 15px; }
     #specialAbilitiesContainer { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; justify-content: center;}
-    #specialAbilitiesContainer button { font-size: 12px; padding: 8px 12px;}
+    #specialAbilitiesContainer button { font-size: 12px; padding: 8px 12px; flex-basis: calc(50% - 4px); }
     #initiativeResult { font-weight: bold; font-size: 18px; min-height: 24px; }
     #battleLog { min-height: 75px; padding: 10px; margin: 10px 0; background: rgba(0,0,0,0.3); border: 1px solid #444; border-radius: 8px; text-align: left; white-space: pre-line; font-size: 16px; line-height: 1.4; }
 
@@ -222,9 +222,6 @@
     </div>
     <div id="battleActionContainer"></div>
     <div id="specialAbilitiesContainer">
-      <button id="powerStrikeBtn" title="Un attacco che non può essere parato"></button>
-      <button id="doubleAttackBtn" title="Esegui due tiri di attacco in un turno"></button>
-      <button id="usePotionBattleBtn">Usa Pozione</button>
     </div>
   </div>
 
@@ -305,9 +302,6 @@
   const battleLog = document.getElementById('battleLog');
   const battleActionContainer = document.getElementById('battleActionContainer');
   const specialAbilitiesContainer = document.getElementById('specialAbilitiesContainer');
-  const powerStrikeBtn = document.getElementById('powerStrikeBtn');
-  const doubleAttackBtn = document.getElementById('doubleAttackBtn');
-  const usePotionBattleBtn = document.getElementById('usePotionBattleBtn');
   const messageModal = document.getElementById('messageModal');
   const messageModalText = document.getElementById('messageModalText');
   const victorySubText = document.getElementById('victorySubText');
@@ -379,8 +373,12 @@
       if (!character) return;
       const cost = character.class === 'Guerriero' ? 4 : 5;
       energyValue.textContent = character.energy;
-      powerStrikeBtn.disabled = character.energy < cost;
-      doubleAttackBtn.disabled = character.energy < cost;
+      
+      const powerStrikeBtn = document.getElementById('powerStrikeBtn');
+      if (powerStrikeBtn) powerStrikeBtn.disabled = character.energy < cost;
+
+      const doubleAttackBtn = document.getElementById('doubleAttackBtn');
+      if (doubleAttackBtn) doubleAttackBtn.disabled = character.energy < cost;
   }
 
   function gainEnergy(amount) {
@@ -758,38 +756,25 @@
   
   function getFinalPrisonerMessage() {
     const totalPrisonersFreed = players.reduce((sum, p) => sum + (p.prisonersFreed || 0), 0);
-    let message;
-    if (totalPrisonersFreed === 11) {
-        message = `Prigionieri liberati: ${totalPrisonersFreed}. Siete stati portati a festa come eroi liberatori!`;
-    } else if (totalPrisonersFreed >= 9) {
-        message = `Prigionieri liberati: ${totalPrisonersFreed}. Un cittadino piange il figlio perduto sulla sua tomba.`;
-    } else if (totalPrisonersFreed >= 5) {
-        message = `Prigionieri liberati: ${totalPrisonersFreed}. I cittadini sono tristi per i prigionieri non liberati.`;
-    } else {
-        message = `Prigionieri liberati: ${totalPrisonersFreed}. I cittadini piangono i loro cari non liberati.`;
-    }
-    return message;
+    if (totalPrisonersFreed === 11) return `Prigionieri liberati: ${totalPrisonersFreed}. Siete stati portati a festa come eroi liberatori!`;
+    if (totalPrisonersFreed >= 9) return `Prigionieri liberati: ${totalPrisonersFreed}. Un cittadino piange il figlio perduto sulla sua tomba.`;
+    if (totalPrisonersFreed >= 5) return `Prigionieri liberati: ${totalPrisonersFreed}. I cittadini sono tristi per i prigionieri non liberati.`;
+    return `Prigionieri liberati: ${totalPrisonersFreed}. I cittadini piangono i loro cari non liberati.`;
   }
 
   function handleGameOver(source, deadPlayer) {
-      // Hide all possible modals to clean the screen
       battleModal.style.display = 'none';
       initiativeModal.style.display = 'none';
       allyChoiceModal.style.display = 'none';
       supportAttackModal.style.display = 'none';
-      setBattleMode(false); // This will also reset battle state
+      setBattleMode(false);
 
       const prisonerMessage = getFinalPrisonerMessage();
       
       const gameOverTitle = `GAME OVER<br>${deadPlayer.name} è stato sconfitto ${source}.`;
       const gameOverSubtitle = `Nemici uccisi: ${enemiesDefeatedCount}<br>${prisonerMessage}`;
       
-      messageQueue.push({
-          endGame: true,
-          title: gameOverTitle,
-          subtitle: gameOverSubtitle
-      });
-      
+      messageQueue.push({ endGame: true, title: gameOverTitle, subtitle: gameOverSubtitle });
       processMessageQueue();
   }
 
@@ -898,7 +883,7 @@
     const isPlayerTurn = activeBattleState.playerHasInitiative;
 
     battleModal.style.display = 'block';
-    specialAbilitiesContainer.style.display = 'flex';
+    
     updateEnergyUI();
     allyJoinedIndicator.style.display = activeBattleState.isAllyJoined ? 'block' : 'none';
 
@@ -910,9 +895,7 @@
     battleEnemyName.textContent = enemy.name;
     battlePlayerPF.textContent = `PF: ${Math.max(0, combatant.hp)} / ${combatant.maxHP}`;
     battleEnemyPF.textContent = `PF: ${Math.max(0, enemy.hp)} / ${enemy.startHP}`;
-    const cost = combatant.class === 'Guerriero' ? 4 : 5;
-    powerStrikeBtn.textContent = `Colpo Potente (${cost})`;
-    doubleAttackBtn.textContent = `Doppio Attacco (${cost})`;
+    
     battlePlayerAttack.textContent = `Attacco: 1D${playerAttackDie}${playerTotalAttackBonus >= 0 ? '+' + playerTotalAttackBonus : playerTotalAttackBonus}`;
     battlePlayerDefense.textContent = `Difesa: 1D${combatant.defenseDie}+${playerTotalDefenseBonus}`;
     battleEnemyAttack.textContent = `Attacco: 1D${enemy.attackDie}+${enemy.attackBonus || 0}`;
@@ -921,6 +904,7 @@
     battlePlayerDice.textContent = '-';
     battleEnemyDice.textContent = '-';
     battleActionContainer.innerHTML = '';
+    specialAbilitiesContainer.innerHTML = '';
     battleLog.textContent = '';
     battleResult.innerHTML = `Tocca a ${isPlayerTurn ? combatant.name : enemy.name} attaccare!`;
 
@@ -928,7 +912,7 @@
         specialAbilitiesContainer.style.visibility = 'visible';
         if (activeBattleState.isAllyJoined) {
             await performSupportAttack();
-            if (!activeBattleState || activeBattleState.enemy.hp <= 0) { // Check if battle ended
+            if (!activeBattleState || activeBattleState.enemy.hp <= 0) { 
                 if(activeBattleState) finalizeBattle();
                 return;
             }
@@ -941,19 +925,44 @@
         };
         battleActionContainer.appendChild(attackBtn);
 
-        if (numPlayers > 1 && !activeBattleState.isAllyJoined && !activeBattleState.helpRequested) {
-            const askHelpBtn = document.createElement('button');
-            askHelpBtn.textContent = 'Chiedi Soccorso';
-            askHelpBtn.classList.add('intervention-btn');
-            askHelpBtn.onclick = askForHelp;
-            battleActionContainer.appendChild(askHelpBtn);
-        }
         if (!enemy.isShadow) {
             const escapeBtn = document.createElement('button');
             escapeBtn.textContent = `Fuggi (subisci 1D${combatant.class === 'Ladro' ? 4 : 6} PF)`;
             escapeBtn.onclick = attemptEscape;
             battleActionContainer.appendChild(escapeBtn);
         }
+
+        // Special Abilities
+        const cost = combatant.class === 'Guerriero' ? 4 : 5;
+        const powerStrikeBtn = document.createElement('button');
+        powerStrikeBtn.id = 'powerStrikeBtn';
+        powerStrikeBtn.title = 'Un attacco che non può essere parato';
+        powerStrikeBtn.textContent = `Colpo Potente (${cost})`;
+        powerStrikeBtn.onclick = () => { if (combatant.energy >= cost) { combatant.energy -= cost; activeAbility = 'powerStrike'; resolveBattleTurn(players[activeBattleState.primaryCombatantIndex], activeBattleState.enemy); } };
+        specialAbilitiesContainer.appendChild(powerStrikeBtn);
+
+        const doubleAttackBtn = document.createElement('button');
+        doubleAttackBtn.id = 'doubleAttackBtn';
+        doubleAttackBtn.title = 'Esegui due tiri di attacco in un turno';
+        doubleAttackBtn.textContent = `Doppio Attacco (${cost})`;
+        doubleAttackBtn.onclick = () => { if (combatant.energy >= cost) { combatant.energy -= cost; activeAbility = 'doubleAttack'; resolveBattleTurn(players[activeBattleState.primaryCombatantIndex], activeBattleState.enemy); } };
+        specialAbilitiesContainer.appendChild(doubleAttackBtn);
+
+        const usePotionBattleBtn = document.createElement('button');
+        usePotionBattleBtn.textContent = 'Usa Pozione';
+        usePotionBattleBtn.onclick = openBattlePotionSelect;
+        specialAbilitiesContainer.appendChild(usePotionBattleBtn);
+        
+        if (numPlayers > 1 && !activeBattleState.isAllyJoined && !activeBattleState.helpRequested) {
+            const askHelpBtn = document.createElement('button');
+            askHelpBtn.textContent = 'Chiedi Soccorso';
+            askHelpBtn.classList.add('intervention-btn');
+            askHelpBtn.onclick = askForHelp;
+            specialAbilitiesContainer.appendChild(askHelpBtn);
+        }
+        updateEnergyUI();
+
+
     } else {
         specialAbilitiesContainer.style.visibility = 'hidden';
         setTimeout(() => resolveBattleTurn(enemy, combatant), 1500);
@@ -1426,10 +1435,6 @@
           else { startGame(); }
       } else { alert('Inserisci un nome valido e i PF.'); }
   });
-  
-  powerStrikeBtn.addEventListener('click', () => { const character = players[activeBattleState.primaryCombatantIndex]; const cost = character.class === 'Guerriero' ? 4 : 5; if (character.energy >= cost) { character.energy -= cost; activeAbility = 'powerStrike'; resolveBattleTurn(players[activeBattleState.primaryCombatantIndex], activeBattleState.enemy); } });
-  doubleAttackBtn.addEventListener('click', () => { const character = players[activeBattleState.primaryCombatantIndex]; const cost = character.class === 'Guerriero' ? 4 : 5; if (character.energy >= cost) { character.energy -= cost; activeAbility = 'doubleAttack'; resolveBattleTurn(players[activeBattleState.primaryCombatantIndex], activeBattleState.enemy); } });
-  usePotionBattleBtn.addEventListener('click', openBattlePotionSelect);
 
   function init() {
       wireCellListeners();
