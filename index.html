@@ -44,6 +44,8 @@
     button:hover { background:#7cb673; }
     button:disabled { background:#555; cursor:not-allowed; }
     #sticky-controls button { width: auto; min-width: 120px; margin: 0; }
+    #tradeBtn { background-color: #3b6b8c; }
+    #tradeBtn:hover { background-color: #5a8ab0; }
     .intervention-btn { background-color: #c4832c; }
     .intervention-btn:hover { background-color: #e6a243; }
     .ignore-btn { background-color: #757575; }
@@ -77,7 +79,7 @@
     .player-1-info { border: 2px solid #a0d535; background: linear-gradient(145deg, #6e8547, #8fad6a); color: #eff7d6; }
     .player-2-info { border: 2px solid #35a0d5; background: linear-gradient(145deg, #476e85, #6a8fad); color: #d6eaff; }
 
-    #charForm, #encounterModal, #battleModal, #messageModal, #initiativeModal, #potionDamageModal, #battlePotionSelectModal, #altarModal, #allyChoiceModal, #supportAttackModal { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background: #3a3a2b; padding:20px; border-radius:10px; box-shadow:0 0 15px #000; z-index:1001; text-align:center; width: 300px; }
+    #charForm, #encounterModal, #battleModal, #messageModal, #initiativeModal, #potionDamageModal, #battlePotionSelectModal, #altarModal, #allyChoiceModal, #supportAttackModal, #tradeModal { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background: #3a3a2b; padding:20px; border-radius:10px; box-shadow:0 0 15px #000; z-index:1001; text-align:center; width: 300px; }
     #charForm input, #charForm select { width: calc(100% - 16px); padding:8px; margin:8px 0; border:none; border-radius:6px; font-size:16px; }
     
     #battleModal, #initiativeModal { z-index: 1050; }
@@ -85,7 +87,18 @@
     #altarModal { z-index: 1070; }
     #allyChoiceModal { z-index: 1080; }
     #supportAttackModal { z-index: 1090; }
+    #tradeModal { z-index: 1100; width: 90%; max-width: 800px; display: flex; flex-direction: column; max-height: 80vh; overflow-y: auto; }
     #altarActions, #allyChoiceActions, #supportAttackActions { display: flex; gap: 10px; justify-content: center; margin-top: 15px; }
+
+    #tradeContainer { display: flex; gap: 20px; text-align: left; flex-grow: 1; min-height: 0; }
+    .trade-column { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+    .trade-column h3 { text-align: center; }
+    .inventory-list { list-style: none; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 8px; flex-grow: 1; overflow-y: auto; }
+    .inventory-list li { padding: 8px; margin-bottom: 5px; background: #4f4f3e; border-radius: 5px; cursor: pointer; border: 2px solid transparent; }
+    .inventory-list li:hover { background: #6a6a52; }
+    .inventory-list li.selected { border-color: #ffeb3b; background: #7c7c5e; }
+    #trade-actions { display: flex; flex-direction: column; justify-content: center; gap: 15px; }
+
 
     .battle-unit { margin: 15px 0; border: 1px solid #555; padding: 10px; border-radius: 8px; }
     .battle-name { font-weight: bold; font-size: 18px; margin-bottom: 5px; color: #a0d535; }
@@ -102,8 +115,8 @@
 
     #messageModal { background: linear-gradient(135deg, #4a3c26, #2d1f0f); border: 4px solid #8b5e3c; color: #f5deb3; font-family: 'MedievalSharp', cursive; font-size: 22px; }
     #messageModal.victory-modal .modal-content { display: flex; flex-direction: column; align-items: center; }
-    #messageModal.victory-modal #messageModalText { font-size: 28px; margin-bottom: 5px; }
-    #messageModal.victory-modal #victorySubText { font-size: 18px; margin-bottom: 10px; }
+    #messageModal.victory-modal #messageModalText { font-size: 28px; margin-bottom: 5px; white-space: pre-line; }
+    #messageModal.victory-modal #victorySubText { font-size: 18px; margin-bottom: 10px; white-space: pre-line; }
     #messageModal.victory-modal #prisonerStatusText { font-size: 16px; color: #d2b48c; }
     #messageModal button { font-family: 'MedievalSharp', cursive; font-size: 18px; margin-top: 20px; padding: 8px 25px; background-color: #8b5e3c; border-radius: 5px; border: 2px solid #5a3d2e; }
     #messageModal button:hover { background-color: #a3764a; }
@@ -115,6 +128,10 @@
       #left { order: 3; }
       #left, #right { width: 100%; box-sizing: border-box; }
       #charForm, #encounterModal, #messageModal, #initiativeModal, #potionDamageModal, #battlePotionSelectModal, #altarModal, #allyChoiceModal, #supportAttackModal { width: 90%; }
+      #tradeModal { flex-direction: column; }
+      #tradeContainer { flex-direction: column; }
+      #trade-actions { flex-direction: row; margin-top: 10px; }
+
       #battleModal { padding: 10px; justify-content: center; }
       .battle-unit { margin: 10px 0; padding: 5px; }
       .battle-name { font-size: 18px; }
@@ -164,10 +181,10 @@
     <div>Nome personaggio</div>
     <input type="text" id="charName" placeholder="Nome...">
     <div>PF iniziali</div>
-    <input type="number" id="charHP" value="30" min="1">
+    <input type="number" id="charHP" value="35" min="1">
     <div>Classe</div>
     <select id="charClass">
-      <option value="Guerriero">Guerriero (+5 PF, +5 Energia)</option>
+      <option value="Guerriero">Guerriero (+10 PF, +5 Energia)</option>
       <option value="Esploratore">Esploratore (-1 buchi, -2 rampicanti, rilancio)</option>
       <option value="Ladro">Ladro (Furtività e Fuga Migliorate)</option>
     </select>
@@ -248,6 +265,25 @@
       <p id="supportAttackMessage"></p>
       <div id="supportAttackDice" class="battle-dice">-</div>
       <div id="supportAttackActions"></div>
+  </div>
+
+  <div id="tradeModal">
+    <h2>Scambio Oggetti</h2>
+    <div id="tradeContainer">
+      <div class="trade-column">
+        <h3 id="tradePlayer1Name"></h3>
+        <ul id="player1InventoryList" class="inventory-list"></ul>
+      </div>
+      <div id="trade-actions">
+        <button id="toPlayer2Btn" disabled>&raquo;</button>
+        <button id="toPlayer1Btn" disabled>&laquo;</button>
+      </div>
+      <div class="trade-column">
+        <h3 id="tradePlayer2Name"></h3>
+        <ul id="player2InventoryList" class="inventory-list"></ul>
+      </div>
+    </div>
+    <button id="closeTradeBtn" style="margin-top: 20px;">Chiudi</button>
   </div>
 
   <div id="battlePotionSelectModal">
@@ -335,6 +371,12 @@
   const supportAttackMessage = document.getElementById('supportAttackMessage');
   const supportAttackDice = document.getElementById('supportAttackDice');
   const supportAttackActions = document.getElementById('supportAttackActions');
+  const tradeModal = document.getElementById('tradeModal');
+  const player1InventoryList = document.getElementById('player1InventoryList');
+  const player2InventoryList = document.getElementById('player2InventoryList');
+  const toPlayer1Btn = document.getElementById('toPlayer1Btn');
+  const toPlayer2Btn = document.getElementById('toPlayer2Btn');
+  const closeTradeBtn = document.getElementById('closeTradeBtn');
   
   // Costanti di Gioco
   const COLS = 9, CELL_COUNT = 72, ENEMY_COUNT = 12, PRISONER_COUNT = 11, GAS_TRAP_COUNT = 2, HOLE_COUNT = 3, GAS_EFFECT_DURATION_CELLS = 5;
@@ -364,6 +406,7 @@
   let messageQueue = [];
   let activeBattleState = null;
   let activeAbility = null;
+  let selectedTradeItem = null;
   
   // ---- FUNZIONI PRINCIPALI ----
   function triggerScreenShake() { document.body.classList.add('shake'); setTimeout(() => document.body.classList.remove('shake'), 500); }
@@ -521,9 +564,25 @@
       messageModal.classList.remove('victory-modal'); victorySubText.textContent = ''; prisonerStatusText.textContent = '';
       if (messageQueue.length > 0) {
           const message = messageQueue.shift();
-          if (typeof message === 'object' && message.victory) { messageModal.classList.add('victory-modal'); messageModalText.textContent = message.title; victorySubText.textContent = message.subtitle; prisonerStatusText.textContent = message.prisonerStatus; }
-          else if (typeof message === 'object' && message.endGame) { messageModal.classList.add('victory-modal'); messageModalText.innerHTML = message.title; victorySubText.textContent = message.subtitle; messageModal.style.display = 'block'; playerActions.innerHTML = ''; messageModalOkBtn.onclick = () => { messageModal.style.display = 'none'; promptForNewGame(); }; return; }
-          else { messageModalText.innerHTML = message; }
+          if (typeof message === 'object' && message.victory) { 
+              messageModal.classList.add('victory-modal'); 
+              messageModalText.textContent = message.title; 
+              victorySubText.textContent = message.subtitle; 
+              prisonerStatusText.textContent = message.prisonerStatus; 
+          } else if (typeof message === 'object' && message.endGame) { 
+              messageModal.classList.add('victory-modal'); 
+              messageModalText.textContent = message.title; 
+              victorySubText.textContent = message.subtitle; 
+              messageModal.style.display = 'block'; 
+              playerActions.innerHTML = ''; 
+              messageModalOkBtn.onclick = () => { 
+                  messageModal.style.display = 'none'; 
+                  promptForNewGame(); 
+              }; 
+              return; 
+          } else { 
+              messageModalText.innerHTML = message; 
+          }
           messageModal.style.display = 'block';
           messageModalOkBtn.onclick = () => {
               messageModal.style.display = 'none';
@@ -583,9 +642,9 @@
       const cellNum = parseInt(cell.dataset.cellNumber);
       character.position = cellNum;
       resetMessages();
-      const isNewVisit = !visitedCells.has(String(cellNum));
-      let subsequentAction = () => endTurnSequence();
+      let subsequentAction;
 
+      const isNewVisit = !visitedCells.has(String(cellNum));
       if (isNewVisit) {
           discoveryCounter++;
           visitedCells.set(String(cellNum), { enemy: null, bonus: null, potion: null, altar: null, prisonerFreed: false, collected: false, defeated: false, hp: 0, discoveryOrder: discoveryCounter });
@@ -596,54 +655,153 @@
           info.potion = potionMap[cellNum] ? { ...potionMap[cellNum] } : null;
           info.altar = altarMap[cellNum] ? { ...altarMap[cellNum] } : null;
 
-          if (holePositions.has(cellNum)) { const damage = character.class === 'Esploratore' ? 2 : 3; messageQueue.push(`Ti sloghi una caviglia in un buco! Perdi ${damage} PF.`); triggerScreenShake(); addHoleMarker(cell); character.hp -= damage; if (character.hp <= 0) { subsequentAction = () => handleGameOver("per una caviglia slogata", character); } }
-          if (subsequentAction.toString().includes('handleGameOver')) { processMessageQueue(subsequentAction); return; }
+          if (holePositions.has(cellNum)) { const damage = character.class === 'Esploratore' ? 2 : 3; messageQueue.push(`Ti sloghi una caviglia in un buco! Perdi ${damage} PF.`); triggerScreenShake(); addHoleMarker(cell); character.hp -= damage; if (character.hp <= 0) { subsequentAction = () => handleGameOver("per una caviglia slogata", character); processMessageQueue(subsequentAction); return; } }
           if (visitedCells.size > 0 && visitedCells.size % 20 === 0) gainEnergy(1);
           if (gasEffect.active) { gasEffect.newCellsVisited++; if (gasEffect.newCellsVisited >= GAS_EFFECT_DURATION_CELLS) { gasEffect.active = false; gasEffect.newCellsVisited = 0; messageQueue.push("L'effetto del gas di debolezza è svanito!"); } }
           if (visitedCells.size > 0 && visitedCells.size % 7 === 0) { character.hp = Math.min(character.hp + 3, character.maxHP); messageQueue.push("Il riposo ti ha fatto guadagnare 3 PF."); }
           if (gasTrapPositions.has(cellNum) && !gasActivatedPositions.has(cellNum)) { messageQueue.push(`Sei finito in una trappola a gas! Attacco -1 finché non scopri ${GAS_EFFECT_DURATION_CELLS} nuove celle.`); gasEffect.active = true; gasEffect.newCellsVisited = 0; gasActivatedPositions.add(cellNum); }
           if (info.bonus) { if (!character.bonuses.some(b => b.name === info.bonus.name)) { character.bonuses.push(info.bonus); const gemNames = GEMS.map(g => g.name); if (gemNames.includes(info.bonus.name)) messageQueue.push(`Hai trovato una ${info.bonus.name}!`); else if (info.bonus.name === GEM_DOOR.name) { const hasAllGems = GEMS.every(gem => character.bonuses.some(b => b.name === gem.name)); if(hasAllGems && !character.hasSpecialSword) { character.hasSpecialSword = true; messageQueue.push("La Porta si apre! Hai trovato la Spada Speciale 1D12+1."); } else if (!character.hasSpecialSword) { messageQueue.push("Trovi una porta incastonata di gemme. È sigillata."); } } else messageQueue.push(`Hai trovato ${info.bonus.name}!`); } }
           if (info.potion) { if (!info.collected) { character.inventory.push(info.potion); info.collected = true; messageQueue.push(`Hai trovato ${info.potion.name}.`); } }
-          if (info.altar) subsequentAction = () => handleAltar(info.altar);
           if (prisonerMap[cellNum]) { if(!visitedCells.get(String(cellNum)).prisonerFreed) { character.prisonersFreed++; info.prisonerFreed = true; messageQueue.push('Hai liberato un prigioniero!'); handlePrisonerQuest(cellNum); }}
-      } else {
-          const info = visitedCells.get(String(cellNum));
-          if (info && info.bonus && info.bonus.name === GEM_DOOR.name) { const hasAllGems = GEMS.every(gem => character.bonuses.some(b => b.name === gem.name)); if (hasAllGems && !character.hasSpecialSword) { character.hasSpecialSword = true; messageQueue.push("Usi le gemme. La Porta si apre! Trovi la Spada Speciale 1D12+1."); } }
       }
 
-      const finalInfo = visitedCells.get(String(cellNum));
-      const shadowAtLocation = shadows.find(s => s.position === cellNum && s.hp > 0);
-      if (shadowAtLocation) subsequentAction = () => startBattle(shadowAtLocation);
-      else if (finalInfo && finalInfo.enemy && !finalInfo.defeated) subsequentAction = () => handleEncounter(finalInfo.enemy);
-      else { if (finalInfo && finalInfo.enemy && finalInfo.defeated) setMainMessage('Qui giace un nemico sconfitto.', '#a9a9a9'); else if (isNewVisit && cellNum !== 1) setMainMessage('Procedi tranquillo', 'lightgreen'); else if (!isNewVisit) setMainMessage('Cella già visitata', '#ffffff'); }
+      if (numPlayers > 1) {
+        const otherPlayerIndex = (currentPlayerIndex + 1) % 2;
+        if (players.length > 1 && players[otherPlayerIndex].position === cellNum) {
+            showTradeButton();
+        } else {
+            hideTradeButton();
+        }
+      }
+
+      const currentCellInfo = visitedCells.get(String(cellNum)) || {};
+      if (currentCellInfo.altar) {
+        subsequentAction = () => handleAltar(currentCellInfo.altar);
+      } else {
+        const shadowAtLocation = shadows.find(s => s.position === cellNum && s.hp > 0);
+        if (shadowAtLocation) {
+          subsequentAction = () => startBattle(shadowAtLocation);
+        } else if (currentCellInfo && currentCellInfo.enemy && !currentCellInfo.defeated) {
+          subsequentAction = () => handleEncounter(currentCellInfo.enemy);
+        } else {
+          if (currentCellInfo && currentCellInfo.enemy && currentCellInfo.defeated) setMainMessage('Qui giace un nemico sconfitto.', '#a9a9a9'); 
+          else if (isNewVisit && cellNum !== 1) setMainMessage('Procedi tranquillo', 'lightgreen'); 
+          else if (!isNewVisit) setMainMessage('Cella già visitata', '#ffffff');
+          subsequentAction = () => endTurnSequence();
+        }
+      }
       
       updatePlayerInfo(); updateDiscoveriesLog(); buildBoard();
       processMessageQueue(subsequentAction);
   }
 
-  function handleAltar(altar) {
-      const character = players[currentPlayerIndex];
-      if (altar.type === 'sacrificial') { altarModal.style.display = 'block'; altarMessage.textContent = "Vedi un altare. Puoi sacrificare 4 PF per ricevere una benedizione (+2 Attacco vs Ombre)."; altarActions.innerHTML = ''; const yesBtn = document.createElement('button'); yesBtn.textContent = 'Sì'; yesBtn.onclick = () => { character.hp -= 4; character.shadowSlayerBonus = 2; messageQueue.push("Hai ricevuto una benedizione! Ottieni +2 agli attacchi contro tutte le Ombre."); altarModal.style.display = 'none'; processMessageQueue(() => { if (character.hp <= 0) handleGameOver("sacrificandosi all'altare", character); else processCellContinuation(); }); }; const noBtn = document.createElement('button'); noBtn.textContent = 'No'; noBtn.onclick = () => { altarModal.style.display = 'none'; processCellContinuation(); }; altarActions.appendChild(yesBtn); altarActions.appendChild(noBtn); }
-      else if (altar.type === 'curse') { character.isCursed = true; messageQueue.push("Ora sei maledetto, hai -2 ai tuoi attacchi. trovare l'altare della purificazione per toglierti la maledizione."); processMessageQueue(processCellContinuation); }
-      else if (altar.type === 'purification') { if (character.isCursed) { character.isCursed = false; messageQueue.push("Ora la maledizione non ha più effetto su di te!"); } else { messageQueue.push("Trovi un altare della purificazione."); } processMessageQueue(processCellContinuation); }
-  }
+function handleAltar(altar) {
+    const character = players[currentPlayerIndex];
+    if (altar.type === 'sacrificial') {
+        altarModal.style.display = 'block';
+        altarMessage.textContent = "Vedi un altare. Puoi sacrificare 4 PF per ricevere una benedizione (+2 Attacco vs Ombre).";
+        altarActions.innerHTML = '';
+        const yesBtn = document.createElement('button');
+        yesBtn.textContent = 'Sì';
+        yesBtn.onclick = () => {
+            character.hp -= 4;
+            character.shadowSlayerBonus = 2;
+            messageQueue.push("Hai ricevuto una benedizione! Ottieni +2 agli attacchi contro tutte le Ombre.");
+            altarModal.style.display = 'none';
+            processMessageQueue(() => {
+                if (character.hp <= 0) handleGameOver("sacrificandosi all'altare", character);
+                else endTurnSequence();
+            });
+        };
+        const noBtn = document.createElement('button');
+        noBtn.textContent = 'No';
+        noBtn.onclick = () => {
+            altarModal.style.display = 'none';
+            endTurnSequence();
+        };
+        altarActions.appendChild(yesBtn);
+        altarActions.appendChild(noBtn);
+    } else if (altar.type === 'curse') {
+        if (!character.isCursed) {
+            character.isCursed = true;
+            messageQueue.push("Sei stato maledetto! Hai -2 ai tuoi attacchi. Trova l'altare della purificazione per rimuovere la maledizione.");
+        } else {
+            messageQueue.push("Senti un'aura maligna, ma sei già maledetto.");
+        }
+        processMessageQueue(endTurnSequence);
+    } else if (altar.type === 'purification') {
+        if (character.isCursed) {
+            character.isCursed = false;
+            messageQueue.push("L'aura benefica dell'altare ti purifica! La maledizione è stata rimossa.");
+        } else {
+            messageQueue.push("Senti un'aura di pace emanare dall'altare, ma non hai maledizioni da rimuovere.");
+        }
+        processMessageQueue(endTurnSequence);
+    }
+}
 
-  function handlePrisonerQuest(cellNum) {
-      const character = players[currentPlayerIndex]; const quest = prisonerQuests.quests[cellNum]; if (!quest) return;
-      if (quest.status === 'inactive') { quest.status = 'active'; let familyMember = ''; let locationInfo = ''; if(quest.type === 'brother'){ familyMember = 'fratello'; locationInfo = 'nella parte nord'; } else if (quest.type === 'father') { familyMember = 'padre'; locationInfo = 'nella parte sud'; } else if (quest.type === 'mother') { familyMember = 'madre'; locationInfo = 'qui vicino'; } messageQueue.push(`Grazie per avermi liberato! Mio/a ${familyMember} è ${locationInfo} del dungeon (cella ${quest.targetCell}). Se liberi anche lui/lei, ti ricompenserò!`); }
-      else if (quest.type.includes('-target')) { const giverQuest = prisonerQuests.quests[quest.giver]; if (giverQuest && giverQuest.status === 'active') { giverQuest.status = 'completed'; character.inventory.push(giverQuest.reward); messageQueue.push(`Il prigioniero liberato ti ringrazia e ti dona una ${giverQuest.reward.name}!`); } }
-  }
+function handlePrisonerQuest(cellNum) {
+    const character = players[currentPlayerIndex];
+    const quest = prisonerQuests.quests[cellNum];
+    if (!quest) return;
+
+    if (quest.status === 'inactive') {
+        quest.status = 'active';
+        character.activeQuests = character.activeQuests || [];
+        character.activeQuests.push(cellNum);
+
+        let familyMember = '', locationInfo = '', possessive = '', pronoun = '';
+
+        if (quest.type === 'brother') {
+            familyMember = 'fratello';
+            locationInfo = 'nella parte nord';
+            possessive = 'Mio';
+            pronoun = 'lui';
+        } else if (quest.type === 'father') {
+            familyMember = 'padre';
+            locationInfo = 'nella parte sud';
+            possessive = 'Mio';
+            pronoun = 'lui';
+        } else if (quest.type === 'mother') {
+            familyMember = 'madre';
+            locationInfo = 'qui vicino';
+            possessive = 'Mia';
+            pronoun = 'lei';
+        }
+        
+        const targetCellInfo = visitedCells.get(String(quest.targetCell));
+        if (targetCellInfo && targetCellInfo.prisonerFreed) {
+            quest.status = 'completed';
+            character.inventory.push(quest.reward);
+            messageQueue.push(`"Grazie!" dice il prigioniero. "Ho saputo che ${possessive.toLowerCase()} ${familyMember} è già in salvo! Prendi questa ricompensa per il tuo valore!"`);
+            messageQueue.push(`Hai ottenuto: ${quest.reward.name}!`);
+        } else if (familyMember) {
+            messageQueue.push(`Grazie per avermi liberato! ${possessive} ${familyMember} è ${locationInfo} del dungeon (cella ${quest.targetCell}). Se liberi anche ${pronoun}, ti ricompenserò!`);
+        }
+    } else if (quest.type.includes('-target')) {
+        const giverQuest = prisonerQuests.quests[quest.giver];
+        if (giverQuest && giverQuest.status === 'active') {
+            giverQuest.status = 'completed';
+            
+            let questOriginator = null;
+            for(const p of players){
+                if(p.activeQuests && p.activeQuests.includes(quest.giver)){
+                    questOriginator = p;
+                    p.activeQuests.splice(p.activeQuests.indexOf(quest.giver), 1); // Rimuove la quest attiva
+                    break;
+                }
+            }
+
+            const rewardRecipient = questOriginator || character;
+            rewardRecipient.inventory.push(giverQuest.reward);
+            messageQueue.push(`Il prigioniero che hai appena liberato è il parente che si stava cercando! Per ringraziarti, viene consegnata la ricompensa promessa a ${rewardRecipient.name}: ${giverQuest.reward.name}!`);
+        }
+    }
+}
   
-  async function processCellContinuation() {
-      buildBoard(); const character = players[currentPlayerIndex]; const info = visitedCells.get(String(character.position)); const shadowAtLocation = shadows.find(s => s.position === character.position && s.hp > 0);
-      if (shadowAtLocation) { startBattle(shadowAtLocation); return; }
-      if (info && info.enemy && !info.defeated) { handleEncounter(info.enemy); } else { await endTurnSequence(); }
-      updatePlayerInfo(); updateDiscoveriesLog();
-  }
-
   async function endTurnSequence() {
       if (activeBattleState) return;
-
+      hideTradeButton();
       let battleStarted = false;
       const exploredCount = visitedCells.size;
       for (const spawn of SHADOW_SPAWNS) {
@@ -771,8 +929,8 @@
 
       const prisonerMessage = getFinalPrisonerMessage();
       
-      const gameOverTitle = `GAME OVER<br>${deadPlayer.name} è stato sconfitto ${source}.`;
-      const gameOverSubtitle = `Nemici uccisi: ${enemiesDefeatedCount}<br>${prisonerMessage}`;
+      const gameOverTitle = `GAME OVER\n${deadPlayer.name} è stato sconfitto ${source}.`;
+      const gameOverSubtitle = `Nemici uccisi: ${enemiesDefeatedCount}\n${prisonerMessage}`;
       
       messageQueue.push({ endGame: true, title: gameOverTitle, subtitle: gameOverSubtitle });
       processMessageQueue();
@@ -880,16 +1038,12 @@
     if (!activeBattleState) return;
     const combatant = players[activeBattleState.primaryCombatantIndex];
     const enemy = activeBattleState.enemy;
-    const isPlayerTurn = activeBattleState.playerHasInitiative;
 
-    battleModal.style.display = 'block';
-    
     updateEnergyUI();
     allyJoinedIndicator.style.display = activeBattleState.isAllyJoined ? 'block' : 'none';
 
     const playerTotalAttackBonus = getAttackBonus(combatant, enemy.isShadow) + (combatant.hasSpecialSword ? 1 : 0);
     const playerAttackDie = combatant.hasSpecialSword ? 12 : combatant.attackDie;
-    const playerTotalDefenseBonus = getDefenseBonus(combatant);
 
     battlePlayerName.textContent = combatant.name;
     battleEnemyName.textContent = enemy.name;
@@ -897,16 +1051,19 @@
     battleEnemyPF.textContent = `PF: ${Math.max(0, enemy.hp)} / ${enemy.startHP}`;
     
     battlePlayerAttack.textContent = `Attacco: 1D${playerAttackDie}${playerTotalAttackBonus >= 0 ? '+' + playerTotalAttackBonus : playerTotalAttackBonus}`;
-    battlePlayerDefense.textContent = `Difesa: 1D${combatant.defenseDie}+${playerTotalDefenseBonus}`;
+    battlePlayerDefense.textContent = `Difesa: 1D${combatant.defenseDie}`;
     battleEnemyAttack.textContent = `Attacco: 1D${enemy.attackDie}+${enemy.attackBonus || 0}`;
-    battleEnemyDefense.textContent = `Difesa: 1D${enemy.defenseDie}+${enemy.defenseBonus || 0}`;
+    battleEnemyDefense.textContent = `Difesa: 1D${enemy.defenseDie}`;
 
     battlePlayerDice.textContent = '-';
     battleEnemyDice.textContent = '-';
     battleActionContainer.innerHTML = '';
     specialAbilitiesContainer.innerHTML = '';
     battleLog.textContent = '';
+    
+    const isPlayerTurn = activeBattleState.playerHasInitiative;
     battleResult.innerHTML = `Tocca a ${isPlayerTurn ? combatant.name : enemy.name} attaccare!`;
+    battleModal.style.display = 'block';
 
     if (isPlayerTurn) {
         specialAbilitiesContainer.style.visibility = 'visible';
@@ -932,7 +1089,6 @@
             battleActionContainer.appendChild(escapeBtn);
         }
 
-        // Special Abilities
         const cost = combatant.class === 'Guerriero' ? 4 : 5;
         const powerStrikeBtn = document.createElement('button');
         powerStrikeBtn.id = 'powerStrikeBtn';
@@ -962,7 +1118,6 @@
         }
         updateEnergyUI();
 
-
     } else {
         specialAbilitiesContainer.style.visibility = 'hidden';
         setTimeout(() => resolveBattleTurn(enemy, combatant), 1500);
@@ -971,6 +1126,7 @@
   
   function performSupportAttack() {
       return new Promise(resolve => {
+          if (!activeBattleState) { resolve(); return; }
           const allyIndex = (activeBattleState.primaryCombatantIndex + 1) % numPlayers;
           const ally = players[allyIndex];
           const enemy = activeBattleState.enemy;
@@ -1001,18 +1157,10 @@
                       battleEnemyPF.textContent = `PF: ${Math.max(0, enemy.hp)} / ${enemy.startHP}`;
                       updatePlayerInfo(); 
                       
-                      if (enemy.hp <= 0) {
-                        setTimeout(() => {
-                          supportAttackModal.style.display = 'none';
-                          resolve(); 
-                        }, 1500);
-                        return;
-                      }
-
                       setTimeout(() => {
                           supportAttackModal.style.display = 'none';
-                          resolve();
-                      }, 2000);
+                          resolve(); 
+                      }, 1500);
                   });
               });
           };
@@ -1049,7 +1197,7 @@
       battleActionContainer.innerHTML = '';
       specialAbilitiesContainer.style.visibility = 'hidden';
       const combatant = players[activeBattleState.primaryCombatantIndex];
-      const isPlayerAttacker = attacker.name === combatant.name;
+      const isPlayerAttacker = players.some(p => p.name === attacker.name);
 
       function processCombatResult(attackRoll, defenseRoll) {
           const damage = Math.max(0, attackRoll - defenseRoll);
@@ -1103,10 +1251,10 @@
       } else {
           const attackDie = isPlayerAttacker ? (combatant.hasSpecialSword ? 12 : combatant.attackDie) : attacker.attackDie;
           const attackBonus = isPlayerAttacker ? getAttackBonus(combatant, defender.isShadow) : (attacker.attackBonus || 0);
-          const defenseDie = isPlayerAttacker ? defender.defenseDie : combatant.defenseDie;
-          const defenseBonus = isPlayerAttacker ? (defender.defenseBonus || 0) : getDefenseBonus(combatant);
+          const defenseDie = !isPlayerAttacker ? combatant.defenseDie : defender.defenseDie;
+          const defenseBonus = !isPlayerAttacker ? getDefenseBonus(combatant) : (defender.defenseBonus || 0);
           const attackerDiceEl = isPlayerAttacker ? battlePlayerDice : battleEnemyDice;
-          const defenderDiceEl = isPlayerAttacker ? battleEnemyDice : battlePlayerDice;
+          const defenderDiceEl = !isPlayerAttacker ? battlePlayerDice : battleEnemyDice;
           animateAndRoll(attackerDiceEl, attackDie, attackBonus, (attackRoll) => {
               animateAndRoll(defenderDiceEl, defenseDie, defenseBonus, (defenseRoll) => {
                   processCombatResult(attackRoll, defenseRoll);
@@ -1126,11 +1274,7 @@
           if (cellInfo) cellInfo.hp = enemy.hp;
       }
 
-      players.forEach(p => {
-        if (p.name === combatant.name) {
-            battlePlayerPF.textContent = `PF: ${Math.max(0, p.hp)} / ${p.maxHP}`;
-        }
-      });
+      battlePlayerPF.textContent = `PF: ${Math.max(0, combatant.hp)} / ${combatant.maxHP}`;
       battleEnemyPF.textContent = `PF: ${Math.max(0, enemy.hp)} / ${enemy.startHP}`;
       updatePlayerInfo();
 
@@ -1138,7 +1282,7 @@
         if (player.hp <= 0) {
           setTimeout(() => {
             handleGameOver("in combattimento", player);
-          }, 500);
+          }, 1000);
           return;
         }
       }
@@ -1150,6 +1294,7 @@
               battleResult.innerHTML = "VITTORIA!<br>Hai sconfitto il nemico.";
               battleResult.style.color = 'lightgreen';
               battleActionContainer.innerHTML = '';
+              specialAbilitiesContainer.innerHTML = '';
               if (enemy.isShadow) {
                   shadows = shadows.filter(s => s.name !== enemy.name);
               } else {
@@ -1189,6 +1334,7 @@
       if (!activeBattleState) return;
       activeBattleState.helpRequested = true;
       battleActionContainer.innerHTML = '';
+      specialAbilitiesContainer.innerHTML = '';
       battleResult.innerHTML = 'Hai chiesto aiuto...';
       
       currentPlayerIndex = (currentPlayerIndex + 1) % numPlayers;
@@ -1208,6 +1354,11 @@
       diceButton.textContent = 'Tira dado';
       diceButton.onclick = rollDice;
       playerActions.appendChild(diceButton);
+      
+      hideTradeButton();
+      if (numPlayers > 1 && players.length > 1 && players[0].position === players[1].position) {
+        showTradeButton();
+      }
 
       if (activeBattleState) {
           diceButton.disabled = true;
@@ -1271,6 +1422,7 @@
 
     rollBtn.onclick = () => {
         rollBtn.disabled = true;
+        allyChoiceMessage.textContent = `Lancio in corso...`;
         animateMainDice(async (roll) => {
             allyChoiceMessage.textContent = `Hai ottenuto: ${roll}`;
             await new Promise(resolve => setTimeout(resolve, 1500));
@@ -1366,7 +1518,14 @@
       creatingPlayerIndex = 0; showCharacterCreationForm();
   }
 
-  function showCharacterCreationForm() { charFormTitle.textContent = `Crea Personaggio per Giocatore ${creatingPlayerIndex + 1}`; document.getElementById('charName').value = ''; document.getElementById('charHP').value = 30; charForm.style.display = 'block'; }
+  function showCharacterCreationForm() {
+    charFormTitle.textContent = `Crea Personaggio per Giocatore ${creatingPlayerIndex + 1}`;
+    document.getElementById('charName').value = '';
+    const charHPInput = document.getElementById('charHP');
+    charHPInput.value = 35; 
+    charForm.style.display = 'block';
+}
+
 
   function saveGame() {
       if (players.length === 0) { alert("Nessun gioco da salvare. Inizia una nuova partita prima."); return; }
@@ -1388,12 +1547,14 @@
   function updateLayout() { const discoveriesLog = document.getElementById('discoveriesLog'); const leftColumn = document.getElementById('left'); const centerColumn = document.getElementById('center-column'); const isDesktop = window.innerWidth > 1024; if (isDesktop) { if (discoveriesLog.parentElement !== leftColumn) { leftColumn.appendChild(discoveriesLog); } } else { if (discoveriesLog.parentElement !== centerColumn) { centerColumn.appendChild(discoveriesLog); } } }
   
   function openBattlePotionSelect() {
+      if (!activeBattleState) return;
       const character = players[activeBattleState.primaryCombatantIndex]; battlePotionList.innerHTML = ''; if (character.inventory.length === 0) return;
       character.inventory.forEach((potion, index) => { const btn = document.createElement('button'); btn.textContent = potion.name; btn.onclick = () => { battlePotionSelectModal.style.display = 'none'; usePotionInBattle(potion, index); }; battlePotionList.appendChild(btn); });
       battlePotionSelectModal.style.display = 'block';
   }
 
   function openInitiativePotionSelect() {
+      if (!activeBattleState) return;
       const character = players[activeBattleState.primaryCombatantIndex]; battlePotionList.innerHTML = ''; const usablePotions = character.inventory.map((potion, index) => ({...potion, originalIndex: index})).filter(p => p.type === 'heal' || p.type === 'energy');
       if (usablePotions.length === 0) return;
       usablePotions.forEach((potion) => { const btn = document.createElement('button'); btn.textContent = potion.name; btn.onclick = () => { battlePotionSelectModal.style.display = 'none'; usePotionInInitiative(potion, potion.originalIndex); }; battlePotionList.appendChild(btn); });
@@ -1408,6 +1569,7 @@
   }
   
   function usePotionInBattle(potion, index) {
+      if (!activeBattleState) return;
       const character = players[activeBattleState.primaryCombatantIndex]; character.inventory.splice(index, 1);
       if (potion.type === 'heal') { const oldHp = character.hp; character.hp = Math.min(character.hp + potion.value, character.maxHP); const healedAmount = character.hp - oldHp; updatePlayerInfo(); battlePlayerPF.textContent = `PF: ${Math.max(0, character.hp)} / ${character.maxHP}`; updateDiscoveriesLog(); battleLog.textContent = `${character.name} usa ${potion.name} e recupera ${healedAmount} PF!`; battleResult.innerHTML = `Ora hai ${character.hp} PF.`; finalizeBattle(); }
       else if (potion.type === 'fire' || potion.type === 'ice') {
@@ -1418,6 +1580,111 @@
            }
       }
   }
+
+  function showTradeButton() {
+    let tradeBtn = document.getElementById('tradeBtn');
+    if (!tradeBtn) {
+        tradeBtn = document.createElement('button');
+        tradeBtn.id = 'tradeBtn';
+        tradeBtn.textContent = 'Scambia Oggetti';
+        tradeBtn.onclick = openTradeModal;
+        stickyControls.appendChild(tradeBtn);
+    }
+    tradeBtn.style.display = 'inline-block';
+  }
+
+  function hideTradeButton() {
+    const tradeBtn = document.getElementById('tradeBtn');
+    if (tradeBtn) {
+        tradeBtn.style.display = 'none';
+    }
+  }
+
+  function openTradeModal() {
+    if(numPlayers < 2) return;
+    updateTradeInventories();
+    tradeModal.style.display = 'flex';
+  }
+
+  function updateTradeInventories() {
+    player1InventoryList.innerHTML = '';
+    player2InventoryList.innerHTML = '';
+    document.getElementById('tradePlayer1Name').textContent = players[0].name;
+    document.getElementById('tradePlayer2Name').textContent = players[1].name;
+    
+    let allItems1 = [...players[0].inventory.map((item, index) => ({...item, source: 'inventory', originalIndex: index})), ...players[0].bonuses.map((item, index) => ({...item, source: 'bonuses', originalIndex: index}))];
+    let allItems2 = [...players[1].inventory.map((item, index) => ({...item, source: 'inventory', originalIndex: index})), ...players[1].bonuses.map((item, index) => ({...item, source: 'bonuses', originalIndex: index}))];
+
+    allItems1.forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = item.name;
+        li.dataset.itemName = item.name;
+        li.dataset.source = item.source;
+        li.dataset.index = item.originalIndex;
+        li.dataset.player = 0;
+        player1InventoryList.appendChild(li);
+    });
+
+    allItems2.forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = item.name;
+        li.dataset.itemName = item.name;
+        li.dataset.source = item.source;
+        li.dataset.index = item.originalIndex;
+        li.dataset.player = 1;
+        player2InventoryList.appendChild(li);
+    });
+    selectedTradeItem = null;
+    toPlayer1Btn.disabled = true;
+    toPlayer2Btn.disabled = true;
+  }
+
+  function handleTradeSelection(e) {
+    const target = e.target;
+    if (target.tagName !== 'LI') return;
+
+    document.querySelectorAll('#tradeModal .inventory-list li').forEach(li => li.classList.remove('selected'));
+    
+    target.classList.add('selected');
+    selectedTradeItem = target;
+
+    const fromPlayerIndex = parseInt(target.dataset.player);
+    toPlayer1Btn.disabled = (fromPlayerIndex === 0);
+    toPlayer2Btn.disabled = (fromPlayerIndex === 1);
+  }
+
+  function transferItem(toIndex) {
+    if (!selectedTradeItem) return;
+
+    const fromIndex = parseInt(selectedTradeItem.dataset.player);
+    const itemName = selectedTradeItem.dataset.itemName;
+    const source = selectedTradeItem.dataset.source;
+
+    let fromPlayerItems, toPlayerItems;
+    if (source === 'inventory') {
+        fromPlayerItems = players[fromIndex].inventory;
+        toPlayerItems = players[toIndex].inventory;
+    } else {
+        fromPlayerItems = players[fromIndex].bonuses;
+        toPlayerItems = players[toIndex].bonuses;
+    }
+    
+    const itemIndex = fromPlayerItems.findIndex(item => item.name === itemName);
+
+    if (itemIndex > -1) {
+        const [itemToTransfer] = fromPlayerItems.splice(itemIndex, 1);
+        toPlayerItems.push(itemToTransfer);
+    }
+    
+    updateTradeInventories();
+    updateDiscoveriesLog();
+  }
+  
+  player1InventoryList.addEventListener('click', handleTradeSelection);
+  player2InventoryList.addEventListener('click', handleTradeSelection);
+  toPlayer1Btn.addEventListener('click', () => { if(selectedTradeItem && selectedTradeItem.dataset.player === '1') transferItem(0); });
+  toPlayer2Btn.addEventListener('click', () => { if(selectedTradeItem && selectedTradeItem.dataset.player === '0') transferItem(1); });
+  closeTradeBtn.addEventListener('click', () => { tradeModal.style.display = 'none'; updateDiscoveriesLog(); });
   
   newGameBtn.addEventListener('click', promptForNewGame);
   saveGameBtn.addEventListener('click', saveGame);
@@ -1426,15 +1693,34 @@
   closeBattlePotionSelectBtn.addEventListener('click', () => { battlePotionSelectModal.style.display = 'none'; });
 
   startAdventureBtn.addEventListener('click', () => {
-      const name = document.getElementById('charName').value.trim(); const hpInput = document.getElementById('charHP').value; const charClass = document.getElementById('charClass').value;
-      if (name && hpInput) {
-          let hp = parseInt(hpInput); let energy = 0; let maxEnergy = 10; if(charClass === 'Guerriero'){ hp += 5; energy = 5; maxEnergy = 12; }
-          players[creatingPlayerIndex] = { name, hp, maxHP: hp, class: charClass, attackDie: 10, defenseDie: 6, bonuses: [], inventory: [], hasSpecialSword: false, prisonersFreed: 0, energy, maxEnergy, isCursed: false, shadowSlayerBonus: 0, activeQuests: [], position: 1 };
-          creatingPlayerIndex++;
-          if (creatingPlayerIndex < numPlayers) { showCharacterCreationForm(); }
-          else { startGame(); }
-      } else { alert('Inserisci un nome valido e i PF.'); }
-  });
+    const name = document.getElementById('charName').value.trim();
+    const hpInput = document.getElementById('charHP').value;
+    const charClass = document.getElementById('charClass').value;
+    if (name && hpInput) {
+        let hp = parseInt(hpInput);
+        let energy = 0;
+        let maxEnergy = 10;
+
+        if (charClass === 'Guerriero') {
+            hp += 10; 
+            energy = 5;
+            maxEnergy = 12;
+        }
+
+        players[creatingPlayerIndex] = {
+            name, hp, maxHP: hp, class: charClass, attackDie: 10, defenseDie: 6, bonuses: [], inventory: [], hasSpecialSword: false, prisonersFreed: 0, energy, maxEnergy, isCursed: false, shadowSlayerBonus: 0, activeQuests: [], position: 1
+        };
+        creatingPlayerIndex++;
+        if (creatingPlayerIndex < numPlayers) {
+            showCharacterCreationForm();
+        } else {
+            startGame();
+        }
+    } else {
+        alert('Inserisci un nome valido e i PF.');
+    }
+});
+
 
   function init() {
       wireCellListeners();
