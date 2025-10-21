@@ -638,61 +638,83 @@
   }
 
   function processCellLogic(cell) {
-      const character = players[currentPlayerIndex];
-      const cellNum = parseInt(cell.dataset.cellNumber);
-      character.position = cellNum;
-      resetMessages();
-      let subsequentAction;
+    const character = players[currentPlayerIndex];
+    const cellNum = parseInt(cell.dataset.cellNumber);
+    character.position = cellNum;
+    resetMessages();
+    let subsequentAction;
 
-      const isNewVisit = !visitedCells.has(String(cellNum));
-      if (isNewVisit) {
-          discoveryCounter++;
-          visitedCells.set(String(cellNum), { enemy: null, bonus: null, potion: null, altar: null, prisonerFreed: false, collected: false, defeated: false, hp: 0, discoveryOrder: discoveryCounter });
-          
-          const info = visitedCells.get(String(cellNum));
-          info.enemy = enemyMap[cellNum] ? { ...enemyMap[cellNum] } : null;
-          info.bonus = bonusMap[cellNum] ? { ...bonusMap[cellNum] } : null;
-          info.potion = potionMap[cellNum] ? { ...potionMap[cellNum] } : null;
-          info.altar = altarMap[cellNum] ? { ...altarMap[cellNum] } : null;
+    const isNewVisit = !visitedCells.has(String(cellNum));
+    if (isNewVisit) {
+        discoveryCounter++;
+        visitedCells.set(String(cellNum), { enemy: null, bonus: null, potion: null, altar: null, prisonerFreed: false, collected: false, defeated: false, hp: 0, discoveryOrder: discoveryCounter });
+        
+        const info = visitedCells.get(String(cellNum));
+        info.enemy = enemyMap[cellNum] ? { ...enemyMap[cellNum] } : null;
+        info.bonus = bonusMap[cellNum] ? { ...bonusMap[cellNum] } : null;
+        info.potion = potionMap[cellNum] ? { ...potionMap[cellNum] } : null;
+        info.altar = altarMap[cellNum] ? { ...altarMap[cellNum] } : null;
 
-          if (holePositions.has(cellNum)) { const damage = character.class === 'Esploratore' ? 2 : 3; messageQueue.push(`Ti sloghi una caviglia in un buco! Perdi ${damage} PF.`); triggerScreenShake(); addHoleMarker(cell); character.hp -= damage; if (character.hp <= 0) { subsequentAction = () => handleGameOver("per una caviglia slogata", character); processMessageQueue(subsequentAction); return; } }
-          if (visitedCells.size > 0 && visitedCells.size % 20 === 0) gainEnergy(1);
-          if (gasEffect.active) { gasEffect.newCellsVisited++; if (gasEffect.newCellsVisited >= GAS_EFFECT_DURATION_CELLS) { gasEffect.active = false; gasEffect.newCellsVisited = 0; messageQueue.push("L'effetto del gas di debolezza è svanito!"); } }
-          if (visitedCells.size > 0 && visitedCells.size % 7 === 0) { character.hp = Math.min(character.hp + 3, character.maxHP); messageQueue.push("Il riposo ti ha fatto guadagnare 3 PF."); }
-          if (gasTrapPositions.has(cellNum) && !gasActivatedPositions.has(cellNum)) { messageQueue.push(`Sei finito in una trappola a gas! Attacco -1 finché non scopri ${GAS_EFFECT_DURATION_CELLS} nuove celle.`); gasEffect.active = true; gasEffect.newCellsVisited = 0; gasActivatedPositions.add(cellNum); }
-          if (info.bonus) { if (!character.bonuses.some(b => b.name === info.bonus.name)) { character.bonuses.push(info.bonus); const gemNames = GEMS.map(g => g.name); if (gemNames.includes(info.bonus.name)) messageQueue.push(`Hai trovato una ${info.bonus.name}!`); else if (info.bonus.name === GEM_DOOR.name) { const hasAllGems = GEMS.every(gem => character.bonuses.some(b => b.name === gem.name)); if(hasAllGems && !character.hasSpecialSword) { character.hasSpecialSword = true; messageQueue.push("La Porta si apre! Hai trovato la Spada Speciale 1D12+1."); } else if (!character.hasSpecialSword) { messageQueue.push("Trovi una porta incastonata di gemme. È sigillata."); } } else messageQueue.push(`Hai trovato ${info.bonus.name}!`); } }
-          if (info.potion) { if (!info.collected) { character.inventory.push(info.potion); info.collected = true; messageQueue.push(`Hai trovato ${info.potion.name}.`); } }
-          if (prisonerMap[cellNum]) { if(!visitedCells.get(String(cellNum)).prisonerFreed) { character.prisonersFreed++; info.prisonerFreed = true; messageQueue.push('Hai liberato un prigioniero!'); handlePrisonerQuest(cellNum); }}
-      }
-
-      if (numPlayers > 1) {
-        const otherPlayerIndex = (currentPlayerIndex + 1) % 2;
-        if (players.length > 1 && players[otherPlayerIndex].position === cellNum) {
-            showTradeButton();
-        } else {
-            hideTradeButton();
+        if (holePositions.has(cellNum)) { const damage = character.class === 'Esploratore' ? 2 : 3; messageQueue.push(`Ti sloghi una caviglia in un buco! Perdi ${damage} PF.`); triggerScreenShake(); addHoleMarker(cell); character.hp -= damage; if (character.hp <= 0) { subsequentAction = () => handleGameOver("per una caviglia slogata", character); processMessageQueue(subsequentAction); return; } }
+        if (visitedCells.size > 0 && visitedCells.size % 20 === 0) gainEnergy(1);
+        if (gasEffect.active) { gasEffect.newCellsVisited++; if (gasEffect.newCellsVisited >= GAS_EFFECT_DURATION_CELLS) { gasEffect.active = false; gasEffect.newCellsVisited = 0; messageQueue.push("L'effetto del gas di debolezza è svanito!"); } }
+        if (visitedCells.size > 0 && visitedCells.size % 7 === 0) { character.hp = Math.min(character.hp + 3, character.maxHP); messageQueue.push("Il riposo ti ha fatto guadagnare 3 PF."); }
+        if (gasTrapPositions.has(cellNum) && !gasActivatedPositions.has(cellNum)) { messageQueue.push(`Sei finito in una trappola a gas! Attacco -1 finché non scopri ${GAS_EFFECT_DURATION_CELLS} nuove celle.`); gasEffect.active = true; gasEffect.newCellsVisited = 0; gasActivatedPositions.add(cellNum); }
+        if (info.bonus) {
+            if (info.bonus.name === GEM_DOOR.name) {
+                messageQueue.push("Trovi una porta incastonata di gemme. È sigillata.");
+            } else if (!character.bonuses.some(b => b.name === info.bonus.name)) {
+                character.bonuses.push(info.bonus);
+                const gemNames = GEMS.map(g => g.name);
+                if (gemNames.includes(info.bonus.name)) {
+                    messageQueue.push(`Hai trovato una ${info.bonus.name}!`);
+                } else {
+                    messageQueue.push(`Hai trovato ${info.bonus.name}!`);
+                }
+            }
         }
-      }
+        if (info.potion) { if (!info.collected) { character.inventory.push(info.potion); info.collected = true; messageQueue.push(`Hai trovato ${info.potion.name}.`); } }
+        if (prisonerMap[cellNum]) { if(!visitedCells.get(String(cellNum)).prisonerFreed) { character.prisonersFreed++; info.prisonerFreed = true; messageQueue.push('Hai liberato un prigioniero!'); handlePrisonerQuest(cellNum); }}
+    } else { // Cella già visitata
+        const info = visitedCells.get(String(cellNum));
+        if (info && info.bonus && info.bonus.name === GEM_DOOR.name) {
+            const hasAllGems = GEMS.every(gem => character.bonuses.some(b => b.name === gem.name));
+            if (hasAllGems && !character.hasSpecialSword) {
+                character.hasSpecialSword = true;
+                messageQueue.push("Usi le gemme... La Porta si apre! All'interno trovi una Spada Speciale (1D12+1)!");
+            }
+        }
+    }
 
-      const currentCellInfo = visitedCells.get(String(cellNum)) || {};
-      if (currentCellInfo.altar) {
-        subsequentAction = () => handleAltar(currentCellInfo.altar);
+
+    if (numPlayers > 1) {
+      const otherPlayerIndex = (currentPlayerIndex + 1) % 2;
+      if (players.length > 1 && players[otherPlayerIndex].position === cellNum) {
+          showTradeButton();
       } else {
-        const shadowAtLocation = shadows.find(s => s.position === cellNum && s.hp > 0);
-        if (shadowAtLocation) {
-          subsequentAction = () => startBattle(shadowAtLocation);
-        } else if (currentCellInfo && currentCellInfo.enemy && !currentCellInfo.defeated) {
-          subsequentAction = () => handleEncounter(currentCellInfo.enemy);
-        } else {
-          if (currentCellInfo && currentCellInfo.enemy && currentCellInfo.defeated) setMainMessage('Qui giace un nemico sconfitto.', '#a9a9a9'); 
-          else if (isNewVisit && cellNum !== 1) setMainMessage('Procedi tranquillo', 'lightgreen'); 
-          else if (!isNewVisit) setMainMessage('Cella già visitata', '#ffffff');
-          subsequentAction = () => endTurnSequence();
-        }
+          hideTradeButton();
       }
-      
-      updatePlayerInfo(); updateDiscoveriesLog(); buildBoard();
-      processMessageQueue(subsequentAction);
+    }
+
+    const currentCellInfo = visitedCells.get(String(cellNum)) || {};
+    if (currentCellInfo.altar) {
+      subsequentAction = () => handleAltar(currentCellInfo.altar);
+    } else {
+      const shadowAtLocation = shadows.find(s => s.position === cellNum && s.hp > 0);
+      if (shadowAtLocation) {
+        subsequentAction = () => startBattle(shadowAtLocation);
+      } else if (currentCellInfo && currentCellInfo.enemy && !currentCellInfo.defeated) {
+        subsequentAction = () => handleEncounter(currentCellInfo.enemy);
+      } else {
+        if (currentCellInfo && currentCellInfo.enemy && currentCellInfo.defeated) setMainMessage('Qui giace un nemico sconfitto.', '#a9a9a9'); 
+        else if (isNewVisit && cellNum !== 1) setMainMessage('Procedi tranquillo', 'lightgreen'); 
+        else if (!isNewVisit) setMainMessage('Cella già visitata', '#ffffff');
+        subsequentAction = () => endTurnSequence();
+      }
+    }
+    
+    updatePlayerInfo(); updateDiscoveriesLog(); buildBoard();
+    processMessageQueue(subsequentAction);
   }
 
 function handleAltar(altar) {
@@ -1609,6 +1631,7 @@ function handlePrisonerQuest(cellNum) {
   function updateTradeInventories() {
     player1InventoryList.innerHTML = '';
     player2InventoryList.innerHTML = '';
+    if(players.length < 2) return;
     document.getElementById('tradePlayer1Name').textContent = players[0].name;
     document.getElementById('tradePlayer2Name').textContent = players[1].name;
     
@@ -1616,21 +1639,21 @@ function handlePrisonerQuest(cellNum) {
     let allItems2 = [...players[1].inventory.map((item, index) => ({...item, source: 'inventory', originalIndex: index})), ...players[1].bonuses.map((item, index) => ({...item, source: 'bonuses', originalIndex: index}))];
 
     allItems1.forEach(item => {
+        if(item.name === GEM_DOOR.name) return;
         const li = document.createElement('li');
         li.textContent = item.name;
         li.dataset.itemName = item.name;
         li.dataset.source = item.source;
-        li.dataset.index = item.originalIndex;
         li.dataset.player = 0;
         player1InventoryList.appendChild(li);
     });
 
     allItems2.forEach(item => {
+        if(item.name === GEM_DOOR.name) return;
         const li = document.createElement('li');
         li.textContent = item.name;
         li.dataset.itemName = item.name;
         li.dataset.source = item.source;
-        li.dataset.index = item.originalIndex;
         li.dataset.player = 1;
         player2InventoryList.appendChild(li);
     });
