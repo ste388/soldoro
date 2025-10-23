@@ -331,6 +331,7 @@
     hole: new Audio('https://ste388.github.io/soldoro/fx/buco.mp3'),
     gas: new Audio('https://ste388.github.io/soldoro/fx/gas.mp3'),
     vines: new Audio('https://ste388.github.io/soldoro/fx/rampicante.mp3'),
+    prisoner: new Audio('https://ste388.github.io/soldoro/fx/prigioniero.mp3'),
   };
 
   sounds.battle.loop = true;
@@ -778,7 +779,7 @@
             }
         }
         if (info.potion) { if (!info.collected) { character.inventory.push(info.potion); playSound('item'); info.collected = true; messageQueue.push(`Hai trovato ${info.potion.name}.`); } }
-        if (prisonerMap[cellNum]) { if(!visitedCells.get(String(cellNum)).prisonerFreed) { character.prisonersFreed++; info.prisonerFreed = true; messageQueue.push('Hai liberato un prigioniero!'); handlePrisonerQuest(cellNum); }}
+        if (prisonerMap[cellNum]) { if(!visitedCells.get(String(cellNum)).prisonerFreed) { playSound('prisoner'); character.prisonersFreed++; info.prisonerFreed = true; messageQueue.push('Hai liberato un prigioniero!'); handlePrisonerQuest(cellNum); }}
     } else {
         const info = visitedCells.get(String(cellNum));
         if (info && info.bonus && info.bonus.name === GEM_DOOR.name) {
@@ -1135,7 +1136,7 @@
         activeBattleState.isAllyJoined = true;
     }
 
-    battleLog.textContent = 'Inizia la battaglia!';
+    battleLog.textContent = '';
     startCombatRound();
   }
 
@@ -1373,7 +1374,6 @@
         setTimeout(() => {
             const damage = Math.max(0, attackRoll - defenseRoll);
             defender.hp -= damage;
-            battleLog.textContent += `\n${attacker.name} (Atk: ${attackRoll}) vs ${defender.name} (Def: ${defenseRoll}).`;
             if (damage > 0) {
                 if (damage >= 3) {
                     playSound('powerhit');
@@ -1406,7 +1406,9 @@
                                  setTimeout(() => {
                                     const damage2 = Math.max(0, attack2 - defense2);
                                     if(damage2 > 0) { if(damage2 >= 3) playSound('powerhit'); else playSound('hit'); }
-                                    if (damage2 >= 3) triggerScreenShake(); totalDamage += damage2; logText += `\nAttacco 2: ${attack2} vs ${defense2}. Danno: ${damage2}`; defender.hp -= totalDamage; battleLog.textContent += logText; battleResult.innerHTML = `Doppio Attacco! Danno Totale: ${totalDamage}`;
+                                    if (damage2 >= 3) triggerScreenShake(); totalDamage += damage2; logText += `\nAttacco 2: ${attack2} vs ${defense2}. Danno: ${damage2}`; 
+                                    defender.hp -= totalDamage; 
+                                    battleResult.innerHTML = `Doppio Attacco! Danno Totale: ${totalDamage}`;
                                     setTimeout(finalizePhase, 2000);
                                 }, 2000);
                             });
@@ -1420,7 +1422,9 @@
             defenderDiceEl.textContent = 'X';
              setTimeout(() => {
                 playSound('powerhit');
-                if (attackRoll >= 3) triggerScreenShake(); defender.hp -= attackRoll; battleLog.textContent += `\nColpo Potente! L'attacco ignora la difesa.`; battleResult.innerHTML = `Danno inflitto: ${attackRoll}`;
+                if (attackRoll >= 3) triggerScreenShake(); 
+                defender.hp -= attackRoll; 
+                battleResult.innerHTML = `Colpo Potente! Danno inflitto: ${attackRoll}`;
                 setTimeout(finalizePhase, 2000);
             }, 2000);
         });
@@ -1736,13 +1740,21 @@
   function usePotionInBattle(potion, index, player) {
       if (!activeBattleState) return;
       player.inventory.splice(index, 1);
-      if (potion.type === 'heal') { const oldHp = player.hp; player.hp = Math.min(player.hp + potion.value, player.maxHP); const healedAmount = player.hp - oldHp; updateBattleUI(); updateDiscoveriesLog(); battleLog.textContent += `\n${player.name} usa ${potion.name} e recupera ${healedAmount} PF!`; battleResult.innerHTML = `Ora ha ${player.hp} PF.`; setTimeout(finalizePhase, 2000); }
+      if (potion.type === 'heal') { 
+          const oldHp = player.hp; 
+          player.hp = Math.min(player.hp + potion.value, player.maxHP); 
+          const healedAmount = player.hp - oldHp; 
+          updateBattleUI(); 
+          updateDiscoveriesLog(); 
+          battleResult.innerHTML = `${player.name} recupera ${healedAmount} PF! Ora ha ${player.hp} PF.`; 
+          setTimeout(finalizePhase, 2000); 
+      }
       else if (potion.type === 'fire' || potion.type === 'ice') {
            potionDamageModal.style.display = 'block'; potionDamageTitle.textContent = `Usa ${potion.name}`; potionDamageDice.textContent = '-'; potionDamageRollBtn.disabled = false;
            potionDamageRollBtn.onclick = () => {
                potionDamageRollBtn.disabled = true; let flips = 10;
                playSound('dice');
-               const timer = setInterval(() => { potionDamageDice.textContent = Math.floor(Math.random() * 6) + 1; if (--flips === 0) { clearInterval(timer); const damage = Number(potionDamageDice.textContent); potionDamageModal.style.display = 'none'; const enemy = activeBattleState.enemy; playSound('hit'); if (damage >= 3) triggerScreenShake(); enemy.hp -= damage; let log = `\n${potion.name} infligge ${damage} danni!`; if (potion.type === 'fire') { enemy.effects = enemy.effects || []; enemy.effects = enemy.effects.filter(e => e.type !== 'burn'); enemy.effects.push({ type: 'burn', duration: 2, damage: [3, 2] }); log += `\nIl nemico sta andando a fuoco!`; } else if (potion.type === 'ice') { const heroAttackRoll = Math.floor(Math.random() * (player.hasSpecialSword ? 12 : player.attackDie) + 1) + getAttackBonus(player, enemy.isShadow); playSound('hit'); if (heroAttackRoll >= 3) triggerScreenShake(); enemy.hp -= heroAttackRoll; log += `\nIl nemico è congelato e subisce un colpo extra da ${heroAttackRoll} danni!`; } battleLog.textContent += log; updateDiscoveriesLog(); setTimeout(finalizePhase, 2000); } }, 100);
+               const timer = setInterval(() => { potionDamageDice.textContent = Math.floor(Math.random() * 6) + 1; if (--flips === 0) { clearInterval(timer); const damage = Number(potionDamageDice.textContent); potionDamageModal.style.display = 'none'; const enemy = activeBattleState.enemy; playSound('hit'); if (damage >= 3) triggerScreenShake(); enemy.hp -= damage; let resultText = `${potion.name} infligge ${damage} danni!`; if (potion.type === 'fire') { enemy.effects = enemy.effects || []; enemy.effects = enemy.effects.filter(e => e.type !== 'burn'); enemy.effects.push({ type: 'burn', duration: 2, damage: [3, 2] }); resultText += ` Il nemico sta andando a fuoco!`; } else if (potion.type === 'ice') { const heroAttackRoll = Math.floor(Math.random() * (player.hasSpecialSword ? 12 : player.attackDie) + 1) + getAttackBonus(player, enemy.isShadow); playSound('hit'); if (heroAttackRoll >= 3) triggerScreenShake(); enemy.hp -= heroAttackRoll; resultText += ` Colpo extra da ${heroAttackRoll} danni!`; } battleResult.innerHTML = resultText; updateDiscoveriesLog(); setTimeout(finalizePhase, 2000); } }, 100);
            }
       }
   }
