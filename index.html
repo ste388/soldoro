@@ -316,6 +316,76 @@
 
 
 <script>
+  // --- Gestione Suoni ---
+  const sounds = {
+    dice: new Audio('https://ste388.github.io/soldoro/fx/dadi.mp3'),
+    hit: new Audio('https://ste388.github.io/soldoro/fx/colpoSpada.mp3'),
+    powerhit: new Audio('https://ste388.github.io/soldoro/fx/colpo.mp3'),
+    item: new Audio('https://ste388.github.io/soldoro/fx/trovare.mp3'),
+    step: new Audio('https://ste388.github.io/soldoro/fx/passi.mp3'),
+    shadow: new Audio('https://ste388.github.io/soldoro/fx/AppareOmbra.mp3'),
+    battle: new Audio('https://ste388.github.io/soldoro/fx/battaglia.mp3'),
+    parry: new Audio('https://ste388.github.io/soldoro/fx/parata.mp3'),
+    background: new Audio('https://ste388.github.io/soldoro/fx/Sottofondo.mp3'),
+    death: new Audio('https://ste388.github.io/soldoro/fx/morte.mp3'),
+    hole: new Audio('https://ste388.github.io/soldoro/fx/buco.mp3'),
+    gas: new Audio('https://ste388.github.io/soldoro/fx/gas.mp3'),
+    vines: new Audio('https://ste388.github.io/soldoro/fx/rampicante.mp3'),
+  };
+
+  sounds.battle.loop = true;
+  sounds.battle.volume = 0.3;
+  sounds.background.loop = true;
+  sounds.background.volume = 0.2;
+  
+
+  let audioInitialized = false;
+
+  function initAudio() {
+    if (audioInitialized) return;
+    const promises = Object.values(sounds).map(sound => sound.play());
+    
+    Promise.all(promises).then(() => {
+        Object.values(sounds).forEach(sound => {
+            sound.pause();
+            sound.currentTime = 0;
+        });
+        audioInitialized = true;
+        playSound('background');
+        console.log("Audio context unlocked and sounds ready.");
+    }).catch(error => {
+        console.warn("Could not unlock audio context automatically. Sounds will be played on demand.", error);
+        audioInitialized = true;
+        playSound('background');
+    });
+    
+    window.removeEventListener('click', initAudio);
+    window.removeEventListener('touchstart', initAudio);
+  }
+
+  function playSound(soundName) {
+    if (!audioInitialized) return;
+    const sound = sounds[soundName];
+    if (sound) {
+      if (!sound.loop) {
+        sound.currentTime = 0;
+      }
+      const playPromise = sound.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(error => console.warn(`Sound playback failed for ${soundName}: ${error.name}`));
+      }
+    }
+  }
+
+  function stopSound(soundName) {
+      if (!audioInitialized) return;
+      const sound = sounds[soundName];
+      if (sound) {
+        sound.pause();
+        sound.currentTime = 0;
+      }
+  }
+
   // Elementi DOM
   const board = document.getElementById('center');
   const discoveriesLog = document.getElementById('discoveriesLog');
@@ -475,6 +545,11 @@
   function addPrisonerMarker(cell) { const contentDiv = cell.querySelector('.cell-content'); if (!contentDiv) return; contentDiv.innerHTML = ''; const img = document.createElement('img'); img.src = PRISONER_ICON_URL; img.className = 'prisoner-marker'; contentDiv.appendChild(img); }
   function addHoleMarker(cell) { const contentDiv = cell.querySelector('.cell-content'); if (!contentDiv) return; contentDiv.innerHTML = ''; const img = document.createElement('div'); img.className = 'hole-marker'; contentDiv.appendChild(img); }
 
+  function removeGems(player) {
+      const gemNames = new Set(GEMS.map(g => g.name));
+      player.bonuses = player.bonuses.filter(bonus => !gemNames.has(bonus.name));
+  }
+
   function updateDiscoveriesLog() {
       const lines = [];
       lines.push(`Celle esplorate: ${visitedCells ? visitedCells.size : 0}`);
@@ -625,9 +700,13 @@
   function setBattleMode(isBattle) {
       if (isBattle) {
           stickyControls.style.top = '-200px';
+          sounds.background.pause();
+          playSound('battle');
       } else {
           activeBattleState = null;
           stickyControls.style.top = '0';
+          stopSound('battle');
+          playSound('background');
       }
       buildBoard();
   }
@@ -657,7 +736,7 @@
       clearHighlights(); diceRes.textContent = '-'; const character = players[currentPlayerIndex];
       const startNum = character.position; const endNum = parseInt(destinationCell.dataset.cellNumber); const path = findPath(startNum, endNum);
       if (!path || path.length <= 1) { character.position = endNum; processCellLogic(destinationCell); return; }
-      for (let i = 1; i < path.length; i++) { await new Promise(resolve => setTimeout(resolve, 150)); character.position = path[i]; buildBoard(); }
+      for (let i = 1; i < path.length; i++) { await new Promise(resolve => setTimeout(resolve, 150)); playSound('step'); character.position = path[i]; buildBoard(); }
       processCellLogic(destinationCell);
   }
 
@@ -679,16 +758,17 @@
         info.potion = potionMap[cellNum] ? { ...potionMap[cellNum] } : null;
         info.altar = altarMap[cellNum] ? { ...altarMap[cellNum] } : null;
 
-        if (holePositions.has(cellNum)) { const damage = character.class === 'Esploratore' ? 2 : 3; messageQueue.push(`Ti sloghi una caviglia in un buco! Perdi ${damage} PF.`); triggerScreenShake(); addHoleMarker(cell); character.hp -= damage; if (character.hp <= 0) { subsequentAction = () => handleGameOver("per una caviglia slogata", character); processMessageQueue(subsequentAction); return; } }
+        if (holePositions.has(cellNum)) { const damage = character.class === 'Esploratore' ? 2 : 3; messageQueue.push(`Ti sloghi una caviglia in un buco! Perdi ${damage} PF.`); playSound('hole'); triggerScreenShake(); addHoleMarker(cell); character.hp -= damage; if (character.hp <= 0) { subsequentAction = () => handleGameOver("per una caviglia slogata", character); processMessageQueue(subsequentAction); return; } }
         if (visitedCells.size > 0 && visitedCells.size % 20 === 0) gainEnergy(1);
         if (gasEffect.active) { gasEffect.newCellsVisited++; if (gasEffect.newCellsVisited >= GAS_EFFECT_DURATION_CELLS) { gasEffect.active = false; gasEffect.newCellsVisited = 0; messageQueue.push("L'effetto del gas di debolezza è svanito!"); } }
         if (visitedCells.size > 0 && visitedCells.size % 7 === 0) { character.hp = Math.min(character.hp + 3, character.maxHP); messageQueue.push("Il riposo ti ha fatto guadagnare 3 PF."); }
-        if (gasTrapPositions.has(cellNum) && !gasActivatedPositions.has(cellNum)) { messageQueue.push(`Sei finito in una trappola a gas! Attacco -1 finché non scopri ${GAS_EFFECT_DURATION_CELLS} nuove celle.`); gasEffect.active = true; gasEffect.newCellsVisited = 0; gasActivatedPositions.add(cellNum); }
+        if (gasTrapPositions.has(cellNum) && !gasActivatedPositions.has(cellNum)) { playSound('gas'); messageQueue.push(`Sei finito in una trappola a gas! Attacco -1 finché non scopri ${GAS_EFFECT_DURATION_CELLS} nuove celle.`); gasEffect.active = true; gasEffect.newCellsVisited = 0; gasActivatedPositions.add(cellNum); }
         if (info.bonus) {
             if (info.bonus.name === GEM_DOOR.name) {
                 messageQueue.push("Trovi una porta incastonata di gemme. È sigillata.");
             } else if (!character.bonuses.some(b => b.name === info.bonus.name)) {
                 character.bonuses.push(info.bonus);
+                playSound('item');
                 const gemNames = GEMS.map(g => g.name);
                 if (gemNames.includes(info.bonus.name)) {
                     messageQueue.push(`Hai trovato una ${info.bonus.name}!`);
@@ -697,15 +777,17 @@
                 }
             }
         }
-        if (info.potion) { if (!info.collected) { character.inventory.push(info.potion); info.collected = true; messageQueue.push(`Hai trovato ${info.potion.name}.`); } }
+        if (info.potion) { if (!info.collected) { character.inventory.push(info.potion); playSound('item'); info.collected = true; messageQueue.push(`Hai trovato ${info.potion.name}.`); } }
         if (prisonerMap[cellNum]) { if(!visitedCells.get(String(cellNum)).prisonerFreed) { character.prisonersFreed++; info.prisonerFreed = true; messageQueue.push('Hai liberato un prigioniero!'); handlePrisonerQuest(cellNum); }}
-    } else { // Cella già visitata
+    } else {
         const info = visitedCells.get(String(cellNum));
         if (info && info.bonus && info.bonus.name === GEM_DOOR.name) {
             const hasAllGems = GEMS.every(gem => character.bonuses.some(b => b.name === gem.name));
             if (hasAllGems && !character.hasSpecialSword) {
                 character.hasSpecialSword = true;
+                playSound('item');
                 messageQueue.push("Usi le gemme... La Porta si apre! All'interno trovi una Spada Speciale (1D12+1)!");
+                removeGems(character);
             }
         }
     }
@@ -741,7 +823,7 @@
     processMessageQueue(subsequentAction);
   }
 
-function handleAltar(altar) {
+  function handleAltar(altar) {
     const character = players[currentPlayerIndex];
     if (altar.type === 'sacrificial') {
         altarModal.style.display = 'block';
@@ -750,6 +832,7 @@ function handleAltar(altar) {
         const yesBtn = document.createElement('button');
         yesBtn.textContent = 'Sì';
         yesBtn.onclick = () => {
+            playSound('hit');
             character.hp -= 4;
             character.shadowSlayerBonus = 2;
             messageQueue.push("Hai ricevuto una benedizione! Ottieni +2 agli attacchi contro tutte le Ombre.");
@@ -786,7 +869,7 @@ function handleAltar(altar) {
     }
 }
 
-function handlePrisonerQuest(cellNum) {
+  function handlePrisonerQuest(cellNum) {
     const character = players[currentPlayerIndex];
     const quest = prisonerQuests.quests[cellNum];
     if (!quest) return;
@@ -819,6 +902,7 @@ function handlePrisonerQuest(cellNum) {
         if (targetCellInfo && targetCellInfo.prisonerFreed) {
             quest.status = 'completed';
             character.inventory.push(quest.reward);
+            playSound('item');
             messageQueue.push(`"Grazie!" dice il prigioniero. "Ho saputo che ${possessive.toLowerCase()} ${familyMember} è già in salvo! Prendi questa ricompensa per il tuo valore!"`);
             messageQueue.push(`Hai ottenuto: ${quest.reward.name}!`);
         } else if (familyMember) {
@@ -833,13 +917,14 @@ function handlePrisonerQuest(cellNum) {
             for(const p of players){
                 if(p.activeQuests && p.activeQuests.includes(quest.giver)){
                     questOriginator = p;
-                    p.activeQuests.splice(p.activeQuests.indexOf(quest.giver), 1); // Rimuove la quest attiva
+                    p.activeQuests.splice(p.activeQuests.indexOf(quest.giver), 1);
                     break;
                 }
             }
 
             const rewardRecipient = questOriginator || character;
             rewardRecipient.inventory.push(giverQuest.reward);
+            playSound('item');
             messageQueue.push(`Il prigioniero che hai appena liberato è il parente che si stava cercando! Per ringraziarti, viene consegnata la ricompensa promessa a ${rewardRecipient.name}: ${giverQuest.reward.name}!`);
         }
     }
@@ -853,6 +938,7 @@ function handlePrisonerQuest(cellNum) {
       for (const spawn of SHADOW_SPAWNS) {
           if (exploredCount >= spawn.spawnTurn && !spawnedShadows.has(spawn.name)) {
               spawnedShadows.add(spawn.name);
+              playSound('shadow');
               let freeCells = Array.from({length: CELL_COUNT}, (_, i) => i + 1).filter(c => c !== players[currentPlayerIndex].position && !shadows.some(s => s.position === c));
               if(freeCells.length > 0) {
                   const pos = freeCells[Math.floor(Math.random() * freeCells.length)];
@@ -871,6 +957,7 @@ function handlePrisonerQuest(cellNum) {
                   await new Promise(resolve => setTimeout(resolve, 1000));
                   shadowTurnName.textContent = shadow.name;
                   const moveRoll = Math.floor(Math.random() * 6) + 1;
+                  playSound('dice');
                   shadowDiceRes.textContent = moveRoll;
                   await new Promise(resolve => setTimeout(resolve, 500));
                   for(let i=0; i<moveRoll; i++) {
@@ -918,6 +1005,7 @@ function handlePrisonerQuest(cellNum) {
           rollBtn.disabled = true;
           battleBtn.disabled = true;
           let flips = 10;
+          playSound('dice');
           const timer = setInterval(() => {
               encounterDiceResult.textContent = Math.floor(Math.random() * 6) + 1;
               if (--flips === 0) {
@@ -971,6 +1059,9 @@ function handlePrisonerQuest(cellNum) {
       initiativeModal.style.display = 'none';
       allyChoiceModal.style.display = 'none';
       supportAttackModal.style.display = 'none';
+      playSound('death');
+      stopSound('battle');
+      stopSound('background');
       setBattleMode(false);
 
       const prisonerMessage = getFinalPrisonerMessage();
@@ -991,12 +1082,14 @@ function handlePrisonerQuest(cellNum) {
       battleResult.style.fontSize = '18px';
       const character = players[activeBattleState.primaryCombatantIndex];
       let flips = 10;
+      playSound('dice');
       const timer = setInterval(() => {
           let dieSize = character.class === 'Ladro' ? 4 : 6;
           battlePlayerDice.textContent = Math.floor(Math.random() * dieSize) + 1;
           if (--flips === 0) {
               clearInterval(timer);
               const damageRoll = Number(battlePlayerDice.textContent);
+              playSound('hit');
               character.hp -= damageRoll;
               updatePlayerInfo();
               if (character.hp <= 0) {
@@ -1011,7 +1104,7 @@ function handlePrisonerQuest(cellNum) {
       }, 100);
   }
 
-function startBattle(enemy) {
+  function startBattle(enemy) {
     setBattleMode(true);
     const character = players[currentPlayerIndex];
     if (!character) return;
@@ -1024,7 +1117,6 @@ function startBattle(enemy) {
             enemy = { ...enemy, ...definition, startHP: definition.hp, name: definition.name };
         }
     }
-    
     const cellInfo = visitedCells.get(String(character.position));
     let currentEnemyHP = enemy.isShadow ? enemy.hp : (cellInfo && cellInfo.hp > 0 ? cellInfo.hp : enemy.startHP);
     if (cellInfo && !enemy.isShadow) cellInfo.hp = currentEnemyHP;
@@ -1045,22 +1137,22 @@ function startBattle(enemy) {
 
     battleLog.textContent = 'Inizia la battaglia!';
     startCombatRound();
-}
+  }
 
-function startCombatRound() {
-    if (!activeBattleState) return;
-    if (activeBattleState.roundPhase === 'mainPlayer') {
-        startInitiativePhase(false);
-    } else if (activeBattleState.roundPhase === 'ally' && activeBattleState.isAllyJoined) {
-        startInitiativePhase(true);
-    } else {
-        activeBattleState.roundPhase = 'mainPlayer';
-        startInitiativePhase(false);
-    }
-}
+  function startCombatRound() {
+      if (!activeBattleState) return;
+      if (activeBattleState.roundPhase === 'mainPlayer') {
+          startInitiativePhase(false);
+      } else if (activeBattleState.roundPhase === 'ally' && activeBattleState.isAllyJoined) {
+          startInitiativePhase(true);
+      } else {
+          activeBattleState.roundPhase = 'mainPlayer';
+          startInitiativePhase(false);
+      }
+  }
 
 
-function startInitiativePhase(isSupportRound) {
+  function startInitiativePhase(isSupportRound) {
     if (!activeBattleState) return;
     battleModal.style.display = 'none';
 
@@ -1114,9 +1206,9 @@ function startInitiativePhase(isSupportRound) {
             });
         });
     };
-}
+  }
 
-function prepareAttackPhase(attacker, defender, isSupportRound) {
+  function prepareAttackPhase(attacker, defender, isSupportRound) {
     if (!activeBattleState) return;
     
     battleModal.style.display = 'flex';
@@ -1138,7 +1230,6 @@ function prepareAttackPhase(attacker, defender, isSupportRound) {
         };
         battleActionContainer.appendChild(attackBtn);
 
-        // Solo il giocatore principale (non in supporto) può fuggire, usare abilità speciali o chiedere aiuto
         if (!isSupportRound) {
             if (!defender.isShadow) {
                 const escapeBtn = document.createElement('button');
@@ -1185,9 +1276,9 @@ function prepareAttackPhase(attacker, defender, isSupportRound) {
         specialAbilitiesContainer.style.visibility = 'hidden';
         setTimeout(() => resolveAttack(attacker, defender), 2000);
     }
-}
+  }
   
-function updateBattleUI() {
+  function updateBattleUI() {
     if (!activeBattleState) return;
     const mainPlayer = players[activeBattleState.primaryCombatantIndex];
     const enemy = activeBattleState.enemy;
@@ -1226,9 +1317,10 @@ function updateBattleUI() {
     battleAllyDice.textContent = '-';
     battleEnemyDice.textContent = '-';
     updateEnergyUI();
-}
+  }
 
   function animateMainDice(callback) {
+      playSound('dice');
       let flips = 10;
       const timer = setInterval(() => {
           diceRes.textContent = Math.floor(Math.random() * 6) + 1;
@@ -1242,6 +1334,7 @@ function updateBattleUI() {
   }
 
   function animateAndRoll(targetEl, die, bonus, callback) {
+        playSound('dice');
         let flips = 10;
         const timer = setInterval(() => {
             targetEl.textContent = Math.floor(Math.random() * die) + 1;
@@ -1282,10 +1375,16 @@ function updateBattleUI() {
             defender.hp -= damage;
             battleLog.textContent += `\n${attacker.name} (Atk: ${attackRoll}) vs ${defender.name} (Def: ${defenseRoll}).`;
             if (damage > 0) {
+                if (damage >= 3) {
+                    playSound('powerhit');
+                } else {
+                    playSound('hit');
+                }
                 if (damage >= 3) triggerScreenShake();
                 battleResult.innerHTML = `${defender.name} subisce ${damage} danni!`;
                 battleResult.style.color = players.includes(defender) ? 'red' : 'lightgreen';
             } else {
+                playSound('parry');
                 battleResult.innerHTML = `Attacco parato!`;
                 battleResult.style.color = 'deepskyblue';
             }
@@ -1298,12 +1397,16 @@ function updateBattleUI() {
         animateAndRoll(attackerDiceEl, getAttackerAttackDie(), getAttackerAttackBonus(), (attack1) => {
             animateAndRoll(defenderDiceEl, getDefenderDefenseDie(), getDefenderDefenseBonus(), (defense1) => {
                 setTimeout(() => {
-                    const damage1 = Math.max(0, attack1 - defense1); if (damage1 >= 3) triggerScreenShake(); totalDamage += damage1; logText += `\nAttacco 1: ${attack1} vs ${defense1}. Danno: ${damage1}`;
+                    const damage1 = Math.max(0, attack1 - defense1); 
+                    if(damage1 > 0) { if(damage1 >= 3) playSound('powerhit'); else playSound('hit'); }
+                    if (damage1 >= 3) triggerScreenShake(); totalDamage += damage1; logText += `\nAttacco 1: ${attack1} vs ${defense1}. Danno: ${damage1}`;
                     setTimeout(() => {
                         animateAndRoll(attackerDiceEl, getAttackerAttackDie(), getAttackerAttackBonus(), (attack2) => {
                             animateAndRoll(defenderDiceEl, getDefenderDefenseDie(), getDefenderDefenseBonus(), (defense2) => {
                                  setTimeout(() => {
-                                    const damage2 = Math.max(0, attack2 - defense2); if (damage2 >= 3) triggerScreenShake(); totalDamage += damage2; logText += `\nAttacco 2: ${attack2} vs ${defense2}. Danno: ${damage2}`; defender.hp -= totalDamage; battleLog.textContent += logText; battleResult.innerHTML = `Doppio Attacco! Danno Totale: ${totalDamage}`;
+                                    const damage2 = Math.max(0, attack2 - defense2);
+                                    if(damage2 > 0) { if(damage2 >= 3) playSound('powerhit'); else playSound('hit'); }
+                                    if (damage2 >= 3) triggerScreenShake(); totalDamage += damage2; logText += `\nAttacco 2: ${attack2} vs ${defense2}. Danno: ${damage2}`; defender.hp -= totalDamage; battleLog.textContent += logText; battleResult.innerHTML = `Doppio Attacco! Danno Totale: ${totalDamage}`;
                                     setTimeout(finalizePhase, 2000);
                                 }, 2000);
                             });
@@ -1316,6 +1419,7 @@ function updateBattleUI() {
         animateAndRoll(attackerDiceEl, getAttackerAttackDie(), getAttackerAttackBonus(), (attackRoll) => {
             defenderDiceEl.textContent = 'X';
              setTimeout(() => {
+                playSound('powerhit');
                 if (attackRoll >= 3) triggerScreenShake(); defender.hp -= attackRoll; battleLog.textContent += `\nColpo Potente! L'attacco ignora la difesa.`; battleResult.innerHTML = `Danno inflitto: ${attackRoll}`;
                 setTimeout(finalizePhase, 2000);
             }, 2000);
@@ -1351,12 +1455,13 @@ function updateBattleUI() {
         activeBattleState.roundPhase = 'mainPlayer';
     }
     startCombatRound();
-}
+  }
 
-function endBattleVictoriously(){
+  function endBattleVictoriously(){
     const combatant = players[activeBattleState.primaryCombatantIndex];
     const enemy = activeBattleState.enemy;
     gainEnergy(3);
+    playSound('death');
     battleResult.innerHTML = "VITTORIA!<br>Hai sconfitto il nemico.";
     battleResult.style.color = 'lightgreen';
     if (enemy.isShadow) {
@@ -1384,7 +1489,7 @@ function endBattleVictoriously(){
     battleActionContainer.innerHTML = '';
     specialAbilitiesContainer.innerHTML = '';
     battleActionContainer.appendChild(closeBtn);
-}
+  }
   
   function askForHelp() {
       if (!activeBattleState) return;
@@ -1486,6 +1591,7 @@ function endBattleVictoriously(){
                 const movePath = path;
                 for (let i = 1; i < movePath.length; i++) {
                     await new Promise(resolve => setTimeout(resolve, 150));
+                    playSound('step');
                     ally.position = movePath[i];
                     buildBoard();
                 }
@@ -1503,6 +1609,7 @@ function endBattleVictoriously(){
                 if (movePath.length > 1) {
                   for (let i = 1; i < movePath.length; i++) {
                       await new Promise(resolve => setTimeout(resolve, 150));
+                      playSound('step');
                       ally.position = movePath[i];
                       buildBoard();
                   }
@@ -1516,7 +1623,7 @@ function endBattleVictoriously(){
             }
         });
     };
-}
+  }
 
 
   function updatePlayerInfo() {
@@ -1535,6 +1642,7 @@ function endBattleVictoriously(){
         const moves = getValidMoves(roll);
         if (moves.length === 0) {
             triggerScreenShake();
+            playSound('vines');
             const character = players[currentPlayerIndex];
             const damage = character.class === 'Esploratore' ? 1 : 3;
             messageQueue.push(`Sei bloccato da delle rampicanti che ti infliggono ${damage} PF`);
@@ -1551,7 +1659,7 @@ function endBattleVictoriously(){
             moves.forEach(cell => cell.classList.add('highlighted'));
         }
     });
-}
+  }
   
   async function startGame() {
       players.forEach(p => { p.position = 1; p.bonuses = p.bonuses || []; p.inventory = p.inventory || []; p.hasSpecialSword = p.hasSpecialSword || false; p.prisonersFreed = p.prisonersFreed || 0; p.isCursed = p.isCursed || false; p.shadowSlayerBonus = p.shadowSlayerBonus || 0; p.activeQuests = p.activeQuests || []; });
@@ -1574,7 +1682,7 @@ function endBattleVictoriously(){
     const charHPInput = document.getElementById('charHP');
     charHPInput.value = 35; 
     charForm.style.display = 'block';
-}
+  }
 
 
   function saveGame() {
@@ -1584,6 +1692,7 @@ function endBattleVictoriously(){
   }
 
   async function loadGame() {
+      if (!audioInitialized) initAudio();
       const savedStateJSON = localStorage.getItem('dungeon72Save'); if (!savedStateJSON) { promptForNewGame(); return; }
       const savedState = JSON.parse(savedStateJSON);
       players = savedState.players; currentPlayerIndex = savedState.currentPlayerIndex; numPlayers = savedState.numPlayers; enemiesDefeatedCount = savedState.enemiesDefeatedCount; discoveryCounter = savedState.discoveryCounter; visitedCells = new Map(savedState.visitedCells);
@@ -1632,7 +1741,8 @@ function endBattleVictoriously(){
            potionDamageModal.style.display = 'block'; potionDamageTitle.textContent = `Usa ${potion.name}`; potionDamageDice.textContent = '-'; potionDamageRollBtn.disabled = false;
            potionDamageRollBtn.onclick = () => {
                potionDamageRollBtn.disabled = true; let flips = 10;
-               const timer = setInterval(() => { potionDamageDice.textContent = Math.floor(Math.random() * 6) + 1; if (--flips === 0) { clearInterval(timer); const damage = Number(potionDamageDice.textContent); potionDamageModal.style.display = 'none'; const enemy = activeBattleState.enemy; if (damage >= 3) triggerScreenShake(); enemy.hp -= damage; let log = `\n${potion.name} infligge ${damage} danni!`; if (potion.type === 'fire') { enemy.effects = enemy.effects || []; enemy.effects = enemy.effects.filter(e => e.type !== 'burn'); enemy.effects.push({ type: 'burn', duration: 2, damage: [3, 2] }); log += `\nIl nemico sta andando a fuoco!`; } else if (potion.type === 'ice') { const heroAttackRoll = Math.floor(Math.random() * (player.hasSpecialSword ? 12 : player.attackDie) + 1) + getAttackBonus(player, enemy.isShadow); if (heroAttackRoll >= 3) triggerScreenShake(); enemy.hp -= heroAttackRoll; log += `\nIl nemico è congelato e subisce un colpo extra da ${heroAttackRoll} danni!`; } battleLog.textContent += log; updateDiscoveriesLog(); setTimeout(finalizePhase, 2000); } }, 100);
+               playSound('dice');
+               const timer = setInterval(() => { potionDamageDice.textContent = Math.floor(Math.random() * 6) + 1; if (--flips === 0) { clearInterval(timer); const damage = Number(potionDamageDice.textContent); potionDamageModal.style.display = 'none'; const enemy = activeBattleState.enemy; playSound('hit'); if (damage >= 3) triggerScreenShake(); enemy.hp -= damage; let log = `\n${potion.name} infligge ${damage} danni!`; if (potion.type === 'fire') { enemy.effects = enemy.effects || []; enemy.effects = enemy.effects.filter(e => e.type !== 'burn'); enemy.effects.push({ type: 'burn', duration: 2, damage: [3, 2] }); log += `\nIl nemico sta andando a fuoco!`; } else if (potion.type === 'ice') { const heroAttackRoll = Math.floor(Math.random() * (player.hasSpecialSword ? 12 : player.attackDie) + 1) + getAttackBonus(player, enemy.isShadow); playSound('hit'); if (heroAttackRoll >= 3) triggerScreenShake(); enemy.hp -= heroAttackRoll; log += `\nIl nemico è congelato e subisce un colpo extra da ${heroAttackRoll} danni!`; } battleLog.textContent += log; updateDiscoveriesLog(); setTimeout(finalizePhase, 2000); } }, 100);
            }
       }
   }
@@ -1776,10 +1886,14 @@ function endBattleVictoriously(){
     } else {
         alert('Inserisci un nome valido e i PF.');
     }
-});
+  });
 
 
   function init() {
+      // Aggiunge gli event listener per sbloccare l'audio alla prima interazione
+      window.addEventListener('click', initAudio, { once: true });
+      window.addEventListener('touchstart', initAudio, { once: true });
+
       wireCellListeners();
       if (localStorage.getItem('dungeon72Save')) { loadGameBtn.style.display = 'block'; }
       window.addEventListener('resize', updateLayout);
