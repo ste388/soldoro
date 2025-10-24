@@ -9,7 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap" rel="stylesheet">
   <style>
     body { 
-      background-image: url('https://i.imgur.com/HvMSTpG.jpg');
+      background-image: url('https://ste388.github.io/soldoro/img/sfondo.png');
       background-size: cover;
       background-repeat: no-repeat;
       background-attachment: fixed;
@@ -61,7 +61,7 @@
     .enemy-marker, .gas-marker { position:absolute; width:10px; height:10px; border-radius:50%; border:1px solid #fff; }
     .enemy-marker { top:3px; right:3px; background:red; }
     .gas-marker { bottom:3px; left:3px; background:#808080;}
-    .hole-marker { position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width: 40px; height: 40px; border-radius: 0; border: none; background-image: url('https://i.imgur.com/kG6JJlO.png'); background-size: contain; background-repeat: no-repeat; background-position: center; }
+    .hole-marker { position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width: 40px; height: 40px; border-radius: 0; border: none; background-image: url('https://ste388.github.io/soldoro/img/buco.png'); background-size: contain; background-repeat: no-repeat; background-position: center; }
 
     .skull-marker, .prisoner-marker, .shadow-marker, .hero-marker, .item-marker { position:absolute; top:50%; left:50%; transform: translate(-50%, -50%); width: 80%; height: 80%; pointer-events:none; opacity: 0.9; }
     .item-marker { width: 70%; height: 70%; z-index: 6; }
@@ -501,19 +501,19 @@
   
   // Costanti di Gioco
   const COLS = 9, CELL_COUNT = 72, ENEMY_COUNT = 12, PRISONER_COUNT = 11, GAS_TRAP_COUNT = 2, HOLE_COUNT = 3, GAS_EFFECT_DURATION_CELLS = 5;
-  const HOLE_IMAGE_URL = 'https://i.imgur.com/kG6JJlO.png';
-  const ATTACK_BONUS_ITEMS = [ { name: "Elsa migliorata", iconUrl: "https://i.imgur.com/euz20nX.png" }, { name: "Guanti rinforzati", iconUrl: "https://i.imgur.com/aE8GVDY.png" }, { name: "Stivali", iconUrl: "https://i.imgur.com/BNy44sG.png" } ];
-  const DEFENSE_BONUS_ITEMS = [ { name: "Scudo di ferro", iconUrl: "https://i.imgur.com/hF20xva.png" }, { name: "Elmo", iconUrl: "https://i.imgur.com/7Ur7oSX.png" }, { name: "Corazza", iconUrl: "https://i.imgur.com/vTBxHQI.png" } ];
-  const POTIONS = [ { name: "Pozione Fuoco", type: "fire", iconUrl: "https://i.imgur.com/U4jwiij.png" }, { name: "Pozione Fuoco", type: "fire", iconUrl: "https://i.imgur.com/U4jwiij.png" }, { name: "Pozione Ghiaccio", type: "ice", iconUrl: "https://i.imgur.com/UqxFF43.png" }, { name: "Pozione Ghiaccio", type: "ice", iconUrl: "https://i.imgur.com/UqxFF43.png" }, { name: "Pozione (+5 PF)", value: 5, type: "heal", iconUrl: "https://i.imgur.com/OpZJJ1f.png" }, { name: "Pozione (+10 PF)", value: 10, type: "heal", iconUrl: "https://i.imgur.com/OpZJJ1f.png" }, { name: "Pozione (+15 PF)", value: 15, type: "heal", iconUrl: "https://i.imgur.com/OpZJJ1f.png" } ];
-  const GEMS = [ { name: "Gemma Blu", iconUrl: "https://i.imgur.com/cD8wDec.png" }, { name: "Gemma Verde", iconUrl: "https://i.imgur.com/h7dcivA.png" }, { name: "Gemma Viola", iconUrl: "https://i.imgur.com/yWygx8z.png" } ];
-  const GEM_DOOR = { name: "Porta di Gemme", iconUrl: "https://i.imgur.com/2u6BWSv.png" };
-  const ALTARS = [ { name: "Altare Sacrificale", type: 'sacrificial', iconUrl: "https://i.imgur.com/zR75xod.png" }, { name: "Altare della Maledizione", type: 'curse', iconUrl: "https://i.imgur.com/0XEOJdW.png" }, { name: "Altare della Purificazione", type: 'purification', iconUrl: "https://i.imgur.com/SNImGq0.png" } ];
-  const HEALING_FOUNTAIN = { name: "Fontana Curativa", iconUrl: "https://raw.githubusercontent.com/ste388/soldoro/main/img/fontana.png" };
-  const SHADOW_SPAWNS = [ { name: "Ombra", hp: 10, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 1, iconUrl: "https://i.imgur.com/sgLJSln.png", spawnTurn: 10 }, { name: "Ombra Paurosa", hp: 15, attackDie: 10, attackBonus: 1, defenseDie: 8, defenseBonus: 0, iconUrl: "https://i.imgur.com/grZ66Ex.png", spawnTurn: 30 }, { name: "Ombra Cattiva", hp: 20, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 1, iconUrl: "https://i.imgur.com/Jo45qDz.png", spawnTurn: 45 }, { name: "Ombra Cattivissima", hp: 25, attackDie: 10, attackBonus: 1, defenseDie: 8, defenseBonus: 1, iconUrl: "https://i.imgur.com/rJg2v1t.png", spawnTurn: 55 } ];
+  const HOLE_IMAGE_URL = 'https://ste388.github.io/soldoro/img/buco.png';
+  const ATTACK_BONUS_ITEMS = [ { name: "Elsa migliorata", iconUrl: "https://ste388.github.io/soldoro/img/elsa.png" }, { name: "Guanti rinforzati", iconUrl: "https://ste388.github.io/soldoro/img/guanti.png" }, { name: "Stivali", iconUrl: "https://ste388.github.io/soldoro/img/stivali.png" } ];
+  const DEFENSE_BONUS_ITEMS = [ { name: "Scudo di ferro", iconUrl: "https://ste388.github.io/soldoro/img/scudo.png" }, { name: "Elmo", iconUrl: "https://ste388.github.io/soldoro/img/elmo.png" }, { name: "Corazza", iconUrl: "https://ste388.github.io/soldoro/img/corazza.png" } ];
+  const POTIONS = [ { name: "Pozione Fuoco", type: "fire", iconUrl: "https://ste388.github.io/soldoro/img/pozioneFuoco.png" }, { name: "Pozione Fuoco", type: "fire", iconUrl: "https://ste388.github.io/soldoro/img/pozioneFuoco.png" }, { name: "Pozione Ghiaccio", type: "ice", iconUrl: "https://ste388.github.io/soldoro/img/pozioneGhiaccio.png" }, { name: "Pozione Ghiaccio", type: "ice", iconUrl: "https://ste388.github.io/soldoro/img/pozioneGhiaccio.png" }, { name: "Pozione (+5 PF)", value: 5, type: "heal", iconUrl: "https://ste388.github.io/soldoro/img/pozione.png" }, { name: "Pozione (+10 PF)", value: 10, type: "heal", iconUrl: "https://ste388.github.io/soldoro/img/pozione.png" }, { name: "Pozione (+15 PF)", value: 15, type: "heal", iconUrl: "https://ste388.github.io/soldoro/img/pozione.png" } ];
+  const GEMS = [ { name: "Gemma Blu", iconUrl: "https://ste388.github.io/soldoro/img/gemmaBlu.png" }, { name: "Gemma Verde", iconUrl: "https://ste388.github.io/soldoro/img/gemmaVerde.png" }, { name: "Gemma Viola", iconUrl: "https://ste388.github.io/soldoro/img/gemmaViola.png" } ];
+  const GEM_DOOR = { name: "Porta di Gemme", iconUrl: "https://ste388.github.io/soldoro/img/portaGemme.png" };
+  const ALTARS = [ { name: "Altare Sacrificale", type: 'sacrificial', iconUrl: "https://ste388.github.io/soldoro/img/altareSacrificale.png" }, { name: "Altare della Maledizione", type: 'curse', iconUrl: "https://ste388.github.io/soldoro/img/AltareMaledizione.png" }, { name: "Altare della Purificazione", type: 'purification', iconUrl: "https://ste388.github.io/soldoro/img/AltarePurificazione.png" } ];
+  const HEALING_FOUNTAIN = { name: "Fontana Curativa", iconUrl: "https://ste388.github.io/soldoro/img/fontana.png" };
+  const SHADOW_SPAWNS = [ { name: "Ombra", hp: 10, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 1, iconUrl: "https://ste388.github.io/soldoro/img/ombra.png", spawnTurn: 10 }, { name: "Ombra Paurosa", hp: 15, attackDie: 10, attackBonus: 1, defenseDie: 8, defenseBonus: 0, iconUrl: "https://ste388.github.io/soldoro/img/OmbraPaurosa.png", spawnTurn: 30 }, { name: "Ombra Cattiva", hp: 20, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 1, iconUrl: "https://ste388.github.io/soldoro/img/OmbraCattiva.png", spawnTurn: 45 }, { name: "Ombra Cattivissima", hp: 25, attackDie: 10, attackBonus: 1, defenseDie: 8, defenseBonus: 1, iconUrl: "https://ste388.github.io/soldoro/img/OmbraCattivissima.png", spawnTurn: 55 } ];
   const ENEMY_DEFINITIONS = [ { name: "Orchetto", hp: 10, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 0 }, { name: "Orchetto", hp: 10, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 0 }, { name: "Orchetto", hp: 10, attackDie: 10, attackBonus: 0, defenseDie: 8, defenseBonus: 0 }, { name: "Orco", hp: 12, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 1 }, { name: "Orco", hp: 12, attackDie: 10, attackBonus: 1, defenseDie: 6, defenseBonus: 0 }, { name: "Orco", hp: 12, attackDie: 10, attackBonus: 0, defenseDie: 8, defenseBonus: 0 }, { name: "Orco", hp: 12, attackDie: 10, attackBonus: 1, defenseDie: 8, defenseBonus: 0 }, { name: "Orco", hp: 12, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 1 }, { name: "Orco", hp: 12, attackDie: 10, attackBonus: 1, defenseDie: 6, defenseBonus: 1 }, { name: "Troll", hp: 15, attackDie: 10, attackBonus: 0, defenseDie: 8, defenseBonus: 0 }, { name: "Troll", hp: 15, attackDie: 10, attackBonus: 1, defenseDie: 8, defenseBonus: 0 }, { name: "Troll", hp: 15, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 1 }, ];
-  const NEW_SKULL_ICON_URL = 'https://i.imgur.com/g9mN0pU.jpg';
-  const PRISONER_ICON_URL = 'https://i.imgur.com/XW3fJxc.jpg';
-  const CLASS_ICONS = { Guerriero: 'https://i.imgur.com/IcEVhov.png', Esploratore: 'https://i.imgur.com/61wtgJ1.png', Ladro: 'https://i.imgur.com/eY1Q0b5.png' };
+  const NEW_SKULL_ICON_URL = 'https://ste388.github.io/soldoro/img/morte.png';
+  const PRISONER_ICON_URL = 'https://ste388.github.io/soldoro/img/prigioniero.png';
+  const CLASS_ICONS = { Guerriero: 'https://ste388.github.io/soldoro/img/guerriero.png', Esploratore: 'https://ste388.github.io/soldoro/img/esploratore.png', Ladro: 'https://ste388.github.io/soldoro/img/ladro.png' };
 
   // ---- STATO DEL GIOCO ----
   let players = [];
@@ -641,7 +641,7 @@
           let questGiver2 = prisonerCells.pop(); let target2 = prisonerCells.find(c => c < 36);
           if (target2) { prisonerCells.splice(prisonerCells.indexOf(target2), 1); prisonerQuests.quests[questGiver2] = { type: 'father', targetCell: target2, reward: {name: 'Pozione Fuoco', type: 'fire'}, status: 'inactive' }; prisonerQuests.quests[target2] = { type: 'father-target', giver: questGiver2 }; }
           let questGiver3 = prisonerCells.pop(); let target3 = prisonerCells.pop();
-          if (questGiver3 && target3) { prisonerQuests.quests[questGiver3] = { type: 'mother', targetCell: target3, reward: {name: 'Fiala di Energia', type: 'energy', value: 999, iconUrl: 'https://i.imgur.com/vjgNL2x.png'}, status: 'inactive' }; prisonerQuests.quests[target3] = { type: 'mother-target', giver: questGiver3 }; }
+          if (questGiver3 && target3) { prisonerQuests.quests[questGiver3] = { type: 'mother', targetCell: target3, reward: {name: 'Fiala di Energia', type: 'energy', value: 999, iconUrl: 'https://ste388.github.io/soldoro/img/pozione.png'}, status: 'inactive' }; prisonerQuests.quests[target3] = { type: 'mother-target', giver: questGiver3 }; }
       }
   }
   
@@ -1830,8 +1830,8 @@
         p.isCursed = p.isCursed || false; 
         p.shadowSlayerBonus = p.shadowSlayerBonus || 0; 
         p.activeQuests = p.activeQuests || []; 
-        p.inventory.push({ name: "Pozione (+5 PF)", value: 5, type: "heal", iconUrl: "https://i.imgur.com/OpZJJ1f.png" });
-        p.inventory.push({ name: "Fiala di Energia", value: 5, type: "energy", iconUrl: 'https://i.imgur.com/vjgNL2x.png' });
+        p.inventory.push({ name: "Pozione (+5 PF)", value: 5, type: "heal", iconUrl: "https://ste388.github.io/soldoro/img/pozione.png" });
+        p.inventory.push({ name: "Fiala di Energia", value: 5, type: "energy", iconUrl: 'https://ste388.github.io/soldoro/img/pozione.png' });
       });
 
       visitedCells = new Map(); enemiesDefeatedCount = 0; discoveryCounter = 1; gasEffect = { active: false, newCellsVisited: 0 }; shadows = []; spawnedShadows = new Set(); messageQueue = [];
@@ -1909,14 +1909,21 @@
   function usePotionInBattle(potion, index, player) {
       if (!activeBattleState) return;
       player.inventory.splice(index, 1);
-      if (potion.type === 'heal') { 
+      if (potion.type === 'heal' || potion.type === 'energy') { 
           playSound('drink');
-          const oldHp = player.hp; 
-          player.hp = Math.min(player.hp + potion.value, player.maxHP); 
-          const healedAmount = player.hp - oldHp; 
+          if(potion.type === 'heal'){
+            const oldHp = player.hp; 
+            player.hp = Math.min(player.hp + potion.value, player.maxHP); 
+            const healedAmount = player.hp - oldHp; 
+            battleResult.innerHTML = `${player.name} recupera ${healedAmount} PF! Ora ha ${player.hp} PF.`; 
+          } else {
+            const oldEnergy = player.energy; 
+            player.energy = Math.min(player.energy + potion.value, player.maxEnergy);
+            const gainedAmount = player.energy - oldEnergy; 
+            battleResult.innerHTML = `${player.name} recupera ${gainedAmount} Energia!`; 
+          }
           updateBattleUI(); 
           updateDiscoveriesLog(); 
-          battleResult.innerHTML = `${player.name} recupera ${healedAmount} PF! Ora ha ${player.hp} PF.`; 
           setTimeout(finalizePhase, 2000); 
       }
       else if (potion.type === 'fire' || potion.type === 'ice') {
