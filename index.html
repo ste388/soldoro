@@ -116,6 +116,30 @@
     #specialAbilitiesContainer button { font-size: 12px; padding: 8px 12px; flex-basis: calc(50% - 4px); }
     #initiativeResult { font-weight: bold; font-size: 18px; min-height: 24px; }
     #battleLog { display: none; }
+    
+    #itemFoundModal {
+        display: none; position: fixed; z-index: 2000; left: 50%; top: 50%; transform: translate(-50%, -50%);
+        background-color: rgba(0,0,0,0.85); padding: 25px; border-radius: 15px; text-align: center;
+        color: white; border: 3px solid #ffeb3b; box-shadow: 0 0 25px #ffeb3b;
+    }
+    #itemFoundModal.blood-effect { 
+      top: 0; left: 0; width: 100%; height: 100%;
+      transform: none;
+      display: flex; justify-content: center; align-items: center;
+      background-color: transparent; border: none; box-shadow: none; padding: 0; pointer-events: none;
+    }
+    #itemFoundModal.blood-effect img {
+        width: auto; height: auto; max-width: 90%; max-height: 90%;
+        object-fit: contain; opacity: 0.8;
+    }
+    #itemFoundModal img { width: 100px; height: 100px; }
+    #itemFoundModal p { margin: 0; font-family: 'MedievalSharp', cursive; }
+    #itemFoundTitle { font-size: 24px; font-weight: bold; margin-bottom: 15px; color: #ffeb3b; }
+    #itemFoundName { font-size: 20px; font-weight: bold; margin-top: 12px; }
+    #itemFoundExtraText { font-size: 16px; color: #d2b48c; margin-top: 15px; font-style: italic; max-width: 280px; line-height: 1.4; }
+    #itemFoundCloseBtn { margin-top: 20px; padding: 8px 25px; background-color: #8b5e3c; border-radius: 5px; border: 2px solid #5a3d2e; font-family: 'MedievalSharp', cursive; font-size: 18px; }
+    #itemFoundCloseBtn:hover { background-color: #a3764a; }
+
 
     #messageModal { background: linear-gradient(135deg, #4a3c26, #2d1f0f); border: 4px solid #8b5e3c; color: #f5deb3; font-family: 'MedievalSharp', cursive; font-size: 22px; }
     #messageModal.victory-modal .modal-content { display: flex; flex-direction: column; align-items: center; }
@@ -329,6 +353,14 @@
       <button id="potionDamageRollBtn">Lancia</button>
   </div>
 
+  <div id="itemFoundModal">
+      <p id="itemFoundTitle"></p>
+      <img id="itemFoundImg" src="" alt="Oggetto Trovato">
+      <p id="itemFoundName"></p>
+      <p id="itemFoundExtraText"></p>
+      <button id="itemFoundCloseBtn">Chiudi</button>
+  </div>
+
 
 <script>
   // --- Gestione Suoni ---
@@ -359,7 +391,7 @@
   sounds.battle.loop = true;
   sounds.battle.volume = 0.3;
   sounds.background.loop = true;
-  sounds.background.volume = 0.2;
+  sounds.background.volume = 0.6;
   
   let deathSoundToggle = false;
   let audioInitialized = false;
@@ -535,6 +567,67 @@
   // ---- FUNZIONI PRINCIPALI ----
   function triggerScreenShake() { document.body.classList.add('shake'); setTimeout(() => document.body.classList.remove('shake'), 500); }
   
+  function showBloodEffect() {
+    return new Promise(resolve => {
+        const modal = document.getElementById('itemFoundModal');
+        const titleEl = document.getElementById('itemFoundTitle');
+        const imgEl = document.getElementById('itemFoundImg');
+        const nameEl = document.getElementById('itemFoundName');
+        const extraTextEl = document.getElementById('itemFoundExtraText');
+        const closeBtn = document.getElementById('itemFoundCloseBtn');
+
+        modal.classList.add('blood-effect');
+        titleEl.style.display = 'none';
+        nameEl.style.display = 'none';
+        extraTextEl.style.display = 'none';
+        closeBtn.style.display = 'none';
+        imgEl.src = 'https://ste388.github.io/soldoro/img/sangue.png';
+        imgEl.alt = 'Sangue';
+
+        modal.style.display = 'flex';
+        modal.classList.add('shake');
+
+        setTimeout(() => {
+            modal.style.display = 'none';
+            modal.classList.remove('shake');
+            modal.classList.remove('blood-effect');
+            // Restore visibility for other modals
+            titleEl.style.display = 'block';
+            nameEl.style.display = 'block';
+            closeBtn.style.display = 'inline-block';
+            resolve();
+        }, 500);
+    });
+  }
+
+  function showEventModal(title, iconUrl, name, extraText = '') {
+    return new Promise(resolve => {
+        const modal = document.getElementById('itemFoundModal');
+        const titleEl = document.getElementById('itemFoundTitle');
+        const imgEl = document.getElementById('itemFoundImg');
+        const nameEl = document.getElementById('itemFoundName');
+        const extraTextEl = document.getElementById('itemFoundExtraText');
+        const closeBtn = document.getElementById('itemFoundCloseBtn');
+
+        titleEl.textContent = title;
+        imgEl.src = iconUrl;
+        imgEl.alt = name;
+        nameEl.textContent = name;
+        extraTextEl.innerHTML = extraText.replace(/\n/g, '<br>');
+        extraTextEl.style.display = extraText ? 'block' : 'none';
+
+        const closeHandler = () => {
+            modal.style.display = 'none';
+            closeBtn.removeEventListener('click', closeHandler);
+            resolve();
+        };
+
+        closeBtn.addEventListener('click', closeHandler);
+        modal.style.display = 'block';
+        closeBtn.focus();
+    });
+  }
+
   function updateEnergyUI() {
       if (players.length === 0) return;
       const character = players[currentPlayerIndex];
@@ -653,9 +746,9 @@
       if (prisonerCells.length >= 6) {
           for (let i = prisonerCells.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [prisonerCells[i], prisonerCells[j]] = [prisonerCells[j], prisonerCells[i]]; }
           let questGiver1 = prisonerCells.pop(); let target1 = prisonerCells.find(c => c > 36);
-          if (target1) { prisonerCells.splice(prisonerCells.indexOf(target1), 1); prisonerQuests.quests[questGiver1] = { type: 'brother', targetCell: target1, reward: {name: 'Pozione (+5 PF)', value: 5, type: 'heal'}, status: 'inactive' }; prisonerQuests.quests[target1] = { type: 'brother-target', giver: questGiver1 }; }
+          if (target1) { prisonerCells.splice(prisonerCells.indexOf(target1), 1); prisonerQuests.quests[questGiver1] = { type: 'brother', targetCell: target1, reward: {name: 'Pozione (+5 PF)', value: 5, type: 'heal', iconUrl: "https://ste388.github.io/soldoro/img/pozione.png"}, status: 'inactive' }; prisonerQuests.quests[target1] = { type: 'brother-target', giver: questGiver1 }; }
           let questGiver2 = prisonerCells.pop(); let target2 = prisonerCells.find(c => c < 36);
-          if (target2) { prisonerCells.splice(prisonerCells.indexOf(target2), 1); prisonerQuests.quests[questGiver2] = { type: 'father', targetCell: target2, reward: {name: 'Pozione Fuoco', type: 'fire'}, status: 'inactive' }; prisonerQuests.quests[target2] = { type: 'father-target', giver: questGiver2 }; }
+          if (target2) { prisonerCells.splice(prisonerCells.indexOf(target2), 1); prisonerQuests.quests[questGiver2] = { type: 'father', targetCell: target2, reward: {name: 'Pozione Fuoco', type: 'fire', iconUrl: "https://ste388.github.io/soldoro/img/pozioneFuoco.png"}, status: 'inactive' }; prisonerQuests.quests[target2] = { type: 'father-target', giver: questGiver2 }; }
           let questGiver3 = prisonerCells.pop(); let target3 = prisonerCells.pop();
           if (questGiver3 && target3) { prisonerQuests.quests[questGiver3] = { type: 'mother', targetCell: target3, reward: {name: 'Fiala di Energia', type: 'energy', value: 999, iconUrl: 'https://ste388.github.io/soldoro/img/pozione.png'}, status: 'inactive' }; prisonerQuests.quests[target3] = { type: 'mother-target', giver: questGiver3 }; }
       }
@@ -792,12 +885,12 @@
       playerActions.innerHTML = '<button id="diceRollBtn" disabled>Tira dado</button>';
       clearHighlights(); diceRes.textContent = '-'; const character = players[currentPlayerIndex];
       const startNum = character.position; const endNum = parseInt(destinationCell.dataset.cellNumber); const path = findPath(startNum, endNum);
-      if (!path || path.length <= 1) { character.position = endNum; processCellLogic(destinationCell); return; }
+      if (!path || path.length <= 1) { character.position = endNum; await processCellLogic(destinationCell); return; }
       for (let i = 1; i < path.length; i++) { await new Promise(resolve => setTimeout(resolve, 150)); playSound('step'); character.position = path[i]; buildBoard(); }
-      processCellLogic(destinationCell);
+      await processCellLogic(destinationCell);
   }
 
-  function processCellLogic(cell) {
+  async function processCellLogic(cell) {
     const character = players[currentPlayerIndex];
     const cellNum = parseInt(cell.dataset.cellNumber);
     character.position = cellNum;
@@ -835,23 +928,45 @@
         info.altar = altarMap[cellNum] ? { ...altarMap[cellNum] } : null;
         info.fountain = fountainMap[cellNum] ? { ...fountainMap[cellNum] } : null;
 
-        if (holePositions.has(cellNum)) { const damage = character.class === 'Esploratore' ? 2 : 3; messageQueue.push(`Ti sloghi una caviglia in un buco! Perdi ${damage} PF.`); playSound('hole'); triggerScreenShake(); addHoleMarker(cell); character.hp -= damage; if (character.hp <= 0) { subsequentAction = () => handleGameOver("per una caviglia slogata", character); processMessageQueue(subsequentAction); return; } }
+        if (holePositions.has(cellNum)) { 
+          const damage = character.class === 'Esploratore' ? 2 : 3; 
+          playSound('hole'); 
+          triggerScreenShake(); 
+          addHoleMarker(cell); 
+          await showEventModal("Sei bloccato in un buco!", HOLE_IMAGE_URL, `-${damage} PF`);
+          character.hp -= damage; 
+          if (character.hp <= 0) { subsequentAction = () => handleGameOver("per una caviglia slogata", character); processMessageQueue(subsequentAction); return; } 
+        }
         
         if (gasEffect.active) { gasEffect.newCellsVisited++; if (gasEffect.newCellsVisited >= GAS_EFFECT_DURATION_CELLS) { gasEffect.active = false; gasEffect.newCellsVisited = 0; messageQueue.push("L'effetto del gas di debolezza è svanito!"); } }
-        if (visitedCells.size > 0 && visitedCells.size % 7 === 0) { character.hp = Math.min(character.hp + 3, character.maxHP); messageQueue.push("Il riposo ti ha fatto guadagnare 3 PF."); }
-        if (gasTrapPositions.has(cellNum) && !gasActivatedPositions.has(cellNum)) { playSound('gas'); messageQueue.push(`Sei finito in una trappola a gas! Attacco -1 finché non scopri ${GAS_EFFECT_DURATION_CELLS} nuove celle.`); gasEffect.active = true; gasEffect.newCellsVisited = 0; gasActivatedPositions.add(cellNum); }
+        
+        if (visitedCells.size > 0 && visitedCells.size % 7 === 0) {
+            const healAmount = 3;
+            character.hp = Math.min(character.hp + healAmount, character.maxHP);
+            await showEventModal("Riposo", 'https://ste388.github.io/soldoro/img/riposo.png', `Il riposo ti ha fatto recuperare ${healAmount} PF`);
+        }
+
+        if (gasTrapPositions.has(cellNum) && !gasActivatedPositions.has(cellNum)) {
+          playSound('gas');
+          gasEffect.active = true;
+          gasEffect.newCellsVisited = 0;
+          gasActivatedPositions.add(cellNum);
+          await showEventModal(
+              "Trappola a Gas!",
+              'https://ste388.github.io/soldoro/img/trappolaGas.png',
+              "Sei finito in una trappola a gas!",
+              `Attacco -1 finché non scopri ${GAS_EFFECT_DURATION_CELLS} nuove celle.`
+          );
+        }
         if (info.bonus) {
             if (info.bonus.name === GEM_DOOR.name) {
-                messageQueue.push("Trovi una porta incastonata di gemme. È sigillata.");
+                await showEventModal("Porta di Gemme", GEM_DOOR.iconUrl, "La porta è sigillata ermeticamente.");
             } else if (!character.bonuses.some(b => b.name === info.bonus.name)) {
                 character.bonuses.push(info.bonus);
                 playSound('item');
-                const gemNames = GEMS.map(g => g.name);
-                if (gemNames.includes(info.bonus.name)) {
-                    messageQueue.push(`Hai trovato una ${info.bonus.name}!`);
-                } else {
-                    messageQueue.push(`Hai trovato ${info.bonus.name}!`);
-                }
+                const isBonusItem = ATTACK_BONUS_ITEMS.some(i => i.name === info.bonus.name) || DEFENSE_BONUS_ITEMS.some(i => i.name === info.bonus.name);
+                const modalText = isBonusItem ? `${info.bonus.name} +1` : info.bonus.name;
+                await showEventModal("Hai trovato", info.bonus.iconUrl, modalText);
             }
         }
         if (info.potion) {
@@ -859,10 +974,10 @@
                 addItemToInventory(character, info.potion);
                 playSound('item');
                 info.collected = true;
-                messageQueue.push(`Hai trovato ${info.potion.name}.`);
+                await showEventModal("Hai trovato", info.potion.iconUrl, info.potion.name);
             }
         }
-        if (prisonerMap[cellNum]) { if(!visitedCells.get(String(cellNum)).prisonerFreed) { playSound('prisoner'); character.prisonersFreed++; info.prisonerFreed = true; messageQueue.push('Hai liberato un prigioniero!'); handlePrisonerQuest(cellNum); }}
+        if (prisonerMap[cellNum] && !visitedCells.get(String(cellNum)).prisonerFreed) { await handlePrisonerQuest(cellNum); }
     } else {
         const info = visitedCells.get(String(cellNum));
         if (info && info.bonus && info.bonus.name === GEM_DOOR.name) {
@@ -870,12 +985,12 @@
             if (hasAllGems && !character.hasSpecialSword) {
                 character.hasSpecialSword = true;
                 playSound('item');
-                messageQueue.push("Usi le gemme... La Porta si apre! All'interno trovi una Spada Speciale (1D12+1)!");
+                const specialSword = { name: "Spada Speciale", iconUrl: "https://ste388.github.io/soldoro/img/elsa.png" };
+                await showEventModal("La Porta si apre!", specialSword.iconUrl, "Spada Speciale (1D12+1)", "All'interno trovi una spada magica!");
                 removeGems(character);
             }
         }
     }
-
 
     if (numPlayers > 1) {
       const otherPlayerIndex = (currentPlayerIndex + 1) % 2;
@@ -888,20 +1003,13 @@
 
     const currentCellInfo = visitedCells.get(String(cellNum)) || {};
     
-    if (currentCellInfo.fountain) {
-        handleFountain(cellNum);
-        return; 
-    }
-    
-    if (currentCellInfo.altar) {
-      subsequentAction = () => handleAltar(currentCellInfo.altar);
-    } else {
+    if (currentCellInfo.fountain) { handleFountain(cellNum); return; }
+    if (currentCellInfo.altar) { subsequentAction = () => handleAltar(currentCellInfo.altar); } 
+    else {
       const shadowAtLocation = shadows.find(s => s.position === cellNum && s.hp > 0);
-      if (shadowAtLocation) {
-        subsequentAction = () => startBattle(shadowAtLocation);
-      } else if (currentCellInfo && currentCellInfo.enemy && !currentCellInfo.defeated) {
-        subsequentAction = () => handleEncounter(currentCellInfo.enemy);
-      } else {
+      if (shadowAtLocation) { subsequentAction = () => startBattle(shadowAtLocation); } 
+      else if (currentCellInfo && currentCellInfo.enemy && !currentCellInfo.defeated) { subsequentAction = () => handleEncounter(currentCellInfo.enemy); } 
+      else {
         if (currentCellInfo && currentCellInfo.enemy && currentCellInfo.defeated) setMainMessage('Qui giace un nemico sconfitto.', '#a9a9a9'); 
         else if (isNewVisit && cellNum !== 1) setMainMessage('Procedi tranquillo', 'lightgreen'); 
         else if (!isNewVisit) setMainMessage('Cella già visitata', '#ffffff');
@@ -956,11 +1064,12 @@
   }
 
 
-  function handleAltar(altar) {
+  async function handleAltar(altar) {
     const character = players[currentPlayerIndex];
     if (altar.type === 'sacrificial') {
+        await showEventModal("Altare Sacrificale", altar.iconUrl, "Un altare oscuro...", "Puoi sacrificare 4 PF per una benedizione (+2 Attacco vs Ombre).");
         altarModal.style.display = 'block';
-        altarMessage.textContent = "Vedi un altare. Puoi sacrificare 4 PF per ricevere una benedizione (+2 Attacco vs Ombre).";
+        altarMessage.textContent = "Accetti il sacrificio?";
         altarActions.innerHTML = '';
         const yesBtn = document.createElement('button');
         yesBtn.textContent = 'Sì';
@@ -968,7 +1077,6 @@
             playSound('hit');
             character.hp -= 4;
             character.shadowSlayerBonus = 2;
-            messageQueue.push("Hai ricevuto una benedizione! Ottieni +2 agli attacchi contro tutte le Ombre.");
             altarModal.style.display = 'none';
             processMessageQueue(() => {
                 if (character.hp <= 0) handleGameOver("sacrificandosi all'altare", character);
@@ -987,27 +1095,36 @@
         playSound('curse');
         if (!character.isCursed) {
             character.isCursed = true;
-            messageQueue.push("Sei stato maledetto! Hai -2 ai tuoi attacchi. Trova l'altare della purificazione per rimuovere la maledizione.");
+            await showEventModal("Maledizione!", altar.iconUrl, "-2 Attacco", "Sei stato maledetto! Trova un altare purificatore.");
         } else {
-            messageQueue.push("Senti un'aura maligna, ma sei già maledetto.");
+            await showEventModal("Aura Maligna", altar.iconUrl, "Nessun effetto", "Senti un'aura maligna, ma sei già maledetto.");
         }
         processMessageQueue(endTurnSequence);
     } else if (altar.type === 'purification') {
         if (character.isCursed) {
             character.isCursed = false;
             playSound('removeCurse');
-            messageQueue.push("L'aura benefica dell'altare ti purifica! La maledizione è stata rimossa.");
+            await showEventModal("Purificazione!", altar.iconUrl, "Maledizione rimossa", "L'aura benefica dell'altare ti purifica!");
         } else {
-            messageQueue.push("Senti un'aura di pace emanare dall'altare, ma non hai maledizioni da rimuovere.");
+            await showEventModal("Altare Purificatore", altar.iconUrl, "Nessun effetto", "Senti un'aura di pace, ma non hai maledizioni.");
         }
         processMessageQueue(endTurnSequence);
     }
 }
 
-  function handlePrisonerQuest(cellNum) {
+  async function handlePrisonerQuest(cellNum) {
     const character = players[currentPlayerIndex];
     const quest = prisonerQuests.quests[cellNum];
-    if (!quest) return;
+    const info = visitedCells.get(String(cellNum));
+    
+    character.prisonersFreed++;
+    info.prisonerFreed = true;
+    playSound('prisoner');
+    
+    if (!quest) {
+      await showEventModal("Hai liberato", PRISONER_ICON_URL, "Prigioniero");
+      return;
+    }
 
     if (quest.status === 'inactive') {
         quest.status = 'active';
@@ -1015,52 +1132,34 @@
         character.activeQuests.push(cellNum);
 
         let familyMember = '', locationInfo = '', possessive = '', pronoun = '';
-
-        if (quest.type === 'brother') {
-            familyMember = 'fratello';
-            locationInfo = 'nella parte nord';
-            possessive = 'Mio';
-            pronoun = 'lui';
-        } else if (quest.type === 'father') {
-            familyMember = 'padre';
-            locationInfo = 'nella parte sud';
-            possessive = 'Mio';
-            pronoun = 'lui';
-        } else if (quest.type === 'mother') {
-            familyMember = 'madre';
-            locationInfo = 'qui vicino';
-            possessive = 'Mia';
-            pronoun = 'lei';
-        }
+        if (quest.type === 'brother') { familyMember = 'fratello'; locationInfo = 'nella parte nord'; possessive = 'Mio'; pronoun = 'lui'; }
+        else if (quest.type === 'father') { familyMember = 'padre'; locationInfo = 'nella parte sud'; possessive = 'Mio'; pronoun = 'lui'; }
+        else if (quest.type === 'mother') { familyMember = 'madre'; locationInfo = 'qui vicino'; possessive = 'Mia'; pronoun = 'lei'; }
         
         const targetCellInfo = visitedCells.get(String(quest.targetCell));
         if (targetCellInfo && targetCellInfo.prisonerFreed) {
             quest.status = 'completed';
             addItemToInventory(character, quest.reward);
             playSound('item');
-            messageQueue.push(`"Grazie!" dice il prigioniero. "Ho saputo che ${possessive.toLowerCase()} ${familyMember} è già in salvo! Prendi questa ricompensa per il tuo valore!"`);
-            messageQueue.push(`Hai ottenuto: ${quest.reward.name}!`);
+            const questText = `"Grazie! Ho saputo che ${possessive.toLowerCase()} ${familyMember} è già in salvo! Prendi questa ricompensa!"`;
+            await showEventModal("Missione Completata!", quest.reward.iconUrl, quest.reward.name, questText);
         } else if (familyMember) {
-            messageQueue.push(`Grazie per avermi liberato! ${possessive} ${familyMember} è ${locationInfo} del dungeon (cella ${quest.targetCell}). Se liberi anche ${pronoun}, ti ricompenserò!`);
+            const questText = `Grazie! ${possessive} ${familyMember} è ${locationInfo} (cella ${quest.targetCell}). Se liberi anche ${pronoun}, ti ricompenserò!`;
+            await showEventModal("Hai liberato", PRISONER_ICON_URL, "Prigioniero", questText, 5000);
         }
     } else if (quest.type.includes('-target')) {
         const giverQuest = prisonerQuests.quests[quest.giver];
         if (giverQuest && giverQuest.status === 'active') {
             giverQuest.status = 'completed';
+            let questOriginator = players.find(p => p.activeQuests && p.activeQuests.includes(quest.giver)) || character;
+            if (questOriginator.activeQuests) { questOriginator.activeQuests = questOriginator.activeQuests.filter(q => q !== quest.giver); }
             
-            let questOriginator = null;
-            for(const p of players){
-                if(p.activeQuests && p.activeQuests.includes(quest.giver)){
-                    questOriginator = p;
-                    p.activeQuests.splice(p.activeQuests.indexOf(quest.giver), 1);
-                    break;
-                }
-            }
-
-            const rewardRecipient = questOriginator || character;
-            addItemToInventory(rewardRecipient, giverQuest.reward);
+            addItemToInventory(questOriginator, giverQuest.reward);
             playSound('item');
-            messageQueue.push(`Il prigioniero che hai appena liberato è il parente che si stava cercando! Per ringraziarti, viene consegnata la ricompensa promessa a ${rewardRecipient.name}: ${giverQuest.reward.name}!`);
+            const rewardText = `Il parente è stato trovato! La ricompensa è per ${questOriginator.name}.`;
+            await showEventModal("Missione Completata!", giverQuest.reward.iconUrl, giverQuest.reward.name, rewardText);
+        } else {
+            await showEventModal("Hai liberato", PRISONER_ICON_URL, "Prigioniero");
         }
     }
 }
@@ -1505,7 +1604,7 @@
         }, 80);
     }
     
-  function resolveAttack(attacker, defender) {
+  async function resolveAttack(attacker, defender) {
     battleActionContainer.innerHTML = '';
     specialAbilitiesContainer.style.visibility = 'hidden';
     
@@ -1526,63 +1625,76 @@
     }
 
 
-    function processCombatResult(attackRoll, defenseRoll) {
-        setTimeout(() => {
-            const damage = Math.max(0, attackRoll - defenseRoll);
-            defender.hp -= damage;
-            if (damage > 0) {
-                if (damage >= 3) {
-                    playSound('powerhit');
-                } else {
-                    playSound('hit');
-                }
-                if (damage >= 3) triggerScreenShake();
-                battleResult.innerHTML = `${defender.name} subisce ${damage} danni!`;
-                battleResult.style.color = players.includes(defender) ? 'red' : 'lightgreen';
-            } else {
-                playSound('parry');
-                battleResult.innerHTML = `Attacco parato!`;
-                battleResult.style.color = 'deepskyblue';
-            }
-            setTimeout(finalizePhase, 2000);
-        }, 2000);
+    async function processCombatResult(attackRoll, defenseRoll) {
+      const damage = Math.max(0, attackRoll - defenseRoll);
+      
+      defender.hp -= damage;
+      
+      if (damage > 0) {
+          battleResult.innerHTML = `${defender.name} subisce ${damage} danni!`;
+          battleResult.style.color = players.includes(defender) ? 'red' : 'lightgreen';
+      } else {
+          battleResult.innerHTML = `Attacco parato!`;
+          battleResult.style.color = 'deepskyblue';
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      if (damage >= 3) {
+          playSound('powerhit');
+          await Promise.all([showBloodEffect(), triggerScreenShake()]);
+      } else if (damage > 0) {
+          playSound('hit');
+      } else {
+          playSound('parry');
+      }
+      
+      setTimeout(finalizePhase, 1380);
     }
 
      if (activeAbility === 'doubleAttack' && isPlayerAttacker) {
         let totalDamage = 0;
-        animateAndRoll(attackerDiceEl, getAttackerAttackDie(), getAttackerAttackBonus(), (attack1) => {
-            animateAndRoll(defenderDiceEl, getDefenderDefenseDie(), getDefenderDefenseBonus(), (defense1) => {
-                setTimeout(() => {
-                    const damage1 = Math.max(0, attack1 - defense1); 
-                    if(damage1 > 0) { if(damage1 >= 3) playSound('powerhit'); else playSound('hit'); }
-                    if (damage1 >= 3) triggerScreenShake(); totalDamage += damage1;
-                    setTimeout(() => {
-                        animateAndRoll(attackerDiceEl, getAttackerAttackDie(), getAttackerAttackBonus(), (attack2) => {
-                            animateAndRoll(defenderDiceEl, getDefenderDefenseDie(), getDefenderDefenseBonus(), (defense2) => {
-                                 setTimeout(() => {
-                                    const damage2 = Math.max(0, attack2 - defense2);
-                                    if(damage2 > 0) { if(damage2 >= 3) playSound('powerhit'); else playSound('hit'); }
-                                    if (damage2 >= 3) triggerScreenShake(); totalDamage += damage2;
-                                    defender.hp -= totalDamage; 
-                                    battleResult.innerHTML = `Doppio Attacco! Danno Totale: ${totalDamage}`;
-                                    setTimeout(finalizePhase, 2000);
-                                }, 2000);
-                            });
-                        });
-                    }, 1000);
-                }, 2000);
+        animateAndRoll(attackerDiceEl, getAttackerAttackDie(), getAttackerAttackBonus(), async (attack1) => {
+            animateAndRoll(defenderDiceEl, getDefenderDefenseDie(), getDefenderDefenseBonus(), async (defense1) => {
+                const damage1 = Math.max(0, attack1 - defense1);
+                totalDamage += damage1;
+                
+                await new Promise(r => setTimeout(r, 500));
+                
+                if (damage1 >= 3) { playSound('powerhit'); await Promise.all([showBloodEffect(), triggerScreenShake()]); } else if (damage1 > 0) { playSound('hit'); }
+                
+                await new Promise(r => setTimeout(r, 500));
+
+                animateAndRoll(attackerDiceEl, getAttackerAttackDie(), getAttackerAttackBonus(), async (attack2) => {
+                    animateAndRoll(defenderDiceEl, getDefenderDefenseDie(), getDefenderDefenseBonus(), async (defense2) => {
+                        const damage2 = Math.max(0, attack2 - defense2);
+                        totalDamage += damage2;
+
+                        await new Promise(r => setTimeout(r, 500));
+
+                        if (damage2 >= 3) { playSound('powerhit'); await Promise.all([showBloodEffect(), triggerScreenShake()]); } else if (damage2 > 0) { playSound('hit'); }
+                        
+                        defender.hp -= totalDamage; 
+                        battleResult.innerHTML = `Doppio Attacco! Danno Totale: ${totalDamage}`;
+                        setTimeout(finalizePhase, 1380);
+                    });
+                });
             });
         });
     } else if (activeAbility === 'powerStrike' && isPlayerAttacker) {
-        animateAndRoll(attackerDiceEl, getAttackerAttackDie(), getAttackerAttackBonus(), (attackRoll) => {
+        animateAndRoll(attackerDiceEl, getAttackerAttackDie(), getAttackerAttackBonus(), async (attackRoll) => {
             defenderDiceEl.textContent = 'X';
-             setTimeout(() => {
+            battleResult.innerHTML = `Colpo Potente! Danno inflitto: ${attackRoll}`;
+            
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            if (attackRoll >= 3) {
                 playSound('powerhit');
-                if (attackRoll >= 3) triggerScreenShake(); 
-                defender.hp -= attackRoll; 
-                battleResult.innerHTML = `Colpo Potente! Danno inflitto: ${attackRoll}`;
-                setTimeout(finalizePhase, 2000);
-            }, 2000);
+                await Promise.all([showBloodEffect(), triggerScreenShake()]);
+            } else { playSound('hit'); }
+
+            defender.hp -= attackRoll; 
+            setTimeout(finalizePhase, 1380);
         });
     } else {
         animateAndRoll(attackerDiceEl, getAttackerAttackDie(), getAttackerAttackBonus(), (attackRoll) => {
@@ -1809,28 +1921,26 @@
 
   function wireCellListeners() { board.addEventListener('click', event => { const target = event.target.closest('.cell'); if (target && target.classList.contains('highlighted')) { animateAndSetCurrent(target); } }); }
   
-  function rollDice() {
+  async function rollDice() {
     const btn = document.getElementById('diceRollBtn');
     if (!btn || btn.disabled) return;
     btn.disabled = true;
     resetMessages();
-    animateMainDice((roll) => {
+    animateMainDice(async (roll) => {
         const moves = getValidMoves(roll);
         if (moves.length === 0) {
             triggerScreenShake();
             playSound('vines');
             const character = players[currentPlayerIndex];
             const damage = character.class === 'Esploratore' ? 1 : 3;
-            messageQueue.push(`Sei bloccato da delle rampicanti che ti infliggono ${damage} PF`);
-            processMessageQueue(() => {
-                character.hp -= damage;
-                updatePlayerInfo();
-                if (character.hp <= 0) {
-                    handleGameOver("intrappolato dai rampicanti", character);
-                } else {
-                    setTimeout(() => endTurnSequence(), 500);
-                }
-            });
+            await showEventModal("Sei bloccato!", 'https://ste388.github.io/soldoro/img/rampicante.png', `Perdi ${damage} PF`);
+            character.hp -= damage;
+            updatePlayerInfo();
+            if (character.hp <= 0) {
+                handleGameOver("intrappolato dai rampicanti", character);
+            } else {
+                await endTurnSequence();
+            }
         } else {
             moves.forEach(cell => cell.classList.add('highlighted'));
         }
@@ -1854,7 +1964,7 @@
       visitedCells = new Map(); enemiesDefeatedCount = 0; discoveryCounter = 1; gasEffect = { active: false, newCellsVisited: 0 }; shadows = []; spawnedShadows = new Set(); messageQueue = [];
       placeDiscoveries(); buildBoard();
       const firstPlayer = players[0]; const startCell = board.querySelector(`[data-cell-number="${firstPlayer.position}"]`);
-      processCellLogic(startCell);
+      await processCellLogic(startCell);
       updateLayout(); updatePlayerInfo(); updateDiscoveriesLog(); charForm.style.display = 'none';
   }
   
