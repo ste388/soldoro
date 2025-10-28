@@ -104,7 +104,8 @@
 
     #combatants-container { display: flex; justify-content: space-between; gap: 15px; }
     #player-side, #enemy-side { flex: 1; display: flex; flex-direction: column; gap: 10px; }
-    .battle-unit { margin: 0; border: 1px solid #555; padding: 10px; border-radius: 8px; }
+    .battle-unit { margin: 0; border: 1px solid #555; padding: 10px; border-radius: 8px; transition: box-shadow 0.3s, border-color 0.3s; }
+    .battle-unit.highlight-winner { box-shadow: 0 0 15px 3px #ffeb3b; border-color: #ffeb3b; }
     .battle-name { font-weight: bold; font-size: 20px; margin-bottom: 5px; color: #a0d535; }
     #allyJoinedIndicator { font-size: 14px; color: #fdd835; font-weight: bold; display:none; text-align: center; margin: 5px 0; }
     .battle-stats { font-size: 14px; color: #ccc; }
@@ -117,6 +118,9 @@
     #initiativeResult { font-weight: bold; font-size: 18px; min-height: 24px; }
     #battleLog { display: none; }
     
+    #battlePotionSelectModal button { background-color: #3b6b8c; margin-bottom: 5px;}
+    #battlePotionSelectModal button:hover { background-color: #5a8ab0; }
+
     #itemFoundModal {
         display: none; position: fixed; z-index: 2000; left: 50%; top: 50%; transform: translate(-50%, -50%);
         background-color: rgba(0,0,0,0.85); padding: 25px; border-radius: 15px; text-align: center;
@@ -148,6 +152,12 @@
     #messageModal.victory-modal #prisonerStatusText { font-size: 16px; color: #d2b48c; }
     #messageModal button { font-family: 'MedievalSharp', cursive; font-size: 18px; margin-top: 20px; padding: 8px 25px; background-color: #8b5e3c; border-radius: 5px; border: 2px solid #5a3d2e; }
     #messageModal button:hover { background-color: #a3764a; }
+    
+    #encounterModal {
+        border: 4px solid red;
+        box-shadow: 0 0 25px red;
+    }
+
 
     @media (max-width: 1024px) {
       body { flex-direction: column; padding: 10px; padding-top: 160px; gap: 10px; align-items: stretch; }
@@ -233,8 +243,10 @@
   </div>
   
   <div id="encounterModal">
-    <p id="encounterMessage"></p>
-    <div id="encounterModal-diceResult"></div>
+    <div id="encounterContent">
+        <p id="encounterMessage"></p>
+        <div id="encounterModal-diceResult"></div>
+    </div>
     <div id="encounterActionBtns"></div>
   </div>
 
@@ -383,7 +395,7 @@
     gas: new Audio('https://ste388.github.io/soldoro/fx/gas.mp3'),
     vines: new Audio('https://ste388.github.io/soldoro/fx/rampicante.mp3'),
     prisoner: new Audio('https://ste388.github.io/soldoro/fx/prigioniero.mp3'),
-    fountain: new Audio('https://ste388.github.io/soldoro/fx/trovare.mp3'),
+    fountain: new Audio('https://ste388.github.io/soldoro/fx/fontana.mp3'),
     drink: new Audio('https://ste388.github.io/soldoro/fx/bere.mp3'),
     throw: new Audio('https://ste388.github.io/soldoro/fx/lancio.mp3'),
   };
@@ -463,6 +475,7 @@
   const startAdventureBtn = document.getElementById('startAdventureBtn');
   const cancelCharBtn = document.getElementById('cancelCharBtn');
   const encounterModal = document.getElementById('encounterModal');
+  const encounterContent = document.getElementById('encounterContent');
   const encounterMessage = document.getElementById('encounterMessage');
   const encounterDiceResult = document.getElementById('encounterModal-diceResult');
   const encounterActionBtns = document.getElementById('encounterActionBtns');
@@ -547,6 +560,13 @@
   const NEW_SKULL_ICON_URL = 'https://ste388.github.io/soldoro/img/morte.png';
   const PRISONER_ICON_URL = 'https://ste388.github.io/soldoro/img/prigioniero.png';
   const CLASS_ICONS = { Guerriero: 'https://ste388.github.io/soldoro/img/guerriero.png', Esploratore: 'https://ste388.github.io/soldoro/img/esploratore.png', Ladro: 'https://ste388.github.io/soldoro/img/ladro.png' };
+  const ENEMY_IMAGES = {
+    orchetto: ['https://ste388.github.io/soldoro/img/orchetto1.png', 'https://ste388.github.io/soldoro/img/orchetto2.png', 'https://ste388.github.io/soldoro/img/orchetto3.png'],
+    orco: ['https://ste388.github.io/soldoro/img/orco1.png', 'https://ste388.github.io/soldoro/img/orco2.png', 'https://ste388.github.io/soldoro/img/orco3.png', 'https://ste388.github.io/soldoro/img/orco4.png', 'https://ste388.github.io/soldoro/img/orco5.png', 'https://ste388.github.io/soldoro/img/orco6.png'],
+    troll: ['https://ste388.github.io/soldoro/img/troll1.png', 'https://ste388.github.io/soldoro/img/troll2.png', 'https://ste388.github.io/soldoro/img/troll3.png'],
+    boss: 'https://ste388.github.io/soldoro/img/bossFinale.png'
+  };
+
 
   // ---- STATO DEL GIOCO ----
   let players = [];
@@ -559,6 +579,7 @@
   let gasEffect = { active: false, newCellsVisited: 0 };
   let fountainState;
   let prisonerQuests;
+  let usedEnemyImages = { orchetto: new Set(), orco: new Set(), troll: new Set() };
   let messageQueue = [];
   let activeBattleState = null;
   let activeAbility = null;
@@ -567,6 +588,20 @@
   // ---- FUNZIONI PRINCIPALI ----
   function triggerScreenShake() { document.body.classList.add('shake'); setTimeout(() => document.body.classList.remove('shake'), 500); }
   
+  function getRandomUniqueImage(type) {
+    const images = ENEMY_IMAGES[type];
+    const used = usedEnemyImages[type];
+    let availableImages = images.filter(img => !used.has(img));
+    if (availableImages.length === 0) {
+        used.clear();
+        availableImages = images;
+    }
+    const randomIndex = Math.floor(Math.random() * availableImages.length);
+    const selectedImage = availableImages[randomIndex];
+    used.add(selectedImage);
+    return selectedImage;
+  }
+
   function showBloodEffect() {
     return new Promise(resolve => {
         const modal = document.getElementById('itemFoundModal');
@@ -1003,7 +1038,7 @@
 
     const currentCellInfo = visitedCells.get(String(cellNum)) || {};
     
-    if (currentCellInfo.fountain) { handleFountain(cellNum); return; }
+    if (currentCellInfo.fountain) { await handleFountain(cellNum); return; }
     if (currentCellInfo.altar) { subsequentAction = () => handleAltar(currentCellInfo.altar); } 
     else {
       const shadowAtLocation = shadows.find(s => s.position === cellNum && s.hp > 0);
@@ -1021,13 +1056,17 @@
     processMessageQueue(subsequentAction);
   }
   
-  function handleFountain(cellNum) {
+  async function handleFountain(cellNum) {
+    playSound('fountain');
     const character = players[currentPlayerIndex];
     const state = fountainState[cellNum];
 
+    const info = visitedCells.get(String(cellNum));
+    await showEventModal("Hai trovato", info.fountain.iconUrl, info.fountain.name, "Una fonte di acqua limpida e pura.");
+    
     if (state && !state.used) {
         fountainModal.style.display = 'block';
-        fountainMessage.textContent = "Hai trovato una Fontana Curativa! Vuoi bere e recuperare 10 PF?";
+        fountainMessage.textContent = "Vuoi bere e recuperare 10 PF?";
         fountainActions.innerHTML = '';
         
         const yesBtn = document.createElement('button');
@@ -1230,58 +1269,95 @@
       setMainMessage(`Tocca a ${players[currentPlayerIndex].name}!`, '#ffeb3b');
   }
   
-  function handleEncounter(enemy) {
-      playerActions.innerHTML = '';
-      encounterModal.style.display = 'block';
-      encounterMessage.textContent = 'Nemico! Scegli la tua azione.';
-      encounterActionBtns.innerHTML = '';
-      const rollBtn = document.createElement('button');
-      rollBtn.textContent = 'Tenta di nasconderti (D6)';
-      rollBtn.onclick = () => {
-          rollBtn.disabled = true;
-          battleBtn.disabled = true;
-          let flips = 10;
-          playSound('dice');
-          const timer = setInterval(() => {
-              encounterDiceResult.textContent = Math.floor(Math.random() * 6) + 1;
-              if (--flips === 0) {
-                  clearInterval(timer);
-                  let roll = Number(encounterDiceResult.textContent);
-                  let success = roll >= 4;
-                  if (players[currentPlayerIndex].class === 'Ladro') {
-                      success = roll >= 3;
-                  }
-                  encounterActionBtns.innerHTML = '';
-                  const closeBtn = document.createElement('button');
-                  if (success) {
-                      encounterMessage.textContent = "Sei riuscito a nasconderti!";
-                      closeBtn.textContent = "Chiudi e continua";
-                      closeBtn.onclick = async () => {
-                          encounterModal.style.display = 'none';
-                          await endTurnSequence();
-                      };
-                  } else {
-                      encounterMessage.textContent = "Sei stato visto! Inizia la battaglia.";
-                      closeBtn.textContent = "Vai alla Battaglia";
-                      closeBtn.onclick = () => {
-                          encounterModal.style.display = 'none';
-                          startBattle(enemy);
-                      };
-                  }
-                  encounterActionBtns.appendChild(closeBtn);
-              }
-          }, 100);
-      };
-      const battleBtn = document.createElement('button');
-      battleBtn.textContent = 'Vai in battaglia';
-      battleBtn.onclick = () => {
-          encounterModal.style.display = 'none';
-          startBattle(enemy);
-      };
-      encounterActionBtns.appendChild(rollBtn);
-      encounterActionBtns.appendChild(battleBtn);
-  }
-  
+  async function handleEncounter(enemy) {
+    playerActions.innerHTML = '';
+    const definition = enemy.isBoss ? { name: 'Boss Finale', hp: 30, attackDie: 10, attackBonus: 2, defenseDie: 8, defenseBonus: 2, isBoss: true } : ENEMY_DEFINITIONS[enemiesDefeatedCount];
+    let finalEnemy = { ...enemy, ...definition, startHP: definition.hp, name: definition.name };
+
+    let imageUrlForEncounter;
+    if (finalEnemy.isBoss) {
+        imageUrlForEncounter = ENEMY_IMAGES.boss;
+    } else {
+        let enemyTypeForImage;
+        if (enemiesDefeatedCount < 3) enemyTypeForImage = 'orchetto';
+        else if (enemiesDefeatedCount < 9) enemyTypeForImage = 'orco';
+        else enemyTypeForImage = 'troll';
+        imageUrlForEncounter = getRandomUniqueImage(enemyTypeForImage);
+    }
+    finalEnemy.imageUrl = imageUrlForEncounter;
+
+    encounterModal.style.display = 'block';
+    encounterContent.innerHTML = `
+        <p style="font-weight: bold; font-size: 20px; color: #ffeb3b;">Hai incontrato un nemico!</p>
+        <img src="${finalEnemy.imageUrl}" alt="${finalEnemy.name}" style="width: 150px; height: 150px; border-radius: 8px; border: 2px solid #555; margin: 10px 0;">
+        <p style="font-size: 18px; margin-bottom: 20px;">${finalEnemy.name}</p>
+    `;
+
+    encounterActionBtns.innerHTML = '';
+    
+    if (!finalEnemy.isBoss) {
+        const rollBtn = document.createElement('button');
+        rollBtn.textContent = 'Tenta di nasconderti (D6)';
+        rollBtn.onclick = () => {
+            handleHideAttempt(finalEnemy);
+        };
+        encounterActionBtns.appendChild(rollBtn);
+    }
+
+    const battleBtn = document.createElement('button');
+    battleBtn.textContent = 'Vai in battaglia';
+    battleBtn.onclick = () => {
+        encounterModal.style.display = 'none';
+        startBattle(finalEnemy);
+    };
+    encounterActionBtns.appendChild(battleBtn);
+}
+
+function handleHideAttempt(enemy) {
+    const rollBtn = encounterActionBtns.querySelector('button:first-child');
+    const battleBtn = encounterActionBtns.querySelector('button:last-child');
+    rollBtn.disabled = true;
+    battleBtn.disabled = true;
+
+    let flips = 10;
+    playSound('dice');
+    const diceResultDiv = document.createElement('div');
+    diceResultDiv.style.fontSize = "48px";
+    diceResultDiv.style.fontWeight = "bold";
+    encounterContent.appendChild(diceResultDiv);
+
+    const timer = setInterval(() => {
+        diceResultDiv.textContent = Math.floor(Math.random() * 6) + 1;
+        if (--flips === 0) {
+            clearInterval(timer);
+            let roll = Number(diceResultDiv.textContent);
+            let success = roll >= 4;
+            if (players[currentPlayerIndex].class === 'Ladro') success = roll >= 3;
+            
+            encounterActionBtns.innerHTML = ''; 
+            const resultMsg = document.createElement('p');
+            
+            if (success) {
+                resultMsg.textContent = "Sei riuscito a nasconderti!";
+                resultMsg.style.color = "lightgreen";
+                setTimeout(async () => { 
+                    encounterModal.style.display = 'none';
+                    await endTurnSequence();
+                }, 2000);
+            } else {
+                resultMsg.textContent = "Sei stato visto! Inizia la battaglia.";
+                resultMsg.style.color = "red";
+                setTimeout(() => {
+                    encounterModal.style.display = 'none';
+                    startBattle(enemy);
+                }, 2000);
+            }
+            encounterContent.appendChild(resultMsg);
+        }
+    }, 100);
+}
+
+
   function getFinalPrisonerMessage() {
     const totalPrisonersFreed = players.reduce((sum, p) => sum + (p.prisonersFreed || 0), 0);
     if (totalPrisonersFreed === 11) return `Prigionieri liberati: ${totalPrisonersFreed}. Siete stati portati a festa come eroi liberatori!`;
@@ -1360,15 +1436,7 @@
     setBattleMode(true);
     const character = players[currentPlayerIndex];
     if (!character) return;
-
-    if (!enemy.isShadow) {
-        if (enemy.isBoss) {
-            enemy.startHP = 30; enemy.attackDie = 10; enemy.attackBonus = 2; enemy.defenseDie = 8; enemy.defenseBonus = 2;
-        } else {
-            const definition = ENEMY_DEFINITIONS[enemiesDefeatedCount];
-            enemy = { ...enemy, ...definition, startHP: definition.hp, name: definition.name };
-        }
-    }
+    
     const cellInfo = visitedCells.get(String(character.position));
     let currentEnemyHP = enemy.isShadow ? enemy.hp : (cellInfo && cellInfo.hp > 0 ? cellInfo.hp : enemy.startHP);
     if (cellInfo && !enemy.isShadow) cellInfo.hp = currentEnemyHP;
@@ -1408,6 +1476,8 @@
   function startInitiativePhase(isSupportRound) {
     if (!activeBattleState) return;
     battleModal.style.display = 'none';
+    
+    document.querySelectorAll('#initiativeModal .battle-unit').forEach(el => el.classList.remove('highlight-winner'));
 
     let combatant1, combatant2;
     if (isSupportRound) {
@@ -1449,6 +1519,12 @@
                     const winner = roll1 >= roll2 ? combatant1 : combatant2;
                     initiativeResult.textContent = `${winner.name} ha l'iniziativa!`;
                     
+                    if (winner === combatant1) {
+                        initiativePlayerName.closest('.battle-unit').classList.add('highlight-winner');
+                    } else {
+                        initiativeEnemyName.closest('.battle-unit').classList.add('highlight-winner');
+                    }
+                    
                     setTimeout(() => {
                         initiativeModal.style.display = 'none';
                         let attacker = winner;
@@ -1484,7 +1560,7 @@
         battleActionContainer.appendChild(attackBtn);
 
         if (!isSupportRound) {
-            if (!defender.isShadow) {
+            if (!defender.isShadow && !defender.isBoss) {
                 const escapeBtn = document.createElement('button');
                 escapeBtn.textContent = `Fuggi (subisci 1D${attacker.class === 'Ladro' ? 4 : 6} PF)`;
                 escapeBtn.onclick = attemptEscape;
@@ -1649,7 +1725,7 @@
           playSound('parry');
       }
       
-      setTimeout(finalizePhase, 1380);
+      setTimeout(finalizePhase, 1480);
     }
 
      if (activeAbility === 'doubleAttack' && isPlayerAttacker) {
@@ -1676,7 +1752,7 @@
                         
                         defender.hp -= totalDamage; 
                         battleResult.innerHTML = `Doppio Attacco! Danno Totale: ${totalDamage}`;
-                        setTimeout(finalizePhase, 1380);
+                        setTimeout(finalizePhase, 1480);
                     });
                 });
             });
@@ -1694,7 +1770,7 @@
             } else { playSound('hit'); }
 
             defender.hp -= attackRoll; 
-            setTimeout(finalizePhase, 1380);
+            setTimeout(finalizePhase, 1480);
         });
     } else {
         animateAndRoll(attackerDiceEl, getAttackerAttackDie(), getAttackerAttackBonus(), (attackRoll) => {
@@ -1962,6 +2038,7 @@
       });
 
       visitedCells = new Map(); enemiesDefeatedCount = 0; discoveryCounter = 1; gasEffect = { active: false, newCellsVisited: 0 }; shadows = []; spawnedShadows = new Set(); messageQueue = [];
+      usedEnemyImages = { orchetto: new Set(), orco: new Set(), troll: new Set() };
       placeDiscoveries(); buildBoard();
       const firstPlayer = players[0]; const startCell = board.querySelector(`[data-cell-number="${firstPlayer.position}"]`);
       await processCellLogic(startCell);
@@ -1985,7 +2062,7 @@
 
   function saveGame() {
       if (players.length === 0) { alert("Nessun gioco da salvare. Inizia una nuova partita prima."); return; }
-      const gameState = { players, currentPlayerIndex, numPlayers, enemiesDefeatedCount, discoveryCounter, visitedCells: Array.from(visitedCells.entries()), enemyMap, bonusMap, potionMap, prisonerMap, altarMap, fountainMap, fountainState, gasTrapPositions: Array.from(gasTrapPositions), gasActivatedPositions: Array.from(gasActivatedPositions), holePositions: Array.from(holePositions), gasEffect, shadows, spawnedShadows: Array.from(spawnedShadows), prisonerQuests, activeBattleState };
+      const gameState = { players, currentPlayerIndex, numPlayers, enemiesDefeatedCount, discoveryCounter, visitedCells: Array.from(visitedCells.entries()), enemyMap, bonusMap, potionMap, prisonerMap, altarMap, fountainMap, fountainState, gasTrapPositions: Array.from(gasTrapPositions), gasActivatedPositions: Array.from(gasActivatedPositions), holePositions: Array.from(holePositions), gasEffect, shadows, spawnedShadows: Array.from(spawnedShadows), prisonerQuests, activeBattleState, usedEnemyImages: { orchetto: Array.from(usedEnemyImages.orchetto), orco: Array.from(usedEnemyImages.orco), troll: Array.from(usedEnemyImages.troll) } };
       localStorage.setItem('dungeon72Save', JSON.stringify(gameState)); alert('Partita salvata!'); loadGameBtn.style.display = 'block';
   }
 
@@ -1995,6 +2072,7 @@
       const savedState = JSON.parse(savedStateJSON);
       players = savedState.players; currentPlayerIndex = savedState.currentPlayerIndex; numPlayers = savedState.numPlayers; enemiesDefeatedCount = savedState.enemiesDefeatedCount; discoveryCounter = savedState.discoveryCounter; visitedCells = new Map(savedState.visitedCells);
       enemyMap = savedState.enemyMap; bonusMap = savedState.bonusMap; potionMap = savedState.potionMap; prisonerMap = savedState.prisonerMap; altarMap = savedState.altarMap; fountainMap = savedState.fountainMap; fountainState = savedState.fountainState; gasTrapPositions = new Set(savedState.gasTrapPositions); gasActivatedPositions = new Set(savedState.gasActivatedPositions); holePositions = new Set(savedState.holePositions); gasEffect = savedState.gasEffect; shadows = savedState.shadows; spawnedShadows = new Set(savedState.spawnedShadows); prisonerQuests = savedState.prisonerQuests; activeBattleState = savedState.activeBattleState;
+      if (savedState.usedEnemyImages) { usedEnemyImages = { orchetto: new Set(savedState.usedEnemyImages.orchetto), orco: new Set(savedState.usedEnemyImages.orco), troll: new Set(savedState.usedEnemyImages.troll) }; } else { usedEnemyImages = { orchetto: new Set(), orco: new Set(), troll: new Set() }; }
       messageQueue = []; buildBoard(); updateLayout(); updatePlayerInfo(); updateDiscoveriesLog(); resetMessages(); charForm.style.display = 'none'; playerCountModal.style.display = 'none';
       if (activeBattleState) { setBattleMode(true); startCombatRound(); }
       else { updatePlayerActions(); }
