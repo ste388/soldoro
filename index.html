@@ -721,7 +721,7 @@
   function updateDiscoveriesLog() {
       const lines = [];
       lines.push(`Celle esplorate: ${visitedCells ? visitedCells.size : 0}`);
-      lines.push(`Nemici Uccisi: ${enemiesDefeatedCount} / 12`);
+      lines.push(`Nemici Uccisi (Totali): ${enemiesDefeatedCount} / 12`);
       lines.push('');
       players.forEach((player, idx) => {
           lines.push(`--- Giocatore ${idx + 1}: ${player.name} ---`);
@@ -751,6 +751,7 @@
           if (player.shadowSlayerBonus > 0) { lines.push(`- Benedizione (+${player.shadowSlayerBonus} Attacco vs Ombre)`); hasEffects = true; }
           if (!hasEffects) { lines.push('Nessuno'); }
           lines.push(`Prigionieri Liberati: ${player.prisonersFreed}`);
+          lines.push(`Nemici Sconfitti: ${player.enemiesDefeated}`);
           lines.push('');
       });
       discoveriesLog.textContent = lines.join('\n');
@@ -1833,6 +1834,10 @@ function handleHideAttempt(enemy) {
         
         const cellInfo = visitedCells.get(String(combatant.position));
         cellInfo.defeated = true;
+        
+        // Incrementa il contatore nemici per il giocatore
+        combatant.enemiesDefeated = (combatant.enemiesDefeated || 0) + 1;
+
         if (enemy.isBoss) {
             messageQueue.push({ victory: true, title: "Dungeon liberato!", subtitle: "Hai sconfitto il Boss Finale!", prisonerStatus: getFinalPrisonerMessage() });
             processMessageQueue(() => { setBattleMode(false); });
@@ -2030,6 +2035,7 @@ function handleHideAttempt(enemy) {
         p.inventory = [];
         p.hasSpecialSword = p.hasSpecialSword || false; 
         p.prisonersFreed = p.prisonersFreed || 0; 
+        p.enemiesDefeated = 0; // Inizializza il contatore
         p.isCursed = p.isCursed || false; 
         p.shadowSlayerBonus = p.shadowSlayerBonus || 0; 
         p.activeQuests = p.activeQuests || []; 
@@ -2353,7 +2359,7 @@ function handleHideAttempt(enemy) {
         }
 
         players[creatingPlayerIndex] = {
-            name, hp, maxHP: hp, class: charClass, attackDie: 10, defenseDie: 6, bonuses: [], inventory: [], hasSpecialSword: false, prisonersFreed: 0, energy, maxEnergy, isCursed: false, shadowSlayerBonus: 0, activeQuests: [], position: 1
+            name, hp, maxHP: hp, class: charClass, attackDie: 10, defenseDie: 6, bonuses: [], inventory: [], hasSpecialSword: false, prisonersFreed: 0, enemiesDefeated: 0, energy, maxEnergy, isCursed: false, shadowSlayerBonus: 0, activeQuests: [], position: 1
         };
         creatingPlayerIndex++;
         if (creatingPlayerIndex < numPlayers) {
