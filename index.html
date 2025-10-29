@@ -27,6 +27,12 @@
     @keyframes screenShake {
       0% { transform: translate(1px, 1px) rotate(0deg); } 10% { transform: translate(-1px, -2px) rotate(-1deg); } 20% { transform: translate(-3px, 0px) rotate(1deg); } 30% { transform: translate(3px, 2px) rotate(0deg); } 40% { transform: translate(1px, -1px) rotate(1deg); } 50% { transform: translate(-1px, 2px) rotate(-1deg); } 60% { transform: translate(-3px, 1px) rotate(0deg); } 70% { transform: translate(3px, 1px) rotate(-1deg); } 80% { transform: translate(-1px, -1px) rotate(1deg); } 90% { transform: translate(1px, 2px) rotate(0deg); } 100% { transform: translate(1px, -2px) rotate(-1deg); }
     }
+    
+    @keyframes splatOnScreen {
+      0% { transform: scale(0.3) rotate(-15deg); opacity: 0; }
+      70% { transform: scale(1.1) rotate(5deg); opacity: 0.8; }
+      100% { transform: scale(1) rotate(0deg); opacity: 0.8; }
+    }
 
     .shake { animation: screenShake 0.5s; }
 
@@ -126,15 +132,18 @@
         background-color: rgba(0,0,0,0.85); padding: 25px; border-radius: 15px; text-align: center;
         color: white; border: 3px solid #ffeb3b; box-shadow: 0 0 25px #ffeb3b;
     }
-    #itemFoundModal.blood-effect { 
+    #itemFoundModal.overlay-effect { 
       top: 0; left: 0; width: 100%; height: 100%;
       transform: none;
       display: flex; justify-content: center; align-items: center;
       background-color: transparent; border: none; box-shadow: none; padding: 0; pointer-events: none;
     }
-    #itemFoundModal.blood-effect img {
+    #itemFoundModal.overlay-effect img {
         width: auto; height: auto; max-width: 90%; max-height: 90%;
         object-fit: contain; opacity: 0.8;
+    }
+    #itemFoundModal.overlay-effect img.splat-effect {
+        animation: splatOnScreen 0.4s ease-out forwards;
     }
     #itemFoundModal img { width: 100px; height: 100px; }
     #itemFoundModal p { margin: 0; font-family: 'MedievalSharp', cursive; }
@@ -398,6 +407,22 @@
     fountain: new Audio('https://ste388.github.io/soldoro/fx/fontana.mp3'),
     drink: new Audio('https://ste388.github.io/soldoro/fx/bere.mp3'),
     throw: new Audio('https://ste388.github.io/soldoro/fx/lancio.mp3'),
+    bossAppear: new Audio('https://ste388.github.io/soldoro/fx/TrovoBossfinale.mp3'),
+    bossDeath: new Audio('https://ste388.github.io/soldoro/fx/morteBossFinale.mp3'),
+    gameLost: new Audio('https://ste388.github.io/soldoro/fx/gameLost.mp3'),
+    gameWin: new Audio('https://ste388.github.io/soldoro/fx/gameWin.mp3'),
+    trovoOrchetto: [
+      new Audio('https://ste388.github.io/soldoro/fx/trovoOrchetto.mp3'),
+      new Audio('https://ste388.github.io/soldoro/fx/trovoOrchetto1.mp3'),
+    ],
+    trovoOrco: [
+      new Audio('https://ste388.github.io/soldoro/fx/trovoOrco1.mp3'),
+      new Audio('https://ste388.github.io/soldoro/fx/trovoOrco2.mp3'),
+    ],
+    trovoTroll: [
+      new Audio('https://ste388.github.io/soldoro/fx/trovoTroll1.mp3'),
+      new Audio('https://ste388.github.io/soldoro/fx/trovoTroll2.mp3'),
+    ]
   };
 
   sounds.battle.loop = true;
@@ -410,10 +435,11 @@
 
   function initAudio() {
     if (audioInitialized) return;
-    const promises = Object.values(sounds).map(sound => sound.play());
+    const allSounds = Object.values(sounds).flat();
+    const promises = allSounds.map(sound => sound.play().catch(e => { /* ignore */ }));
     
     Promise.all(promises).then(() => {
-        Object.values(sounds).forEach(sound => {
+        allSounds.forEach(sound => {
             sound.pause();
             sound.currentTime = 0;
         });
@@ -421,7 +447,7 @@
         playSound('background');
         console.log("Audio context unlocked and sounds ready.");
     }).catch(error => {
-        console.warn("Could not unlock audio context automatically. Sounds will be played on demand.", error);
+        console.warn("Could not unlock audio context automatically.", error);
         audioInitialized = true;
         playSound('background');
     });
@@ -433,17 +459,25 @@
   function playSound(soundName) {
     if (!audioInitialized) return;
     const sound = sounds[soundName];
-    if (sound) {
-        setTimeout(() => {
-            if (!sound.loop) {
-                sound.currentTime = 0;
-            }
-            const playPromise = sound.play();
-            if (playPromise !== undefined) {
-                playPromise.catch(error => console.warn(`Sound playback failed for ${soundName}: ${error.name}`));
-            }
-        }, 100);
+    if (Array.isArray(sound)) {
+      const randomIndex = Math.floor(Math.random() * sound.length);
+      const randomSound = sound[randomIndex];
+      playSoundObject(randomSound);
+    } else if (sound) {
+      playSoundObject(sound);
     }
+  }
+
+  function playSoundObject(sound) {
+    setTimeout(() => {
+        if (!sound.loop) {
+            sound.currentTime = 0;
+        }
+        const playPromise = sound.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(error => console.warn(`Sound playback failed: ${error.name}`));
+        }
+    }, 100);
   }
 
   function stopSound(soundName) {
@@ -611,13 +645,14 @@
         const extraTextEl = document.getElementById('itemFoundExtraText');
         const closeBtn = document.getElementById('itemFoundCloseBtn');
 
-        modal.classList.add('blood-effect');
+        modal.classList.add('overlay-effect');
         titleEl.style.display = 'none';
         nameEl.style.display = 'none';
         extraTextEl.style.display = 'none';
         closeBtn.style.display = 'none';
         imgEl.src = 'https://ste388.github.io/soldoro/img/sangue.png';
         imgEl.alt = 'Sangue';
+        imgEl.classList.remove('splat-effect');
 
         modal.style.display = 'flex';
         modal.classList.add('shake');
@@ -625,13 +660,82 @@
         setTimeout(() => {
             modal.style.display = 'none';
             modal.classList.remove('shake');
-            modal.classList.remove('blood-effect');
-            // Restore visibility for other modals
+            modal.classList.remove('overlay-effect');
             titleEl.style.display = 'block';
             nameEl.style.display = 'block';
             closeBtn.style.display = 'inline-block';
             resolve();
         }, 500);
+    });
+  }
+
+  function showWeakHitEffect() {
+    return new Promise(resolve => {
+        const modal = document.getElementById('itemFoundModal');
+        const titleEl = document.getElementById('itemFoundTitle');
+        const imgEl = document.getElementById('itemFoundImg');
+        const nameEl = document.getElementById('itemFoundName');
+        const extraTextEl = document.getElementById('itemFoundExtraText');
+        const closeBtn = document.getElementById('itemFoundCloseBtn');
+        const weakBloodImages = [
+            'https://ste388.github.io/soldoro/img/sangueDebole1.png',
+            'https://ste388.github.io/soldoro/img/sangueDebole2.png',
+            'https://ste388.github.io/soldoro/img/sangueDebole3.png',
+            'https://ste388.github.io/soldoro/img/sangueDebole4.png',
+        ];
+        const selectedImage = weakBloodImages[Math.floor(Math.random() * weakBloodImages.length)];
+        
+        modal.classList.add('overlay-effect');
+        titleEl.style.display = 'none';
+        nameEl.style.display = 'none';
+        extraTextEl.style.display = 'none';
+        closeBtn.style.display = 'none';
+        imgEl.src = selectedImage;
+        imgEl.alt = 'Sangue Debole';
+        imgEl.classList.add('splat-effect');
+        
+        modal.style.display = 'flex';
+
+        setTimeout(() => {
+            modal.style.display = 'none';
+            modal.classList.remove('overlay-effect');
+            imgEl.classList.remove('splat-effect');
+            titleEl.style.display = 'block';
+            nameEl.style.display = 'block';
+            closeBtn.style.display = 'inline-block';
+            resolve();
+        }, 600);
+    });
+}
+
+  function showParryEffect() {
+    return new Promise(resolve => {
+        const modal = document.getElementById('itemFoundModal');
+        const titleEl = document.getElementById('itemFoundTitle');
+        const imgEl = document.getElementById('itemFoundImg');
+        const nameEl = document.getElementById('itemFoundName');
+        const extraTextEl = document.getElementById('itemFoundExtraText');
+        const closeBtn = document.getElementById('itemFoundCloseBtn');
+
+        modal.classList.add('overlay-effect');
+        titleEl.style.display = 'none';
+        nameEl.style.display = 'none';
+        extraTextEl.style.display = 'none';
+        closeBtn.style.display = 'none';
+        imgEl.src = 'https://ste388.github.io/soldoro/img/parata.png';
+        imgEl.alt = 'Parata';
+        imgEl.classList.remove('splat-effect');
+
+        modal.style.display = 'flex';
+
+        setTimeout(() => {
+            modal.style.display = 'none';
+            modal.classList.remove('overlay-effect');
+            titleEl.style.display = 'block';
+            nameEl.style.display = 'block';
+            closeBtn.style.display = 'inline-block';
+            resolve();
+        }, 800);
     });
   }
 
@@ -791,12 +895,36 @@
   }
   
   function placeBoss() {
-      const allCellNumbers = Array.from({length: CELL_COUNT}, (_, i) => i + 1);
-      const occupiedCells = new Set(Array.from(visitedCells.keys()).map(Number));
-      Object.keys(enemyMap).forEach(k => occupiedCells.add(Number(k))); Object.keys(bonusMap).forEach(k => occupiedCells.add(Number(k))); Object.keys(potionMap).forEach(k => occupiedCells.add(Number(k))); Object.keys(prisonerMap).forEach(k => occupiedCells.add(Number(k))); Object.keys(altarMap).forEach(k => occupiedCells.add(Number(k))); Object.keys(fountainMap).forEach(k => occupiedCells.add(Number(k))); holePositions.forEach(k => occupiedCells.add(Number(k)));
-      const freeCells = allCellNumbers.filter(num => !occupiedCells.has(num));
-      if (freeCells.length > 0) { const bossCellNum = freeCells[Math.floor(Math.random() * freeCells.length)]; enemyMap[bossCellNum] = { name: 'Boss Finale', isBoss: true }; messageQueue.push("Un'oscura presenza è apparsa nel dungeon..."); }
-      else { messageQueue.push({endGame: true, title: "Dungeon non depurato!", subtitle: "Il Dungeon non è stato completamente depurato, prova ancora, avrai più fortuna.."}); }
+    const allCellNumbers = Array.from({length: CELL_COUNT}, (_, i) => i + 1);
+    const occupiedCells = new Set(Array.from(visitedCells.keys()).map(Number));
+    Object.keys(enemyMap).forEach(k => occupiedCells.add(Number(k)));
+    Object.keys(bonusMap).forEach(k => occupiedCells.add(Number(k)));
+    Object.keys(potionMap).forEach(k => occupiedCells.add(Number(k)));
+    Object.keys(prisonerMap).forEach(k => occupiedCells.add(Number(k)));
+    Object.keys(altarMap).forEach(k => occupiedCells.add(Number(k)));
+    Object.keys(fountainMap).forEach(k => occupiedCells.add(Number(k)));
+    holePositions.forEach(k => occupiedCells.add(Number(k)));
+    const freeCells = allCellNumbers.filter(num => !occupiedCells.has(num));
+
+    if (freeCells.length > 0) {
+        const bossCellNum = freeCells[Math.floor(Math.random() * freeCells.length)];
+        enemyMap[bossCellNum] = { name: 'Boss Finale', isBoss: true };
+        playSound('bossAppear');
+        messageQueue.push("Un'oscura presenza è apparsa nel dungeon...");
+    } else {
+        stopSound('background');
+        const gameLostSound = sounds.gameLost;
+        if (gameLostSound) {
+            gameLostSound.volume = 0.8;
+            gameLostSound.currentTime = 0;
+            gameLostSound.play().catch(e => console.warn("Game Lost sound failed:", e));
+        }
+        messageQueue.push({
+            endGame: true,
+            title: "Dungeon non depurato!",
+            subtitle: "Il Dungeon non è stato completamente depurato, il boss finale non vuole mostrarsi, riprova avrai più fortuna..."
+        });
+    }
   }
 
   function buildBoard() {
@@ -1275,17 +1403,16 @@
     const definition = enemy.isBoss ? { name: 'Boss Finale', hp: 30, attackDie: 10, attackBonus: 2, defenseDie: 8, defenseBonus: 2, isBoss: true } : ENEMY_DEFINITIONS[enemiesDefeatedCount];
     let finalEnemy = { ...enemy, ...definition, startHP: definition.hp, name: definition.name };
 
-    let imageUrlForEncounter;
+    let enemyTypeForImage;
     if (finalEnemy.isBoss) {
-        imageUrlForEncounter = ENEMY_IMAGES.boss;
+        finalEnemy.imageUrl = ENEMY_IMAGES.boss;
     } else {
-        let enemyTypeForImage;
         if (enemiesDefeatedCount < 3) enemyTypeForImage = 'orchetto';
         else if (enemiesDefeatedCount < 9) enemyTypeForImage = 'orco';
         else enemyTypeForImage = 'troll';
-        imageUrlForEncounter = getRandomUniqueImage(enemyTypeForImage);
+        finalEnemy.imageUrl = getRandomUniqueImage(enemyTypeForImage);
+        playSound(`trovo${enemyTypeForImage.charAt(0).toUpperCase() + enemyTypeForImage.slice(1)}`);
     }
-    finalEnemy.imageUrl = imageUrlForEncounter;
 
     encounterModal.style.display = 'block';
     encounterContent.innerHTML = `
@@ -1368,38 +1495,42 @@ function handleHideAttempt(enemy) {
   }
 
   function handleGameOver(source, deadPlayer) {
-      playSound('death');
-      battleModal.style.display = 'none';
-      initiativeModal.style.display = 'none';
-      allyChoiceModal.style.display = 'none';
-      supportAttackModal.style.display = 'none';
-      setBattleMode(false);
+    if (activeBattleState && activeBattleState.enemy.isBoss) {
+        playSound('gameLost');
+    } else {
+        playSound('death');
+    }
+    battleModal.style.display = 'none';
+    initiativeModal.style.display = 'none';
+    allyChoiceModal.style.display = 'none';
+    supportAttackModal.style.display = 'none';
+    setBattleMode(false);
 
-      if (numPlayers === 2) {
-        const continueSolo = confirm(`Il personaggio ${deadPlayer.name} è morto, vuoi continuare l'avventura in solitaria?`);
-        if (continueSolo) {
-            players = players.filter(p => p !== deadPlayer);
-            numPlayers = 1;
-            currentPlayerIndex = 0;
-            messageQueue.push(`${players[0].name} continua da solo l'avventura.`);
-            processMessageQueue(() => {
-              updatePlayerInfo();
-              updateDiscoveriesLog();
-              buildBoard();
-              updatePlayerActions();
-              endTurnSequence();
-            });
-            return;
-        }
+    if (numPlayers === 2) {
+      const continueSolo = confirm(`Il personaggio ${deadPlayer.name} è morto, vuoi continuare l'avventura in solitaria?`);
+      if (continueSolo) {
+          players = players.filter(p => p !== deadPlayer);
+          numPlayers = 1;
+          currentPlayerIndex = 0;
+          messageQueue.push(`${players[0].name} continua da solo l'avventura.`);
+          processMessageQueue(() => {
+            updatePlayerInfo();
+            updateDiscoveriesLog();
+            buildBoard();
+            updatePlayerActions();
+            endTurnSequence();
+          });
+          return;
       }
-      
-      stopSound('background');
-      const prisonerMessage = getFinalPrisonerMessage();
-      const gameOverTitle = `GAME OVER\n${deadPlayer.name} è stato sconfitto ${source}.`;
-      const gameOverSubtitle = `Nemici uccisi: ${enemiesDefeatedCount}\n${prisonerMessage}`;
-      
-      messageQueue.push({ endGame: true, title: gameOverTitle, subtitle: gameOverSubtitle });
-      processMessageQueue();
+    }
+    
+    stopSound('background');
+    const prisonerMessage = getFinalPrisonerMessage();
+    const gameOverTitle = `GAME OVER\n${deadPlayer.name} è stato sconfitto ${source}.`;
+    const gameOverSubtitle = `Nemici uccisi: ${enemiesDefeatedCount}\n${prisonerMessage}`;
+    
+    messageQueue.push({ endGame: true, title: gameOverTitle, subtitle: gameOverSubtitle });
+    processMessageQueue();
   }
 
   function attemptEscape() {
@@ -1703,30 +1834,31 @@ function handleHideAttempt(enemy) {
 
 
     async function processCombatResult(attackRoll, defenseRoll) {
-      const damage = Math.max(0, attackRoll - defenseRoll);
-      
-      defender.hp -= damage;
-      
-      if (damage > 0) {
-          battleResult.innerHTML = `${defender.name} subisce ${damage} danni!`;
-          battleResult.style.color = players.includes(defender) ? 'red' : 'lightgreen';
-      } else {
-          battleResult.innerHTML = `Attacco parato!`;
-          battleResult.style.color = 'deepskyblue';
-      }
+        const damage = Math.max(0, attackRoll - defenseRoll);
+        defender.hp -= damage;
+        
+        if (damage > 0) {
+            battleResult.innerHTML = `${defender.name} subisce ${damage} danni!`;
+            battleResult.style.color = players.includes(defender) ? 'red' : 'lightgreen';
+        } else {
+            battleResult.innerHTML = `Attacco parato!`;
+            battleResult.style.color = 'deepskyblue';
+        }
 
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      if (damage >= 3) {
-          playSound('powerhit');
-          await Promise.all([showBloodEffect(), triggerScreenShake()]);
-      } else if (damage > 0) {
-          playSound('hit');
-      } else {
-          playSound('parry');
-      }
-      
-      setTimeout(finalizePhase, 1480);
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        if (damage >= 3) {
+            playSound('powerhit');
+            await Promise.all([showBloodEffect(), triggerScreenShake()]);
+        } else if (damage > 0) { // Danno tra 1 e 2
+            playSound('hit');
+            await showWeakHitEffect();
+        } else { // Danno 0, parata
+            playSound('parry');
+            await showParryEffect();
+        }
+        
+        setTimeout(finalizePhase, 1480);
     }
 
      if (activeAbility === 'doubleAttack' && isPlayerAttacker) {
@@ -1737,9 +1869,11 @@ function handleHideAttempt(enemy) {
                 totalDamage += damage1;
                 
                 await new Promise(r => setTimeout(r, 500));
-                
-                if (damage1 >= 3) { playSound('powerhit'); await Promise.all([showBloodEffect(), triggerScreenShake()]); } else if (damage1 > 0) { playSound('hit'); }
-                
+                if (damage1 > 0) {
+                   if (damage1 >= 3) { playSound('powerhit'); await Promise.all([showBloodEffect(), triggerScreenShake()]); } 
+                   else { playSound('hit'); await showWeakHitEffect(); }
+                }
+
                 await new Promise(r => setTimeout(r, 500));
 
                 animateAndRoll(attackerDiceEl, getAttackerAttackDie(), getAttackerAttackBonus(), async (attack2) => {
@@ -1748,8 +1882,10 @@ function handleHideAttempt(enemy) {
                         totalDamage += damage2;
 
                         await new Promise(r => setTimeout(r, 500));
-
-                        if (damage2 >= 3) { playSound('powerhit'); await Promise.all([showBloodEffect(), triggerScreenShake()]); } else if (damage2 > 0) { playSound('hit'); }
+                        if (damage2 > 0) {
+                           if (damage2 >= 3) { playSound('powerhit'); await Promise.all([showBloodEffect(), triggerScreenShake()]); } 
+                           else { playSound('hit'); await showWeakHitEffect(); }
+                        }
                         
                         defender.hp -= totalDamage; 
                         battleResult.innerHTML = `Doppio Attacco! Danno Totale: ${totalDamage}`;
@@ -1765,11 +1901,15 @@ function handleHideAttempt(enemy) {
             
             await new Promise(resolve => setTimeout(resolve, 500));
             
-            if (attackRoll >= 3) {
-                playSound('powerhit');
-                await Promise.all([showBloodEffect(), triggerScreenShake()]);
-            } else { playSound('hit'); }
-
+            if (attackRoll > 0) {
+                if (attackRoll >= 3) {
+                    playSound('powerhit');
+                    await Promise.all([showBloodEffect(), triggerScreenShake()]);
+                } else {
+                    playSound('hit');
+                    await showWeakHitEffect();
+                }
+            }
             defender.hp -= attackRoll; 
             setTimeout(finalizePhase, 1480);
         });
@@ -1824,6 +1964,27 @@ function handleHideAttempt(enemy) {
     if (enemy.isShadow) {
         playSound('deathShadow');
         shadows = shadows.filter(s => s.name !== enemy.name);
+    } else if (enemy.isBoss) {
+        playSound('bossDeath');
+        battleResult.innerHTML = "VITTORIA!<br>Hai sconfitto il Boss Finale!";
+        const dungeonLiberatedBtn = document.createElement('button');
+        dungeonLiberatedBtn.textContent = 'Dungeon liberato';
+        dungeonLiberatedBtn.onclick = () => {
+            playSound('gameWin');
+            battleModal.style.display = 'none';
+            setBattleMode(false);
+            const prisonerMessage = getFinalPrisonerMessage();
+            messageQueue.push({ 
+                endGame: true, 
+                title: "DUNGEON LIBERATO!", 
+                subtitle: `Hai sconfitto il Boss Finale!\n${prisonerMessage}`
+            });
+            processMessageQueue();
+        };
+        battleActionContainer.innerHTML = '';
+        specialAbilitiesContainer.innerHTML = '';
+        battleActionContainer.appendChild(dungeonLiberatedBtn);
+        return;
     } else {
         if (deathSoundToggle) {
             playSound('death2');
@@ -1831,22 +1992,14 @@ function handleHideAttempt(enemy) {
             playSound('death');
         }
         deathSoundToggle = !deathSoundToggle;
-        
-        const cellInfo = visitedCells.get(String(combatant.position));
-        cellInfo.defeated = true;
-        
-        // Incrementa il contatore nemici per il giocatore
+        enemiesDefeatedCount++;
         combatant.enemiesDefeated = (combatant.enemiesDefeated || 0) + 1;
-
-        if (enemy.isBoss) {
-            messageQueue.push({ victory: true, title: "Dungeon liberato!", subtitle: "Hai sconfitto il Boss Finale!", prisonerStatus: getFinalPrisonerMessage() });
-            processMessageQueue(() => { setBattleMode(false); });
-            return;
-        } else {
-            enemiesDefeatedCount++;
-            if (enemiesDefeatedCount === ENEMY_COUNT) placeBoss();
-        }
+        if (enemiesDefeatedCount === ENEMY_COUNT) placeBoss();
     }
+    
+    const cellInfo = visitedCells.get(String(combatant.position));
+    if (cellInfo) cellInfo.defeated = true;
+
     updateDiscoveriesLog();
     const closeBtn = document.createElement('button');
     closeBtn.textContent = 'Continua...';
@@ -2177,12 +2330,12 @@ function handleHideAttempt(enemy) {
         updateDiscoveriesLog();
         setTimeout(finalizePhase, 2000); 
     } else if (potion.type === 'fire' || potion.type === 'ice') {
-         playSound('throw');
          potionDamageModal.style.display = 'block';
          potionDamageTitle.textContent = `Usa ${potion.name}`;
          potionDamageDice.textContent = '-';
          potionDamageRollBtn.disabled = false;
          potionDamageRollBtn.onclick = () => {
+             playSound('throw');
              potionDamageRollBtn.disabled = true;
              let flips = 10;
              playSound('dice');
