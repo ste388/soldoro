@@ -86,7 +86,7 @@
     .player-1-info { border: 2px solid #a0d535; background: linear-gradient(145deg, #6e8547, #8fad6a); color: #eff7d6; }
     .player-2-info { border: 2px solid #35a0d5; background: linear-gradient(145deg, #476e85, #6a8fad); color: #d6eaff; }
 
-    #playerCountModal, #charForm, #encounterModal, #messageModal, #initiativeModal, #potionDamageModal, #battlePotionSelectModal, #altarModal, #allyChoiceModal, #supportAttackModal, #tradeModal, #fountainModal { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background: #3a3a2b; padding:20px; border-radius:10px; box-shadow:0 0 15px #000; z-index:1001; text-align:center; width: 300px; }
+    #playerCountModal, #charForm, #encounterModal, #messageModal, #initiativeModal, #potionDamageModal, #battlePotionSelectModal, #altarModal, #allyChoiceModal, #supportAttackModal, #tradeModal, #fountainModal, #quantityModal { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background: #3a3a2b; padding:20px; border-radius:10px; box-shadow:0 0 15px #000; z-index:1001; text-align:center; width: 300px; }
     #charForm input, #charForm select, #playerCountModal select { width: calc(100% - 16px); padding:8px; margin:8px 0; border:none; border-radius:6px; font-size:16px; }
     
     #battleModal { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background: #3a3a2b; padding:20px; border-radius:10px; box-shadow:0 0 15px #000; z-index:1050; text-align:center; width: 900px; max-width: 95%; flex-direction: column; max-height: 90vh; overflow-y: auto; }
@@ -96,7 +96,8 @@
     #allyChoiceModal { z-index: 1080; }
     #supportAttackModal { z-index: 1090; }
     #tradeModal { z-index: 1100; width: 90%; max-width: 800px; display: flex; flex-direction: column; max-height: 80vh; overflow-y: auto; }
-    #altarActions, #allyChoiceActions, #supportAttackActions, #fountainActions { display: flex; gap: 10px; justify-content: center; margin-top: 15px; }
+    #quantityModal { z-index: 1101; }
+    #altarActions, #allyChoiceActions, #supportAttackActions, #fountainActions, #quantityActions { display: flex; gap: 10px; justify-content: center; margin-top: 15px; }
 
     #tradeContainer { display: flex; gap: 20px; text-align: left; flex-grow: 1; min-height: 0; }
     .trade-column { flex: 1; display: flex; flex-direction: column; min-height: 0; }
@@ -174,7 +175,7 @@
       #center-column { order: 2; width: 100%; align-items: stretch; }
       #left { order: 3; }
       #left, #right { width: 100%; box-sizing: border-box; }
-      #charForm, #encounterModal, #messageModal, #initiativeModal, #potionDamageModal, #battlePotionSelectModal, #altarModal, #allyChoiceModal, #supportAttackModal, #playerCountModal, #fountainModal { width: 90%; }
+      #charForm, #encounterModal, #messageModal, #initiativeModal, #potionDamageModal, #battlePotionSelectModal, #altarModal, #allyChoiceModal, #supportAttackModal, #playerCountModal, #fountainModal, #quantityModal { width: 90%; }
       #tradeModal { flex-direction: column; }
       #tradeContainer { flex-direction: column; }
       #trade-actions { flex-direction: row; margin-top: 10px; }
@@ -362,6 +363,15 @@
     <button id="closeTradeBtn" style="margin-top: 20px;">Chiudi</button>
   </div>
 
+  <div id="quantityModal">
+      <p id="quantityMessage"></p>
+      <input type="number" id="quantityInput" min="1" style="width: 60px; margin: 10px;">
+      <div id="quantityActions">
+          <button id="quantityConfirmBtn">Conferma</button>
+          <button id="quantityCancelBtn">Annulla</button>
+      </div>
+  </div>
+
   <div id="battlePotionSelectModal">
     <p>Seleziona una pozione da usare</p>
     <div id="battlePotionList"></div>
@@ -395,6 +405,7 @@
     battle: new Audio('https://ste388.github.io/soldoro/fx/battaglia.mp3'),
     parry: new Audio('https://ste388.github.io/soldoro/fx/parata.mp3'),
     background: new Audio('https://ste388.github.io/soldoro/fx/Sottofondo.mp3'),
+    finalBackground: new Audio('https://ste388.github.io/soldoro/fx/sottofondofinale.mp3'),
     death: new Audio('https://ste388.github.io/soldoro/fx/morte.mp3'),
     death2: new Audio('https://ste388.github.io/soldoro/fx/morte2.mp3'),
     deathShadow: new Audio('https://ste388.github.io/soldoro/fx/MorteOmbra.mp3'),
@@ -429,6 +440,8 @@
   sounds.battle.volume = 0.3;
   sounds.background.loop = true;
   sounds.background.volume = 0.6;
+  sounds.finalBackground.loop = true;
+  sounds.finalBackground.volume = 0.6;
   
   let deathSoundToggle = false;
   let audioInitialized = false;
@@ -444,12 +457,14 @@
             sound.currentTime = 0;
         });
         audioInitialized = true;
-        playSound('background');
+        if (!isFinalBossAppeared) playSound('background');
+        else playSound('finalBackground');
         console.log("Audio context unlocked and sounds ready.");
     }).catch(error => {
         console.warn("Could not unlock audio context automatically.", error);
         audioInitialized = true;
-        playSound('background');
+        if (!isFinalBossAppeared) playSound('background');
+        else playSound('finalBackground');
     });
     
     window.removeEventListener('click', initAudio);
@@ -470,7 +485,7 @@
 
   function playSoundObject(sound) {
     setTimeout(() => {
-        if (!sound.loop) {
+        if (!sound.loop && sound.currentTime > 0) {
             sound.currentTime = 0;
         }
         const playPromise = sound.play();
@@ -608,7 +623,7 @@
   let numPlayers = 1;
   let creatingPlayerIndex = 0;
   
-  let enemiesDefeatedCount, discoveryCounter;
+  let enemiesDefeatedCount, discoveryCounter, isFinalBossAppeared;
   let visitedCells, enemyMap, bonusMap, potionMap, prisonerMap, altarMap, fountainMap, gasTrapPositions, gasActivatedPositions, holePositions, shadows, spawnedShadows;
   let gasEffect = { active: false, newCellsVisited: 0 };
   let fountainState;
@@ -862,7 +877,7 @@
   }
 
   function placeDiscoveries() {
-      enemyMap = {}; bonusMap = {}; potionMap = {}; prisonerMap = {}; altarMap = {}; fountainMap = {}; gasTrapPositions = new Set(); gasActivatedPositions = new Set(); holePositions = new Set(); shadows = []; spawnedShadows = new Set(); prisonerQuests = { quests: {} }; fountainState = {};
+      enemyMap = {}; bonusMap = {}; potionMap = {}; prisonerMap = {}; altarMap = {}; fountainMap = {}; gasTrapPositions = new Set(); gasActivatedPositions = new Set(); holePositions = new Set(); shadows = []; spawnedShadows = new Set(); prisonerQuests = { quests: {} }; fountainState = {}; isFinalBossAppeared = false;
       let availableCells = Array.from({length: CELL_COUNT}, (_, i) => i + 1).filter(cellNum => cellNum !== 1);
       for (let i = availableCells.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [availableCells[i], availableCells[j]] = [availableCells[j], availableCells[i]]; }
       for(let i=0; i<HOLE_COUNT; i++) { if(availableCells.length > 0) holePositions.add(availableCells.pop()); }
@@ -909,16 +924,9 @@
     if (freeCells.length > 0) {
         const bossCellNum = freeCells[Math.floor(Math.random() * freeCells.length)];
         enemyMap[bossCellNum] = { name: 'Boss Finale', isBoss: true };
-        playSound('bossAppear');
+        isFinalBossAppeared = true;
         messageQueue.push("Un'oscura presenza è apparsa nel dungeon...");
     } else {
-        stopSound('background');
-        const gameLostSound = sounds.gameLost;
-        if (gameLostSound) {
-            gameLostSound.volume = 0.8;
-            gameLostSound.currentTime = 0;
-            gameLostSound.play().catch(e => console.warn("Game Lost sound failed:", e));
-        }
         messageQueue.push({
             endGame: true,
             title: "Dungeon non depurato!",
@@ -974,38 +982,58 @@
   function clearHighlights() { board.querySelectorAll('.highlighted').forEach(el => el.classList.remove('highlighted')); }
 
   function processMessageQueue(onComplete) {
-      messageModal.classList.remove('victory-modal'); victorySubText.textContent = ''; prisonerStatusText.textContent = '';
-      if (messageQueue.length > 0) {
-          const message = messageQueue.shift();
-          if (typeof message === 'object' && message.victory) { 
-              messageModal.classList.add('victory-modal'); 
-              messageModalText.textContent = message.title; 
-              victorySubText.textContent = message.subtitle; 
-              prisonerStatusText.textContent = message.prisonerStatus; 
-          } else if (typeof message === 'object' && message.endGame) { 
-              messageModal.classList.add('victory-modal'); 
-              messageModalText.textContent = message.title; 
-              victorySubText.textContent = message.subtitle; 
-              messageModal.style.display = 'block'; 
-              playerActions.innerHTML = ''; 
-              messageModalOkBtn.onclick = () => { 
-                  messageModal.style.display = 'none'; 
-                  promptForNewGame(); 
-              }; 
-              return; 
-          } else { 
-              messageModalText.innerHTML = message; 
-          }
-          messageModal.style.display = 'block';
-          messageModalOkBtn.onclick = () => {
-              messageModal.style.display = 'none';
-              processMessageQueue(onComplete);
-          };
-          messageModalOkBtn.focus();
-      } else {
-          messageModal.style.display = 'none';
-          if (onComplete) onComplete();
-      }
+    messageModal.classList.remove('victory-modal'); 
+    victorySubText.textContent = ''; 
+    prisonerStatusText.textContent = '';
+    
+    if (messageQueue.length > 0) {
+        const message = messageQueue.shift();
+        let messageText = '';
+        
+        if (typeof message === 'object') {
+            if (message.victory) { 
+                messageModal.classList.add('victory-modal'); 
+                messageModalText.textContent = message.title; 
+                victorySubText.textContent = message.subtitle; 
+                prisonerStatusText.textContent = message.prisonerStatus; 
+            } else if (message.endGame) { 
+                messageModal.classList.add('victory-modal'); 
+                messageModalText.textContent = message.title; 
+                victorySubText.textContent = message.subtitle; 
+                
+                if (message.title === "Dungeon non depurato!") {
+                    stopSound('background');
+                    stopSound('finalBackground');
+                    playSound('gameLost');
+                }
+                
+                messageModal.style.display = 'block'; 
+                playerActions.innerHTML = ''; 
+                messageModalOkBtn.onclick = () => { 
+                    messageModal.style.display = 'none'; 
+                    promptForNewGame(); 
+                }; 
+                return; 
+            }
+        } else { 
+            messageText = message;
+            messageModalText.innerHTML = messageText; 
+        }
+        
+        messageModal.style.display = 'block';
+        messageModalOkBtn.onclick = () => {
+            messageModal.style.display = 'none';
+            if (messageText === "Un'oscura presenza è apparsa nel dungeon...") {
+                stopSound('background');
+                playSound('finalBackground');
+            }
+            processMessageQueue(onComplete);
+        };
+        messageModalOkBtn.focus();
+    } else {
+        messageModal.style.display = 'none';
+        if (onComplete) onComplete();
+    }
   }
   
   function setMainMessage(text, color = '#ffcc00') { mainMessageDisplay.textContent = text; mainMessageDisplay.style.color = color; mainMessageDisplay.style.visibility = text ? 'visible' : 'hidden'; }
@@ -1014,13 +1042,23 @@
   function setBattleMode(isBattle) {
       if (isBattle) {
           stickyControls.style.top = '-200px';
-          sounds.background.pause();
-          playSound('battle');
+          if (activeBattleState && activeBattleState.enemy.isBoss) {
+              stopSound('background');
+              playSound('finalBackground');
+          } else {
+              stopSound('background');
+              stopSound('finalBackground');
+              playSound('battle');
+          }
       } else {
           activeBattleState = null;
           stickyControls.style.top = '0';
           stopSound('battle');
-          playSound('background');
+          if (isFinalBossAppeared) {
+              playSound('finalBackground');
+          } else {
+              playSound('background');
+          }
       }
       buildBoard();
   }
@@ -1172,7 +1210,12 @@
     else {
       const shadowAtLocation = shadows.find(s => s.position === cellNum && s.hp > 0);
       if (shadowAtLocation) { subsequentAction = () => startBattle(shadowAtLocation); } 
-      else if (currentCellInfo && currentCellInfo.enemy && !currentCellInfo.defeated) { subsequentAction = () => handleEncounter(currentCellInfo.enemy); } 
+      else if (currentCellInfo && currentCellInfo.enemy && !currentCellInfo.defeated) {
+          if (currentCellInfo.enemy.isBoss) {
+              playSound('bossAppear');
+          }
+          subsequentAction = () => handleEncounter(currentCellInfo.enemy); 
+      }
       else {
         if (currentCellInfo && currentCellInfo.enemy && currentCellInfo.defeated) setMainMessage('Qui giace un nemico sconfitto.', '#a9a9a9'); 
         else if (isNewVisit && cellNum !== 1) setMainMessage('Procedi tranquillo', 'lightgreen'); 
@@ -1495,11 +1538,16 @@ function handleHideAttempt(enemy) {
   }
 
   function handleGameOver(source, deadPlayer) {
+    stopSound('background');
+    stopSound('finalBackground');
+    stopSound('battle');
+    
     if (activeBattleState && activeBattleState.enemy.isBoss) {
         playSound('gameLost');
     } else {
         playSound('death');
     }
+    
     battleModal.style.display = 'none';
     initiativeModal.style.display = 'none';
     allyChoiceModal.style.display = 'none';
@@ -1524,7 +1572,6 @@ function handleHideAttempt(enemy) {
       }
     }
     
-    stopSound('background');
     const prisonerMessage = getFinalPrisonerMessage();
     const gameOverTitle = `GAME OVER\n${deadPlayer.name} è stato sconfitto ${source}.`;
     const gameOverSubtitle = `Nemici uccisi: ${enemiesDefeatedCount}\n${prisonerMessage}`;
@@ -1565,7 +1612,6 @@ function handleHideAttempt(enemy) {
   }
 
   function startBattle(enemy) {
-    setBattleMode(true);
     const character = players[currentPlayerIndex];
     if (!character) return;
     
@@ -1582,6 +1628,8 @@ function handleHideAttempt(enemy) {
         helpRequested: false,
         roundPhase: 'mainPlayer'
     };
+    
+    setBattleMode(true);
     
     const otherPlayerIndex = (currentPlayerIndex + 1) % numPlayers;
     if (numPlayers > 1 && players.length > 1 && players[otherPlayerIndex].position === character.position) {
@@ -1970,6 +2018,7 @@ function handleHideAttempt(enemy) {
         const dungeonLiberatedBtn = document.createElement('button');
         dungeonLiberatedBtn.textContent = 'Dungeon liberato';
         dungeonLiberatedBtn.onclick = () => {
+            stopSound('finalBackground');
             playSound('gameWin');
             battleModal.style.display = 'none';
             setBattleMode(false);
@@ -2188,7 +2237,7 @@ function handleHideAttempt(enemy) {
         p.inventory = [];
         p.hasSpecialSword = p.hasSpecialSword || false; 
         p.prisonersFreed = p.prisonersFreed || 0; 
-        p.enemiesDefeated = 0; // Inizializza il contatore
+        p.enemiesDefeated = 0;
         p.isCursed = p.isCursed || false; 
         p.shadowSlayerBonus = p.shadowSlayerBonus || 0; 
         p.activeQuests = p.activeQuests || []; 
@@ -2196,7 +2245,7 @@ function handleHideAttempt(enemy) {
         addItemToInventory(p, { name: "Fiala di Energia", value: 5, type: "energy", iconUrl: 'https://ste388.github.io/soldoro/img/pozione.png' });
       });
 
-      visitedCells = new Map(); enemiesDefeatedCount = 0; discoveryCounter = 1; gasEffect = { active: false, newCellsVisited: 0 }; shadows = []; spawnedShadows = new Set(); messageQueue = [];
+      visitedCells = new Map(); enemiesDefeatedCount = 0; discoveryCounter = 1; isFinalBossAppeared = false; gasEffect = { active: false, newCellsVisited: 0 }; shadows = []; spawnedShadows = new Set(); messageQueue = [];
       usedEnemyImages = { orchetto: new Set(), orco: new Set(), troll: new Set() };
       placeDiscoveries(); buildBoard();
       const firstPlayer = players[0]; const startCell = board.querySelector(`[data-cell-number="${firstPlayer.position}"]`);
@@ -2205,8 +2254,11 @@ function handleHideAttempt(enemy) {
   }
   
   function promptForNewGame() {
-      resetMessages(); board.innerHTML = ''; discoveriesLog.textContent = ''; players = []; currentPlayerIndex = 0; activeBattleState = null; updatePlayerInfo(); diceRes.textContent = '-'; updatePlayerActions();
+      resetMessages(); board.innerHTML = ''; discoveriesLog.textContent = ''; players = []; currentPlayerIndex = 0; activeBattleState = null; isFinalBossAppeared = false; updatePlayerInfo(); diceRes.textContent = '-'; updatePlayerActions();
       tradeModal.style.display = 'none';
+      stopSound('background');
+      stopSound('finalBackground');
+      playSound('background');
       playerCountModal.style.display = 'block';
   }
 
@@ -2221,7 +2273,7 @@ function handleHideAttempt(enemy) {
 
   function saveGame() {
       if (players.length === 0) { alert("Nessun gioco da salvare. Inizia una nuova partita prima."); return; }
-      const gameState = { players, currentPlayerIndex, numPlayers, enemiesDefeatedCount, discoveryCounter, visitedCells: Array.from(visitedCells.entries()), enemyMap, bonusMap, potionMap, prisonerMap, altarMap, fountainMap, fountainState, gasTrapPositions: Array.from(gasTrapPositions), gasActivatedPositions: Array.from(gasActivatedPositions), holePositions: Array.from(holePositions), gasEffect, shadows, spawnedShadows: Array.from(spawnedShadows), prisonerQuests, activeBattleState, usedEnemyImages: { orchetto: Array.from(usedEnemyImages.orchetto), orco: Array.from(usedEnemyImages.orco), troll: Array.from(usedEnemyImages.troll) } };
+      const gameState = { players, currentPlayerIndex, numPlayers, enemiesDefeatedCount, discoveryCounter, isFinalBossAppeared, visitedCells: Array.from(visitedCells.entries()), enemyMap, bonusMap, potionMap, prisonerMap, altarMap, fountainMap, fountainState, gasTrapPositions: Array.from(gasTrapPositions), gasActivatedPositions: Array.from(gasActivatedPositions), holePositions: Array.from(holePositions), gasEffect, shadows, spawnedShadows: Array.from(spawnedShadows), prisonerQuests, activeBattleState, usedEnemyImages: { orchetto: Array.from(usedEnemyImages.orchetto), orco: Array.from(usedEnemyImages.orco), troll: Array.from(usedEnemyImages.troll) } };
       localStorage.setItem('dungeon72Save', JSON.stringify(gameState)); alert('Partita salvata!'); loadGameBtn.style.display = 'block';
   }
 
@@ -2229,12 +2281,21 @@ function handleHideAttempt(enemy) {
       if (!audioInitialized) initAudio();
       const savedStateJSON = localStorage.getItem('dungeon72Save'); if (!savedStateJSON) { promptForNewGame(); return; }
       const savedState = JSON.parse(savedStateJSON);
-      players = savedState.players; currentPlayerIndex = savedState.currentPlayerIndex; numPlayers = savedState.numPlayers; enemiesDefeatedCount = savedState.enemiesDefeatedCount; discoveryCounter = savedState.discoveryCounter; visitedCells = new Map(savedState.visitedCells);
+      players = savedState.players; currentPlayerIndex = savedState.currentPlayerIndex; numPlayers = savedState.numPlayers; enemiesDefeatedCount = savedState.enemiesDefeatedCount; discoveryCounter = savedState.discoveryCounter; isFinalBossAppeared = savedState.isFinalBossAppeared; visitedCells = new Map(savedState.visitedCells);
       enemyMap = savedState.enemyMap; bonusMap = savedState.bonusMap; potionMap = savedState.potionMap; prisonerMap = savedState.prisonerMap; altarMap = savedState.altarMap; fountainMap = savedState.fountainMap; fountainState = savedState.fountainState; gasTrapPositions = new Set(savedState.gasTrapPositions); gasActivatedPositions = new Set(savedState.gasActivatedPositions); holePositions = new Set(savedState.holePositions); gasEffect = savedState.gasEffect; shadows = savedState.shadows; spawnedShadows = new Set(savedState.spawnedShadows); prisonerQuests = savedState.prisonerQuests; activeBattleState = savedState.activeBattleState;
       if (savedState.usedEnemyImages) { usedEnemyImages = { orchetto: new Set(savedState.usedEnemyImages.orchetto), orco: new Set(savedState.usedEnemyImages.orco), troll: new Set(savedState.usedEnemyImages.troll) }; } else { usedEnemyImages = { orchetto: new Set(), orco: new Set(), troll: new Set() }; }
       messageQueue = []; buildBoard(); updateLayout(); updatePlayerInfo(); updateDiscoveriesLog(); resetMessages(); charForm.style.display = 'none'; playerCountModal.style.display = 'none';
       if (activeBattleState) { setBattleMode(true); startCombatRound(); }
-      else { updatePlayerActions(); }
+      else { 
+        if(isFinalBossAppeared) {
+            stopSound('background');
+            playSound('finalBackground');
+        } else {
+            stopSound('finalBackground');
+            playSound('background');
+        }
+        updatePlayerActions(); 
+      }
       alert('Partita caricata!');
   }
 
@@ -2320,7 +2381,7 @@ function handleHideAttempt(enemy) {
             player.hp = Math.min(player.hp + potion.value, player.maxHP); 
             const healedAmount = player.hp - oldHp; 
             battleResult.innerHTML = `${player.name} recupera ${healedAmount} PF! Ora ha ${player.hp} PF.`; 
-        } else { // energy
+        } else {
             const oldEnergy = player.energy; 
             player.energy = Math.min(player.energy + potion.value, player.maxEnergy);
             const gainedAmount = player.energy - oldEnergy; 
@@ -2433,6 +2494,89 @@ function handleHideAttempt(enemy) {
     toPlayer1Btn.disabled = true;
     toPlayer2Btn.disabled = true;
   }
+  
+    async function promptQuantity(itemName, maxQuantity) {
+        return new Promise(resolve => {
+            const quantityModal = document.getElementById('quantityModal');
+            const quantityMessage = document.getElementById('quantityMessage');
+            const quantityInput = document.getElementById('quantityInput');
+            const quantityConfirmBtn = document.getElementById('quantityConfirmBtn');
+            const quantityCancelBtn = document.getElementById('quantityCancelBtn');
+
+            quantityMessage.textContent = `Quanti ${itemName} vuoi scambiare? (max ${maxQuantity})`;
+            quantityInput.max = maxQuantity;
+            quantityInput.value = 1;
+            quantityModal.style.display = 'block';
+            quantityInput.focus();
+            quantityInput.select();
+
+            const confirmHandler = () => {
+                const quantity = parseInt(quantityInput.value);
+                if (!isNaN(quantity) && quantity > 0 && quantity <= maxQuantity) {
+                    cleanup();
+                    resolve(quantity);
+                }
+            };
+
+            const cancelHandler = () => {
+                cleanup();
+                resolve(null);
+            };
+
+            const cleanup = () => {
+                quantityModal.style.display = 'none';
+                quantityConfirmBtn.removeEventListener('click', confirmHandler);
+                quantityCancelBtn.removeEventListener('click', cancelHandler);
+            };
+
+            quantityConfirmBtn.addEventListener('click', confirmHandler);
+            quantityCancelBtn.addEventListener('click', cancelHandler);
+        });
+    }
+
+  async function transferItem(toIndex) {
+      if (!selectedTradeItem) return;
+
+      const fromIndex = parseInt(selectedTradeItem.dataset.player);
+      const itemName = selectedTradeItem.dataset.itemName;
+      const isPotion = selectedTradeItem.dataset.isPotion === 'true';
+
+      const fromPlayer = players[fromIndex];
+      const toPlayer = players[toIndex];
+
+      if (isPotion) {
+          const itemToMove = fromPlayer.inventory.find(i => i.name === itemName);
+          if (itemToMove) {
+              if (itemToMove.quantity > 1) {
+                  const quantity = await promptQuantity(itemName, itemToMove.quantity);
+                  if (quantity !== null) {
+                      const existingToItem = toPlayer.inventory.find(i => i.name === itemName);
+                      if (existingToItem) {
+                          existingToItem.quantity += quantity;
+                      } else {
+                          toPlayer.inventory.push({ ...itemToMove, quantity });
+                      }
+                      itemToMove.quantity -= quantity;
+                      if (itemToMove.quantity === 0) {
+                          fromPlayer.inventory = fromPlayer.inventory.filter(i => i.name !== itemName);
+                      }
+                  }
+              } else {
+                  fromPlayer.inventory = fromPlayer.inventory.filter(i => i.name !== itemName);
+                  addItemToInventory(toPlayer, { ...itemToMove, quantity: 1 });
+              }
+          }
+      } else {
+          const itemIndex = fromPlayer.bonuses.findIndex(b => b.name === itemName);
+          if (itemIndex > -1) {
+              const [itemToTransfer] = fromPlayer.bonuses.splice(itemIndex, 1);
+              toPlayer.bonuses.push(itemToTransfer);
+          }
+      }
+
+      updateTradeInventories();
+      updateDiscoveriesLog();
+  }
 
   function handleTradeSelection(e) {
     const target = e.target;
@@ -2446,35 +2590,6 @@ function handleHideAttempt(enemy) {
     const fromPlayerIndex = parseInt(target.dataset.player);
     toPlayer1Btn.disabled = (fromPlayerIndex === 0);
     toPlayer2Btn.disabled = (fromPlayerIndex === 1);
-  }
-
-  function transferItem(toIndex) {
-    if (!selectedTradeItem) return;
-
-    const fromIndex = parseInt(selectedTradeItem.dataset.player);
-    const itemName = selectedTradeItem.dataset.itemName;
-    const isPotion = selectedTradeItem.dataset.isPotion === 'true';
-
-    let fromPlayer, toPlayer;
-    fromPlayer = players[fromIndex];
-    toPlayer = players[toIndex];
-    
-    if(isPotion) {
-        const itemToMove = fromPlayer.inventory.find(i => i.name === itemName);
-        if(itemToMove){
-            fromPlayer.inventory = fromPlayer.inventory.filter(i => i.name !== itemName);
-            addItemToInventory(toPlayer, itemToMove);
-        }
-    } else { // Bonus item
-        const itemIndex = fromPlayer.bonuses.findIndex(i => i.name === itemName);
-        if(itemIndex > -1){
-            const [itemToTransfer] = fromPlayer.bonuses.splice(itemIndex, 1);
-            toPlayer.bonuses.push(itemToTransfer);
-        }
-    }
-    
-    updateTradeInventories();
-    updateDiscoveriesLog();
   }
   
   player1InventoryList.addEventListener('click', handleTradeSelection);
@@ -2527,7 +2642,6 @@ function handleHideAttempt(enemy) {
 
 
   function init() {
-      // Aggiunge gli event listener per sbloccare l'audio alla prima interazione
       window.addEventListener('click', initAudio, { once: true });
       window.addEventListener('touchstart', initAudio, { once: true });
 
