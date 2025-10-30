@@ -155,7 +155,14 @@
     #itemFoundCloseBtn:hover { background-color: #a3764a; }
 
 
-    #messageModal { background: linear-gradient(135deg, #4a3c26, #2d1f0f); border: 4px solid #8b5e3c; color: #f5deb3; font-family: 'MedievalSharp', cursive; font-size: 22px; }
+    #messageModal { 
+      background: linear-gradient(135deg, #4a3c26, #2d1f0f); 
+      border: 4px solid #8b5e3c; 
+      color: #f5deb3; 
+      font-family: 'MedievalSharp', cursive; 
+      font-size: 22px;
+      z-index: 2100;
+    }
     #messageModal.victory-modal .modal-content { display: flex; flex-direction: column; align-items: center; }
     #messageModal.victory-modal #messageModalText { font-size: 28px; margin-bottom: 5px; white-space: pre-line; }
     #messageModal.victory-modal #victorySubText { font-size: 18px; margin-bottom: 10px; white-space: pre-line; }
@@ -422,6 +429,7 @@
     bossDeath: new Audio('https://ste388.github.io/soldoro/fx/morteBossFinale.mp3'),
     gameLost: new Audio('https://ste388.github.io/soldoro/fx/gameLost.mp3'),
     gameWin: new Audio('https://ste388.github.io/soldoro/fx/gameWin.mp3'),
+    fiamma: new Audio('https://ste388.github.io/soldoro/fx/fiamma.mp3'),
     trovoOrchetto: [
       new Audio('https://ste388.github.io/soldoro/fx/trovoOrchetto.mp3'),
       new Audio('https://ste388.github.io/soldoro/fx/trovoOrchetto1.mp3'),
@@ -1017,7 +1025,7 @@
             }
         } else { 
             messageText = message;
-            messageModalText.innerHTML = messageText; 
+            messageModalText.innerHTML = messageText.replace(/\n/g, '<br>');
         }
         
         messageModal.style.display = 'block';
@@ -1640,17 +1648,42 @@ function handleHideAttempt(enemy) {
     startCombatRound();
   }
 
-  function startCombatRound() {
-      if (!activeBattleState) return;
-      if (activeBattleState.roundPhase === 'mainPlayer') {
-          startInitiativePhase(false);
-      } else if (activeBattleState.roundPhase === 'ally' && activeBattleState.isAllyJoined) {
-          startInitiativePhase(true);
-      } else {
-          activeBattleState.roundPhase = 'mainPlayer';
-          startInitiativePhase(false);
-      }
-  }
+  async function startCombatRound() {
+    if (!activeBattleState) return;
+
+    const enemy = activeBattleState.enemy;
+    const burnEffect = enemy.effects?.find(e => e.type === 'burn');
+
+    if (burnEffect && burnEffect.damage && burnEffect.damage.length > 0) {
+        const burnDamage = burnEffect.damage.shift(); 
+        enemy.hp -= burnDamage;
+
+        playSound('fiamma');
+        
+        messageQueue.push(`La bruciatura infligge ${burnDamage} danni al nemico!`);
+        await new Promise(resolve => processMessageQueue(resolve));
+        
+        updateBattleUI(); 
+
+        if (enemy.hp <= 0) {
+            endBattleVictoriously();
+            return;
+        }
+
+        if (burnEffect.damage.length === 0) {
+            enemy.effects = enemy.effects.filter(e => e.type !== 'burn');
+        }
+    }
+    
+    if (activeBattleState.roundPhase === 'mainPlayer') {
+        startInitiativePhase(false);
+    } else if (activeBattleState.roundPhase === 'ally' && activeBattleState.isAllyJoined) {
+        startInitiativePhase(true);
+    } else {
+        activeBattleState.roundPhase = 'mainPlayer';
+        startInitiativePhase(false);
+    }
+}
 
 
   function startInitiativePhase(isSupportRound) {
@@ -1684,9 +1717,12 @@ function handleHideAttempt(enemy) {
     
     usePotionInitiativeBtn.style.display = 'none';
     if (!isSupportRound) {
-        usePotionInitiativeBtn.style.display = 'block';
-        usePotionInitiativeBtn.disabled = combatant1.inventory.filter(p => p.type === 'heal' || p.type === 'energy').length === 0;
-        usePotionInitiativeBtn.onclick = () => openInitiativePotionSelect();
+        const usablePotions = combatant1.inventory.filter(p => p.type === 'heal' || p.type === 'energy');
+        if (usablePotions.length > 0) {
+            usePotionInitiativeBtn.style.display = 'block';
+            usePotionInitiativeBtn.disabled = false;
+            usePotionInitiativeBtn.onclick = () => openInitiativePotionSelect();
+        }
     }
 
     initiativeRollBtn.onclick = () => {
@@ -1738,7 +1774,7 @@ function handleHideAttempt(enemy) {
             resolveAttack(attacker, defender); 
         };
         battleActionContainer.appendChild(attackBtn);
-
+        
         if (!isSupportRound) {
             if (!defender.isShadow && !defender.isBoss) {
                 const escapeBtn = document.createElement('button');
@@ -1761,11 +1797,14 @@ function handleHideAttempt(enemy) {
             doubleAttackBtn.textContent = `Doppio Attacco (${cost})`;
             doubleAttackBtn.onclick = () => { if (attacker.energy >= cost) { attacker.energy -= cost; activeAbility = 'doubleAttack'; resolveAttack(attacker, defender); } };
             specialAbilitiesContainer.appendChild(doubleAttackBtn);
-
-             const usePotionBattleBtn = document.createElement('button');
-             usePotionBattleBtn.textContent = 'Usa Pozione';
-             usePotionBattleBtn.onclick = () => openBattlePotionSelect(attacker);
-             specialAbilitiesContainer.appendChild(usePotionBattleBtn);
+            
+            const usePotionBattleBtn = document.createElement('button');
+            usePotionBattleBtn.textContent = 'Usa Pozione';
+            usePotionBattleBtn.onclick = () => openBattlePotionSelect(attacker);
+            const hasDamagePotions = attacker.inventory.some(p => (p.type === 'fire' || p.type === 'ice') && p.quantity > 0);
+            usePotionBattleBtn.disabled = !hasDamagePotions;
+            usePotionBattleBtn.style.flexBasis = '100%';
+            specialAbilitiesContainer.appendChild(usePotionBattleBtn);
             
             if (numPlayers > 1 && !activeBattleState.isAllyJoined && !activeBattleState.helpRequested) {
                 const askHelpBtn = document.createElement('button');
@@ -1776,10 +1815,13 @@ function handleHideAttempt(enemy) {
             }
         } else { // Alleato attaccante
             const usePotionBattleBtn = document.createElement('button');
-             usePotionBattleBtn.textContent = 'Usa Pozione';
-             usePotionBattleBtn.onclick = () => openBattlePotionSelect(attacker);
-             specialAbilitiesContainer.appendChild(usePotionBattleBtn);
+            usePotionBattleBtn.textContent = 'Usa Pozione';
+            usePotionBattleBtn.onclick = () => openBattlePotionSelect(attacker);
+            const hasDamagePotions = attacker.inventory.some(p => (p.type === 'fire' || p.type === 'ice') && p.quantity > 0);
+            usePotionBattleBtn.disabled = !hasDamagePotions;
+            specialAbilitiesContainer.appendChild(usePotionBattleBtn);
         }
+        
         updateEnergyUI();
     } else { // Turno del nemico
         specialAbilitiesContainer.style.visibility = 'hidden';
@@ -2304,9 +2346,11 @@ function handleHideAttempt(enemy) {
   function openBattlePotionSelect(player) {
     if (!activeBattleState || !player) return;
     battlePotionList.innerHTML = '';
-    if (player.inventory.length === 0) return;
+    const damagePotions = player.inventory.filter(p => (p.type === 'fire' || p.type === 'ice') && p.quantity > 0);
     
-    player.inventory.forEach(potion => { 
+    if (damagePotions.length === 0) return;
+    
+    damagePotions.forEach(potion => { 
         const btn = document.createElement('button'); 
         btn.textContent = `${potion.name} (x${potion.quantity})`;
         btn.onclick = () => { 
@@ -2358,38 +2402,47 @@ function handleHideAttempt(enemy) {
     }
     
     if (potion.quantity <= 0) {
-        character.inventory = character.inventory.filter(p => p.name !== potion.name);
+        character.inventory = character.inventory.filter(p => p.name !== potion.name || p.quantity > 0);
     }
     
     updatePlayerInfo();
     updateDiscoveriesLog();
     initiativePlayerStats.textContent = `PF: ${character.hp} | Energia: ${character.energy}`;
-    initiativeResult.textContent = logMessage;
-    setTimeout(() => { if (initiativeResult.textContent === logMessage) { initiativeResult.textContent = ''; } }, 2000);
-    usePotionInitiativeBtn.disabled = character.inventory.filter(p => (p.type === 'heal' || p.type === 'energy') && p.quantity > 0).length === 0;
+    
+    messageQueue.push(logMessage);
+    processMessageQueue();
+
+    const hasMorePotions = character.inventory.filter(p => (p.type === 'heal' || p.type === 'energy') && p.quantity > 0).length > 0;
+    usePotionInitiativeBtn.disabled = !hasMorePotions;
+    if (!hasMorePotions) usePotionInitiativeBtn.style.display = 'none';
   }
   
   function usePotionInBattle(potion, player) {
     if (!activeBattleState || !player) return;
     
     potion.quantity--;
+    if (potion.quantity <= 0) {
+        player.inventory = player.inventory.filter(p => p.name !== potion.name || p.quantity > 0);
+    }
 
     if (potion.type === 'heal' || potion.type === 'energy') { 
         playSound('drink');
+        let resultMessage = '';
         if (potion.type === 'heal') {
             const oldHp = player.hp; 
             player.hp = Math.min(player.hp + potion.value, player.maxHP); 
             const healedAmount = player.hp - oldHp; 
-            battleResult.innerHTML = `${player.name} recupera ${healedAmount} PF! Ora ha ${player.hp} PF.`; 
+            resultMessage = `${player.name} recupera ${healedAmount} PF! Ora ha ${player.hp} PF.`; 
         } else {
             const oldEnergy = player.energy; 
             player.energy = Math.min(player.energy + potion.value, player.maxEnergy);
             const gainedAmount = player.energy - oldEnergy; 
-            battleResult.innerHTML = `${player.name} recupera ${gainedAmount} Energia!`;
+            resultMessage = `${player.name} recupera ${gainedAmount} Energia!`;
         }
         updateBattleUI();
         updateDiscoveriesLog();
-        setTimeout(finalizePhase, 2000); 
+        messageQueue.push(resultMessage);
+        processMessageQueue(finalizePhase);
     } else if (potion.type === 'fire' || potion.type === 'ice') {
          potionDamageModal.style.display = 'block';
          potionDamageTitle.textContent = `Usa ${potion.name}`;
@@ -2414,25 +2467,22 @@ function handleHideAttempt(enemy) {
                      if (potion.type === 'fire') {
                          enemy.effects = enemy.effects || [];
                          enemy.effects = enemy.effects.filter(e => e.type !== 'burn');
-                         enemy.effects.push({ type: 'burn', duration: 2, damage: [3, 2] });
-                         resultText += ` Il nemico sta andando a fuoco!`;
+                         enemy.effects.push({ type: 'burn', damage: [3, 2] });
+                         resultText += `\nIl nemico sta andando a fuoco!`;
                      } else if (potion.type === 'ice') {
                          const heroAttackRoll = Math.floor(Math.random() * (player.hasSpecialSword ? 12 : player.attackDie) + 1) + getAttackBonus(player, enemy.isShadow);
                          playSound('hit');
                          if (heroAttackRoll >= 3) triggerScreenShake();
                          enemy.hp -= heroAttackRoll;
-                         resultText += ` Colpo extra da ${heroAttackRoll} danni!`;
+                         resultText += `\nColpo extra da ${heroAttackRoll} danni!`;
                      }
-                     battleResult.innerHTML = resultText;
                      updateDiscoveriesLog();
-                     setTimeout(finalizePhase, 2000);
+                     updateBattleUI();
+                     messageQueue.push(resultText);
+                     processMessageQueue(finalizePhase);
                  }
              }, 100);
          }
-    }
-    
-    if (potion.quantity <= 0) {
-        player.inventory = player.inventory.filter(p => p.name !== potion.name);
     }
   }
 
