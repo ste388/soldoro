@@ -37,7 +37,7 @@
     .shake { animation: screenShake 0.5s; }
 
     #sticky-controls {
-      position: fixed; top: 0; left: 0; width: 100%; background: #1a1915; border-radius: 0 0 10px 10px; z-index: 1000; padding: 10px; display: flex; gap: 14px; justify-content: center; align-items: center; box-shadow: 0 2px 12px rgba(0,0,0,0.40); transition: top 0.3s ease-in-out;
+      position: fixed; top: 0; left: 0; width: 100%; background: #1a1915; border-radius: 0 0 10px 10px; z-index: 1000; padding: 10px; display: flex; gap: 10px; justify-content: center; align-items: center; box-shadow: 0 2px 12px rgba(0,0,0,0.40); transition: top 0.3s ease-in-out; flex-wrap: wrap;
     }
     
     #left, #right { width:240px; display:flex; flex-direction:column; gap:10px; }
@@ -49,9 +49,9 @@
     #left button { min-width: 150px; }
     button:hover { background:#7cb673; }
     button:disabled { background:#555; cursor:not-allowed; }
-    #sticky-controls button { width: auto; min-width: 120px; margin: 0; }
-    #tradeBtn { background-color: #3b6b8c; }
-    #tradeBtn:hover { background-color: #5a8ab0; }
+    #sticky-controls button { width: auto; min-width: 120px; margin: 0; font-size: 14px; padding: 8px 12px; }
+    #tradeInventoryBtn { background-color: #3b6b8c; }
+    #tradeInventoryBtn:hover { background-color: #5a8ab0; }
     .intervention-btn { background-color: #c4832c; }
     .intervention-btn:hover { background-color: #e6a243; }
     .ignore-btn { background-color: #757575; }
@@ -69,7 +69,8 @@
     .gas-marker { bottom:3px; left:3px; background:#808080;}
     .hole-marker { position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); width: 40px; height: 40px; border-radius: 0; border: none; background-image: url('https://ste388.github.io/soldoro/img/buco.png'); background-size: contain; background-repeat: no-repeat; background-position: center; }
 
-    .skull-marker, .prisoner-marker, .shadow-marker, .hero-marker, .item-marker { position:absolute; top:50%; left:50%; transform: translate(-50%, -50%); width: 80%; height: 80%; pointer-events:none; opacity: 0.9; }
+    .skull-marker, .prisoner-marker, .shadow-marker, .hero-marker, .item-marker, .elf-thief-marker { position:absolute; top:50%; left:50%; transform: translate(-50%, -50%); width: 80%; height: 80%; pointer-events:none; opacity: 0.9; }
+    .elf-thief-marker { z-index: 11; }
     .item-marker { width: 70%; height: 70%; z-index: 6; }
     .skull-marker, .prisoner-marker { z-index: 5; }
     .hero-marker, .shadow-marker { z-index: 10; }
@@ -81,12 +82,12 @@
     #main-message-display { min-height:24px; font-weight:bold; text-align:center; background-color: rgba(0,0,0,0.4); border-radius: 5px; padding: 5px; width:100%; box-sizing: border-box; visibility: hidden; }
     #shadowActionDisplay { display:none; min-height:24px; text-align:center; background-color: rgba(0,0,0,0.4); border-radius: 5px; padding: 5px; width:100%; box-sizing: border-box; margin-top: 10px; }
     
-    #discoveriesLog { white-space: pre-line; background:rgba(58, 58, 43, 0.8); border-radius:8px; padding:10px; font-size:14px; min-height: 200px; width: 100%;}
+    #playerStatusLog { white-space: pre-line; background:rgba(58, 58, 43, 0.8); border-radius:8px; padding:10px; font-size:14px; min-height: 200px; width: 100%;}
     #playerInfo { text-align:center; padding: 5px 10px; border-radius:10px; min-width: 180px; font-weight: bold; }
     .player-1-info { border: 2px solid #a0d535; background: linear-gradient(145deg, #6e8547, #8fad6a); color: #eff7d6; }
     .player-2-info { border: 2px solid #35a0d5; background: linear-gradient(145deg, #476e85, #6a8fad); color: #d6eaff; }
 
-    #playerCountModal, #charForm, #encounterModal, #messageModal, #initiativeModal, #potionDamageModal, #battlePotionSelectModal, #altarModal, #allyChoiceModal, #supportAttackModal, #tradeModal, #fountainModal, #quantityModal { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background: #3a3a2b; padding:20px; border-radius:10px; box-shadow:0 0 15px #000; z-index:1001; text-align:center; width: 300px; }
+    #playerCountModal, #charForm, #encounterModal, #messageModal, #initiativeModal, #potionDamageModal, #battlePotionSelectModal, #altarModal, #allyChoiceModal, #supportAttackModal, #tradeModal, #fountainModal, #quantityModal, #inventoryModal { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background: #3a3a2b; padding:20px; border-radius:10px; box-shadow:0 0 15px #000; z-index:1001; text-align:center; width: 300px; }
     #charForm input, #charForm select, #playerCountModal select { width: calc(100% - 16px); padding:8px; margin:8px 0; border:none; border-radius:6px; font-size:16px; }
     
     #battleModal { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background: #3a3a2b; padding:20px; border-radius:10px; box-shadow:0 0 15px #000; z-index:1050; text-align:center; width: 900px; max-width: 95%; flex-direction: column; max-height: 90vh; overflow-y: auto; }
@@ -97,7 +98,12 @@
     #supportAttackModal { z-index: 1090; }
     #tradeModal { z-index: 1100; width: 90%; max-width: 800px; display: flex; flex-direction: column; max-height: 80vh; overflow-y: auto; }
     #quantityModal { z-index: 1101; }
-    #altarActions, #allyChoiceActions, #supportAttackActions, #fountainActions, #quantityActions { display: flex; gap: 10px; justify-content: center; margin-top: 15px; }
+    #inventoryModal { z-index: 2200; width: 350px; max-height: 80vh; overflow-y: auto; display: flex; flex-direction: column;}
+    #inventoryList { list-style: none; padding: 0; margin: 15px 0; text-align: left; }
+    #inventoryList li { background: #4f4f3e; padding: 8px; border-radius: 5px; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center; }
+    .use-item-btn { font-size: 12px; padding: 4px 8px; width: auto; background-color: #3b8c60; }
+    .use-item-btn:hover { background-color: #5aa87d; }
+    #altarActions, #allyChoiceActions, #supportAttackActions, #fountainActions, #quantityActions, #initiativeActionContainer { display: flex; gap: 10px; justify-content: center; margin-top: 15px; flex-wrap: wrap; }
 
     #tradeContainer { display: flex; gap: 20px; text-align: left; flex-grow: 1; min-height: 0; }
     .trade-column { flex: 1; display: flex; flex-direction: column; min-height: 0; }
@@ -119,7 +125,7 @@
     .battle-pf, .battle-attack, .battle-defense { font-size: 16px; margin-bottom: 5px; }
     .battle-dice { font-size: 48px; font-weight: bold; min-height: 60px; display:flex; align-items:center; justify-content:center; }
     #battleResult { font-size: 18px; font-weight: bold; min-height: 24px; margin-top: 10px; transition: font-size 0.2s; line-height: 1.2; }
-    #battleActionContainer, #initiativeActionContainer { display:flex; flex-direction:column; gap:10px; margin-top: 15px; }
+    #battleActionContainer { display:flex; flex-direction:column; gap:10px; margin-top: 15px; }
     #specialAbilitiesContainer { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; justify-content: center;}
     #specialAbilitiesContainer button { font-size: 12px; padding: 8px 12px; flex-basis: calc(50% - 4px); }
     #initiativeResult { font-weight: bold; font-size: 18px; min-height: 24px; }
@@ -177,12 +183,12 @@
 
 
     @media (max-width: 1024px) {
-      body { flex-direction: column; padding: 10px; padding-top: 160px; gap: 10px; align-items: stretch; }
+      body { flex-direction: column; padding: 10px; padding-top: 200px; gap: 10px; align-items: stretch; }
       #right { order: 1; align-items: stretch; }
       #center-column { order: 2; width: 100%; align-items: stretch; }
-      #left { order: 3; }
+      #left { order: 3; width: 100%; }
       #left, #right { width: 100%; box-sizing: border-box; }
-      #charForm, #encounterModal, #messageModal, #initiativeModal, #potionDamageModal, #battlePotionSelectModal, #altarModal, #allyChoiceModal, #supportAttackModal, #playerCountModal, #fountainModal, #quantityModal { width: 90%; }
+      #charForm, #encounterModal, #messageModal, #initiativeModal, #potionDamageModal, #battlePotionSelectModal, #altarModal, #allyChoiceModal, #supportAttackModal, #playerCountModal, #fountainModal, #quantityModal, #inventoryModal { width: 90%; }
       #tradeModal { flex-direction: column; }
       #tradeContainer { flex-direction: column; }
       #trade-actions { flex-direction: row; margin-top: 10px; }
@@ -193,8 +199,8 @@
       .battle-pf, .battle-attack, .battle-defense { font-size: 14px; }
       .battle-dice { font-size: 40px; min-height: 50px; }
       
-      #sticky-controls { flex-wrap: wrap; justify-content: space-around; }
-      #sticky-controls button { flex-basis: 45%; min-width: auto; }
+      #sticky-controls { justify-content: space-around; }
+      #sticky-controls button { flex-basis: 30%; min-width: auto; }
       #diceResult, #shadowDiceResult { flex-basis: 45%; }
       #playerInfo { flex-basis: 100%; margin-top: 5px; }
     }
@@ -203,18 +209,18 @@
 <body>
 
   <div id="sticky-controls">
-      <div id="player-actions">
-        <button id="diceRollBtn">Tira dado</button>
-      </div>
+      <button id="diceRollBtn">Tira dado</button>
       <div id="diceResult">-</div>
       <div id="playerInfo">Crea un personaggio</div>
       <div id="energyInfo" style="color: #4dd0e1; font-weight: bold;">Energia: <span id="energyValue">0</span></div>
+      <button id="tradeInventoryBtn">Inventario</button>
   </div>
 
   <div id="left">
     <button id="saveGameBtn">Salva</button>
     <button id="loadGameBtn" style="display:none;">Carica Partita</button>
     <button id="newGameBtn">Nuova Partita</button>
+    <div id="playerStatusLog"></div>
   </div>
   
   <div id="center-column">
@@ -222,7 +228,6 @@
     <div id="board-wrapper">
         <div id="center"></div>
     </div>
-    <div id="discoveriesLog"></div>
   </div>
 
   <div id="right">
@@ -252,6 +257,7 @@
       <option value="Guerriero">Guerriero (+10 PF, +5 Energia)</option>
       <option value="Esploratore">Esploratore (-1 buchi, -2 rampicanti, rilancio)</option>
       <option value="Ladro">Ladro (Furtività e Fuga Migliorate)</option>
+      <option value="Mago">Mago (Equipaggiamento Speciale)</option>
     </select>
     <div style="display:flex; gap:8px; margin-top:10px;">
       <button id="startAdventureBtn">Inizia Avventura</button>
@@ -280,10 +286,7 @@
         <div id="initiativeEnemyDice" class="battle-dice">-</div>
     </div>
     <p id="initiativeResult"></p>
-    <div id="initiativeActionContainer">
-        <button id="initiativeRollBtn">Lancia i dadi</button>
-        <button id="usePotionInitiativeBtn">Usa Pozione</button>
-    </div>
+    <div id="initiativeActionContainer"></div>
   </div>
 
  <div id="battleModal">
@@ -369,6 +372,12 @@
     </div>
     <button id="closeTradeBtn" style="margin-top: 20px;">Chiudi</button>
   </div>
+  
+  <div id="inventoryModal">
+      <h2>Inventario</h2>
+      <ul id="inventoryList"></ul>
+      <button id="closeInventoryBtn" style="margin-top: 15px;">Chiudi</button>
+  </div>
 
   <div id="quantityModal">
       <p id="quantityMessage"></p>
@@ -398,8 +407,6 @@
       <p id="itemFoundExtraText"></p>
       <button id="itemFoundCloseBtn">Chiudi</button>
   </div>
-
-
 <script>
   // --- Gestione Suoni ---
   const sounds = {
@@ -430,6 +437,7 @@
     gameLost: new Audio('https://ste388.github.io/soldoro/fx/gameLost.mp3'),
     gameWin: new Audio('https://ste388.github.io/soldoro/fx/gameWin.mp3'),
     fiamma: new Audio('https://ste388.github.io/soldoro/fx/fiamma.mp3'),
+    elfThiefLaugh: new Audio('https://ste388.github.io/soldoro/fx/risata.mp3'),
     trovoOrchetto: [
       new Audio('https://ste388.github.io/soldoro/fx/trovoOrchetto.mp3'),
       new Audio('https://ste388.github.io/soldoro/fx/trovoOrchetto1.mp3'),
@@ -514,8 +522,7 @@
 
   // Elementi DOM
   const board = document.getElementById('center');
-  const discoveriesLog = document.getElementById('discoveriesLog');
-  const playerActions = document.getElementById('player-actions');
+  const playerStatusLog = document.getElementById('playerStatusLog');
   const diceRes = document.getElementById('diceResult');
   const shadowActionDisplay = document.getElementById('shadowActionDisplay');
   const shadowTurnName = document.getElementById('shadowTurnName');
@@ -565,6 +572,7 @@
   const messageModalOkBtn = document.getElementById('messageModalOkBtn');
   const stickyControls = document.getElementById('sticky-controls');
   const initiativeModal = document.getElementById('initiativeModal');
+  const initiativeActionContainer = document.getElementById('initiativeActionContainer');
   const initiativeMessage = document.getElementById('initiativeMessage');
   const initiativePlayerName = document.getElementById('initiativePlayerName');
   const initiativePlayerStats = document.getElementById('initiativePlayerStats');
@@ -574,7 +582,6 @@
   const initiativeEnemyDice = document.getElementById('initiativeEnemyDice');
   const initiativeResult = document.getElementById('initiativeResult');
   const initiativeRollBtn = document.getElementById('initiativeRollBtn');
-  const usePotionInitiativeBtn = document.getElementById('usePotionInitiativeBtn');
   const battlePotionSelectModal = document.getElementById('battlePotionSelectModal');
   const battlePotionList = document.getElementById('battlePotionList');
   const closeBattlePotionSelectBtn = document.getElementById('closeBattlePotionSelectBtn');
@@ -601,6 +608,10 @@
   const toPlayer1Btn = document.getElementById('toPlayer1Btn');
   const toPlayer2Btn = document.getElementById('toPlayer2Btn');
   const closeTradeBtn = document.getElementById('closeTradeBtn');
+  const tradeInventoryBtn = document.getElementById('tradeInventoryBtn');
+  const inventoryModal = document.getElementById('inventoryModal');
+  const inventoryList = document.getElementById('inventoryList');
+  const closeInventoryBtn = document.getElementById('closeInventoryBtn');
   
   // Costanti di Gioco
   const COLS = 9, CELL_COUNT = 72, ENEMY_COUNT = 12, PRISONER_COUNT = 11, GAS_TRAP_COUNT = 2, HOLE_COUNT = 3, GAS_EFFECT_DURATION_CELLS = 5;
@@ -608,6 +619,8 @@
   const ATTACK_BONUS_ITEMS = [ { name: "Elsa migliorata", iconUrl: "https://ste388.github.io/soldoro/img/elsa.png" }, { name: "Guanti rinforzati", iconUrl: "https://ste388.github.io/soldoro/img/guanti.png" }, { name: "Stivali", iconUrl: "https://ste388.github.io/soldoro/img/stivali.png" } ];
   const DEFENSE_BONUS_ITEMS = [ { name: "Scudo di ferro", iconUrl: "https://ste388.github.io/soldoro/img/scudo.png" }, { name: "Elmo", iconUrl: "https://ste388.github.io/soldoro/img/elmo.png" }, { name: "Corazza", iconUrl: "https://ste388.github.io/soldoro/img/corazza.png" } ];
   const POTIONS = [ { name: "Pozione Fuoco", type: "fire", iconUrl: "https://ste388.github.io/soldoro/img/pozioneFuoco.png" }, { name: "Pozione Fuoco", type: "fire", iconUrl: "https://ste388.github.io/soldoro/img/pozioneFuoco.png" }, { name: "Pozione Ghiaccio", type: "ice", iconUrl: "https://ste388.github.io/soldoro/img/pozioneGhiaccio.png" }, { name: "Pozione Ghiaccio", type: "ice", iconUrl: "https://ste388.github.io/soldoro/img/pozioneGhiaccio.png" }, { name: "Pozione (+5 PF)", value: 5, type: "heal", iconUrl: "https://ste388.github.io/soldoro/img/pozione.png" }, { name: "Pozione (+10 PF)", value: 10, type: "heal", iconUrl: "https://ste388.github.io/soldoro/img/pozione.png" }, { name: "Pozione (+15 PF)", value: 15, type: "heal", iconUrl: "https://ste388.github.io/soldoro/img/pozione.png" } ];
+  const ENERGY_ELIXIR = { name: "Elisir di Energia", type: 'energy', value: 999, iconUrl: 'https://ste388.github.io/soldoro/img/elisirEnergia.png' };
+  const ELF_THIEF = { name: "Elfo Ladro", iconUrl: "https://ste388.github.io/soldoro/img/elfoLadro.png" };
   const GEMS = [ { name: "Gemma Blu", iconUrl: "https://ste388.github.io/soldoro/img/gemmaBlu.png" }, { name: "Gemma Verde", iconUrl: "https://ste388.github.io/soldoro/img/gemmaVerde.png" }, { name: "Gemma Viola", iconUrl: "https://ste388.github.io/soldoro/img/gemmaViola.png" } ];
   const GEM_DOOR = { name: "Porta di Gemme", iconUrl: "https://ste388.github.io/soldoro/img/portaGemme.png" };
   const ALTARS = [ { name: "Altare Sacrificale", type: 'sacrificial', iconUrl: "https://ste388.github.io/soldoro/img/altareSacrificale.png" }, { name: "Altare della Maledizione", type: 'curse', iconUrl: "https://ste388.github.io/soldoro/img/AltareMaledizione.png" }, { name: "Altare della Purificazione", type: 'purification', iconUrl: "https://ste388.github.io/soldoro/img/AltarePurificazione.png" } ];
@@ -616,14 +629,21 @@
   const ENEMY_DEFINITIONS = [ { name: "Orchetto", hp: 10, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 0 }, { name: "Orchetto", hp: 10, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 0 }, { name: "Orchetto", hp: 10, attackDie: 10, attackBonus: 0, defenseDie: 8, defenseBonus: 0 }, { name: "Orco", hp: 12, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 1 }, { name: "Orco", hp: 12, attackDie: 10, attackBonus: 1, defenseDie: 6, defenseBonus: 0 }, { name: "Orco", hp: 12, attackDie: 10, attackBonus: 0, defenseDie: 8, defenseBonus: 0 }, { name: "Orco", hp: 12, attackDie: 10, attackBonus: 1, defenseDie: 8, defenseBonus: 0 }, { name: "Orco", hp: 12, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 1 }, { name: "Orco", hp: 12, attackDie: 10, attackBonus: 1, defenseDie: 6, defenseBonus: 1 }, { name: "Troll", hp: 15, attackDie: 10, attackBonus: 0, defenseDie: 8, defenseBonus: 0 }, { name: "Troll", hp: 15, attackDie: 10, attackBonus: 1, defenseDie: 8, defenseBonus: 0 }, { name: "Troll", hp: 15, attackDie: 10, attackBonus: 0, defenseDie: 6, defenseBonus: 1 }, ];
   const NEW_SKULL_ICON_URL = 'https://ste388.github.io/soldoro/img/morte.png';
   const PRISONER_ICON_URL = 'https://ste388.github.io/soldoro/img/prigioniero.png';
-  const CLASS_ICONS = { Guerriero: 'https://ste388.github.io/soldoro/img/guerriero.png', Esploratore: 'https://ste388.github.io/soldoro/img/esploratore.png', Ladro: 'https://ste388.github.io/soldoro/img/ladro.png' };
+  const CLASS_ICONS = {
+    Guerriero: 'https://ste388.github.io/soldoro/img/guerriero.png',
+    Esploratore: 'https://ste388.github.io/soldoro/img/esploratore.png',
+    Ladro: 'https://ste388.github.io/soldoro/img/ladro.png',
+    Mago: 'https://ste388.github.io/soldoro/img/mago.png'
+  };
   const ENEMY_IMAGES = {
     orchetto: ['https://ste388.github.io/soldoro/img/orchetto1.png', 'https://ste388.github.io/soldoro/img/orchetto2.png', 'https://ste388.github.io/soldoro/img/orchetto3.png'],
     orco: ['https://ste388.github.io/soldoro/img/orco1.png', 'https://ste388.github.io/soldoro/img/orco2.png', 'https://ste388.github.io/soldoro/img/orco3.png', 'https://ste388.github.io/soldoro/img/orco4.png', 'https://ste388.github.io/soldoro/img/orco5.png', 'https://ste388.github.io/soldoro/img/orco6.png'],
     troll: ['https://ste388.github.io/soldoro/img/troll1.png', 'https://ste388.github.io/soldoro/img/troll2.png', 'https://ste388.github.io/soldoro/img/troll3.png'],
     boss: 'https://ste388.github.io/soldoro/img/bossFinale.png'
   };
-
+  const ITEM_DESCRIPTIONS = {
+    "Scudo di ferro": "+1 DIF", "Elmo": "+1 DIF", "Corazza": "+1 DIF", "Elsa migliorata": "+1 ATT", "Guanti rinforzati": "+1 ATT", "Stivali": "+1 ATT"
+  };
 
   // ---- STATO DEL GIOCO ----
   let players = [];
@@ -632,7 +652,7 @@
   let creatingPlayerIndex = 0;
   
   let enemiesDefeatedCount, discoveryCounter, isFinalBossAppeared;
-  let visitedCells, enemyMap, bonusMap, potionMap, prisonerMap, altarMap, fountainMap, gasTrapPositions, gasActivatedPositions, holePositions, shadows, spawnedShadows;
+  let visitedCells, enemyMap, bonusMap, potionMap, prisonerMap, altarMap, fountainMap, gasTrapPositions, gasActivatedPositions, holePositions, shadows, spawnedShadows, elfThiefCell, elfThief;
   let gasEffect = { active: false, newCellsVisited: 0 };
   let fountainState;
   let prisonerQuests;
@@ -818,6 +838,9 @@
       if (gasEffect.active && players.indexOf(player) === currentPlayerIndex) bonus -= 1;
       if (player.isCursed) bonus -= 2;
       if (isAgainstShadow && player.shadowSlayerBonus) bonus += player.shadowSlayerBonus;
+      if (isAgainstShadow && player.class === 'Mago') {
+        bonus += 1;
+      }
       return bonus;
   }
 
@@ -845,49 +868,50 @@
     }
   }
 
-  function updateDiscoveriesLog() {
-      const lines = [];
-      lines.push(`Celle esplorate: ${visitedCells ? visitedCells.size : 0}`);
-      lines.push(`Nemici Uccisi (Totali): ${enemiesDefeatedCount} / 12`);
-      lines.push('');
-      players.forEach((player, idx) => {
-          lines.push(`--- Giocatore ${idx + 1}: ${player.name} ---`);
-          lines.push(`PF: ${Math.max(0, player.hp)} / ${player.maxHP}`);
-          lines.push(`Energia: ${player.energy} / ${player.maxEnergy}`);
-          const attackItemNames = ATTACK_BONUS_ITEMS.map(item => item.name);
-          const attackBonuses = player.bonuses.filter(b => attackItemNames.includes(b.name));
-          if (attackBonuses.length > 0) { lines.push('Bonus Attacco:'); attackBonuses.forEach(b => lines.push(`- ${b.name} (+1)`)); }
-          const defenseItemNames = DEFENSE_BONUS_ITEMS.map(item => item.name);
-          const defenseBonuses = player.bonuses.filter(b => defenseItemNames.includes(b.name));
-          if (defenseBonuses.length > 0) { lines.push('Bonus Difesa:'); defenseBonuses.forEach(b => lines.push(`- ${b.name} (+1)`)); }
-          
-          if (player.inventory.length > 0) {
-              lines.push('Pozioni:');
-              player.inventory.forEach(p => {
-                lines.push(`- ${p.name}` + (p.quantity > 1 ? ` (x${p.quantity})` : ''));
-              });
-          }
+  function updatePlayerStatusLog() {
+    if (players.length === 0 || !players[currentPlayerIndex]) {
+        playerStatusLog.textContent = '';
+        return;
+    }
+    const player = players[currentPlayerIndex];
+    const lines = [];
+    lines.push(`--- Giocatore ${currentPlayerIndex + 1}: ${player.name} ---`);
+    lines.push(`PF: ${Math.max(0, player.hp)} / ${player.maxHP}`);
+    lines.push(`Energia: ${player.energy} / ${player.maxEnergy}`);
+    lines.push('Effetti:');
+    
+    let hasEffects = false;
+    if (gasEffect.active && players.indexOf(player) === currentPlayerIndex) {
+        const remainingCells = GAS_EFFECT_DURATION_CELLS - gasEffect.newCellsVisited;
+        lines.push(`- Gas Debolezza (-1 Atk per ${remainingCells} celle)`);
+        hasEffects = true;
+    }
+    if (player.isCursed) {
+        lines.push(`- Maledizione (-2 Attacco)`);
+        hasEffects = true;
+    }
+    if (player.shadowSlayerBonus > 0) {
+        lines.push(`- Benedizione (+${player.shadowSlayerBonus} Attacco vs Ombre)`);
+        hasEffects = true;
+    }
+    if (!hasEffects) {
+        lines.push('Nessuno');
+    }
 
-          const collectedGemNames = new Set(player.bonuses.map(b => b.name));
-          const gemsToShow = GEMS.filter(g => collectedGemNames.has(g.name));
-          if (gemsToShow.length > 0) { lines.push('Gemme:'); gemsToShow.forEach(gem => lines.push(`- ${gem.name}`)); }
-          lines.push('Effetti:');
-          let hasEffects = false;
-          if (idx === currentPlayerIndex && gasEffect.active) { const remainingCells = GAS_EFFECT_DURATION_CELLS - gasEffect.newCellsVisited; lines.push(`- Gas Debolezza (-1 Atk per ${remainingCells} celle)`); hasEffects = true; }
-          if (player.isCursed) { lines.push(`- Maledizione (-2 Attacco)`); hasEffects = true; }
-          if (player.shadowSlayerBonus > 0) { lines.push(`- Benedizione (+${player.shadowSlayerBonus} Attacco vs Ombre)`); hasEffects = true; }
-          if (!hasEffects) { lines.push('Nessuno'); }
-          lines.push(`Prigionieri Liberati: ${player.prisonersFreed}`);
-          lines.push(`Nemici Sconfitti: ${player.enemiesDefeated}`);
-          lines.push('');
-      });
-      discoveriesLog.textContent = lines.join('\n');
+    lines.push(`Prigionieri Liberati: ${player.prisonersFreed}`);
+    lines.push(`Nemici Sconfitti: ${player.enemiesDefeated}`);
+    
+    playerStatusLog.textContent = lines.join('\n');
   }
 
+
   function placeDiscoveries() {
-      enemyMap = {}; bonusMap = {}; potionMap = {}; prisonerMap = {}; altarMap = {}; fountainMap = {}; gasTrapPositions = new Set(); gasActivatedPositions = new Set(); holePositions = new Set(); shadows = []; spawnedShadows = new Set(); prisonerQuests = { quests: {} }; fountainState = {}; isFinalBossAppeared = false;
+      enemyMap = {}; bonusMap = {}; potionMap = {}; prisonerMap = {}; altarMap = {}; fountainMap = {}; gasTrapPositions = new Set(); gasActivatedPositions = new Set(); holePositions = new Set(); shadows = []; spawnedShadows = new Set(); prisonerQuests = { quests: {} }; fountainState = {}; isFinalBossAppeared = false; elfThief = { active: false, position: -1 };
       let availableCells = Array.from({length: CELL_COUNT}, (_, i) => i + 1).filter(cellNum => cellNum !== 1);
       for (let i = availableCells.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [availableCells[i], availableCells[j]] = [availableCells[j], availableCells[i]]; }
+      
+      if(availableCells.length > 0) elfThiefCell = availableCells.pop(); else elfThiefCell = -1;
+      
       for(let i=0; i<HOLE_COUNT; i++) { if(availableCells.length > 0) holePositions.add(availableCells.pop()); }
       for(let i = 0; i < ENEMY_COUNT; i++) { if(availableCells.length > 0) enemyMap[availableCells.pop()] = { name: 'Nemico Casuale' }; }
       ATTACK_BONUS_ITEMS.forEach(item => { if(availableCells.length > 0) bonusMap[availableCells.pop()] = item; });
@@ -916,7 +940,7 @@
           if (questGiver3 && target3) { prisonerQuests.quests[questGiver3] = { type: 'mother', targetCell: target3, reward: {name: 'Fiala di Energia', type: 'energy', value: 999, iconUrl: 'https://ste388.github.io/soldoro/img/pozione.png'}, status: 'inactive' }; prisonerQuests.quests[target3] = { type: 'mother-target', giver: questGiver3 }; }
       }
   }
-  
+
   function placeBoss() {
     const allCellNumbers = Array.from({length: CELL_COUNT}, (_, i) => i + 1);
     const occupiedCells = new Set(Array.from(visitedCells.keys()).map(Number));
@@ -960,6 +984,7 @@
               else if (info.altar) { const img = document.createElement('img'); img.src = info.altar.iconUrl; img.className = 'item-marker'; content.appendChild(img); }
               else if (info.bonus && info.bonus.iconUrl) { const img = document.createElement('img'); img.src = info.bonus.iconUrl; img.className = 'item-marker'; content.appendChild(img); }
               else if (info.potion && info.potion.iconUrl) { const img = document.createElement('img'); img.src = info.potion.iconUrl; img.className = 'item-marker'; content.appendChild(img); }
+              else if (i === elfThiefCell) { const img = document.createElement('img'); img.src = ELF_THIEF.iconUrl; img.className = 'item-marker'; content.appendChild(img); }
               else { content.textContent = i; }
               if (info.enemy && !info.defeated) content.appendChild(Object.assign(document.createElement('div'), { className: 'enemy-marker' }));
               if (info.bonus && info.bonus.name === GEM_DOOR.name) cellDiv.classList.add('gem-door-marker');
@@ -967,6 +992,7 @@
 
           const shadowHere = shadows.find(s => s.position === i && s.hp > 0);
           if (shadowHere) { const img = document.createElement('img'); img.src = shadowHere.iconUrl; img.className = 'shadow-marker'; content.appendChild(img); }
+          if (elfThief.active && elfThief.position === i) { const img = document.createElement('img'); img.src = ELF_THIEF.iconUrl; img.className = 'elf-thief-marker'; content.appendChild(img); }
           players.forEach((p, index) => { if (p.position === i && (!activeBattleState || p.position !== activeBattleState.battleCellNum)) { const img = document.createElement('img'); img.src = CLASS_ICONS[p.class]; img.className = 'hero-marker'; content.appendChild(img); if (index === currentPlayerIndex && !activeBattleState) { cellDiv.classList.add(`current-player-${index + 1}`); } } });
           if (gasActivatedPositions.has(i)) content.appendChild(Object.assign(document.createElement('div'), { className: 'gas-marker' }));
           board.appendChild(cellDiv);
@@ -1016,7 +1042,7 @@
                 }
                 
                 messageModal.style.display = 'block'; 
-                playerActions.innerHTML = ''; 
+                document.getElementById('diceRollBtn').style.display = 'none';
                 messageModalOkBtn.onclick = () => { 
                     messageModal.style.display = 'none'; 
                     promptForNewGame(); 
@@ -1092,7 +1118,7 @@
   }
   
   async function animateAndSetCurrent(destinationCell) {
-      playerActions.innerHTML = '<button id="diceRollBtn" disabled>Tira dado</button>';
+      document.getElementById('diceRollBtn').disabled = true;
       clearHighlights(); diceRes.textContent = '-'; const character = players[currentPlayerIndex];
       const startNum = character.position; const endNum = parseInt(destinationCell.dataset.cellNumber); const path = findPath(startNum, endNum);
       if (!path || path.length <= 1) { character.position = endNum; await processCellLogic(destinationCell); return; }
@@ -1106,6 +1132,18 @@
     character.position = cellNum;
     resetMessages();
     let subsequentAction;
+
+    if (elfThief.active && character.position === elfThief.position) {
+        elfThief.active = false;
+        await showEventModal("Catturato!", ELF_THIEF.iconUrl, "Hai catturato l'Elfo Ladro!");
+        addItemToInventory(character, { ...POTIONS.find(p => p.type === 'ice') });
+        addItemToInventory(character, { ...POTIONS.find(p => p.type === 'fire') });
+        addItemToInventory(character, { ...ENERGY_ELIXIR });
+        messageQueue.push("Hai ricevuto una Pozione Ghiaccio, una di Fuoco e un Elisir di Energia!");
+        playSound('item');
+        buildBoard();
+        updatePlayerStatusLog();
+    }
 
     const isNewVisit = !visitedCells.has(String(cellNum));
     
@@ -1138,6 +1176,15 @@
         info.altar = altarMap[cellNum] ? { ...altarMap[cellNum] } : null;
         info.fountain = fountainMap[cellNum] ? { ...fountainMap[cellNum] } : null;
 
+        if (cellNum === elfThiefCell && !elfThief.active) {
+            playSound('elfThiefLaugh');
+            elfThief.active = true;
+            let spawnCells = Array.from({length: CELL_COUNT}, (_, i) => i + 1).filter(c => c > 36 && !visitedCells.has(String(c)));
+            if (spawnCells.length === 0) spawnCells = Array.from({length: CELL_COUNT}, (_, i) => i + 1).filter(c => c !== character.position);
+            elfThief.position = spawnCells[Math.floor(Math.random() * spawnCells.length)];
+            await showEventModal("Un incontro inaspettato!", ELF_THIEF.iconUrl, "Un Elfo Ladro ti deride e fugge!");
+        }
+        
         if (holePositions.has(cellNum)) { 
           const damage = character.class === 'Esploratore' ? 2 : 3; 
           playSound('hole'); 
@@ -1151,7 +1198,7 @@
         if (gasEffect.active) { gasEffect.newCellsVisited++; if (gasEffect.newCellsVisited >= GAS_EFFECT_DURATION_CELLS) { gasEffect.active = false; gasEffect.newCellsVisited = 0; messageQueue.push("L'effetto del gas di debolezza è svanito!"); } }
         
         if (visitedCells.size > 0 && visitedCells.size % 7 === 0) {
-            const healAmount = 3;
+            const healAmount = (character.class === 'Mago') ? 5 : 3;
             character.hp = Math.min(character.hp + healAmount, character.maxHP);
             await showEventModal("Riposo", 'https://ste388.github.io/soldoro/img/riposo.png', `Il riposo ti ha fatto recuperare ${healAmount} PF`);
         }
@@ -1202,14 +1249,7 @@
         }
     }
 
-    if (numPlayers > 1) {
-      const otherPlayerIndex = (currentPlayerIndex + 1) % 2;
-      if (players.length > 1 && players[otherPlayerIndex].position === cellNum) {
-          showTradeButton();
-      } else {
-          hideTradeButton();
-      }
-    }
+    updateTradeInventoryButton();
 
     const currentCellInfo = visitedCells.get(String(cellNum)) || {};
     
@@ -1232,7 +1272,7 @@
       }
     }
     
-    updatePlayerInfo(); updateDiscoveriesLog(); buildBoard();
+    updatePlayerInfo(); updatePlayerStatusLog(); buildBoard();
     processMessageQueue(subsequentAction);
   }
   
@@ -1260,7 +1300,7 @@
             fountainModal.style.display = 'none';
             processMessageQueue(() => {
                 updatePlayerInfo();
-                updateDiscoveriesLog();
+                updatePlayerStatusLog();
                 endTurnSequence();
             });
         };
@@ -1385,8 +1425,44 @@
   
   async function endTurnSequence() {
       if (activeBattleState) return;
-      hideTradeButton();
+      updateTradeInventoryButton();
       let battleStarted = false;
+
+      if (elfThief.active) {
+          shadowActionDisplay.style.display = 'block';
+          shadowTurnName.textContent = elfThief.name;
+          const moveRoll = Math.floor(Math.random() * 6) + 1;
+          playSound('dice');
+          shadowDiceRes.textContent = moveRoll;
+          await new Promise(resolve => setTimeout(resolve, 1000));
+
+          for (let i = 0; i < moveRoll; i++) {
+              if (!elfThief.active) break; 
+              const playerPos = players[currentPlayerIndex].position;
+              let neighbors = [elfThief.position - 1, elfThief.position + 1, elfThief.position - COLS, elfThief.position + COLS, elfThief.position-COLS-1, elfThief.position-COLS+1, elfThief.position+COLS-1, elfThief.position+COLS+1].filter(n => {
+                  if (n < 1 || n > CELL_COUNT) return false;
+                  const r1 = Math.floor((elfThief.position - 1) / COLS), c1 = (elfThief.position - 1) % COLS;
+                  const r2 = Math.floor((n - 1) / COLS), c2 = (n - 1) % COLS;
+                  return Math.abs(r1 - r2) <= 1 && Math.abs(c1 - c2) <= 1;
+              });
+
+              if (neighbors.length > 0) {
+                  neighbors.sort((a, b) => {
+                      const distA = Math.abs(Math.floor((a-1)/COLS) - Math.floor((playerPos-1)/COLS)) + Math.abs(((a-1)%COLS) - ((playerPos-1)%COLS));
+                      const distB = Math.abs(Math.floor((b-1)/COLS) - Math.floor((playerPos-1)/COLS)) + Math.abs(((b-1)%COLS) - ((playerPos-1)%COLS));
+                      return distB - distA; 
+                  });
+                  elfThief.position = neighbors[0];
+                  playSound('step');
+                  buildBoard();
+                  await new Promise(resolve => setTimeout(resolve, 200));
+              } else {
+                  break; 
+              }
+          }
+          shadowActionDisplay.style.display = 'none';
+      }
+
       const exploredCount = visitedCells.size;
       for (const spawn of SHADOW_SPAWNS) {
           if (exploredCount >= spawn.spawnTurn && !spawnedShadows.has(spawn.name)) {
@@ -1443,14 +1519,13 @@
         currentPlayerIndex = (currentPlayerIndex + 1) % numPlayers;
       }
       updatePlayerInfo();
-      updateDiscoveriesLog();
+      updatePlayerStatusLog();
       buildBoard();
       updatePlayerActions();
       setMainMessage(`Tocca a ${players[currentPlayerIndex].name}!`, '#ffeb3b');
   }
   
   async function handleEncounter(enemy) {
-    playerActions.innerHTML = '';
     const definition = enemy.isBoss ? { name: 'Boss Finale', hp: 30, attackDie: 10, attackBonus: 2, defenseDie: 8, defenseBonus: 2, isBoss: true } : ENEMY_DEFINITIONS[enemiesDefeatedCount];
     let finalEnemy = { ...enemy, ...definition, startHP: definition.hp, name: definition.name };
 
@@ -1571,7 +1646,7 @@ function handleHideAttempt(enemy) {
           messageQueue.push(`${players[0].name} continua da solo l'avventura.`);
           processMessageQueue(() => {
             updatePlayerInfo();
-            updateDiscoveriesLog();
+            updatePlayerStatusLog();
             buildBoard();
             updatePlayerActions();
             endTurnSequence();
@@ -1658,10 +1733,8 @@ function handleHideAttempt(enemy) {
         const burnDamage = burnEffect.damage.shift(); 
         enemy.hp -= burnDamage;
 
+        await showEventModal("Danno da Bruciatura", "https://ste388.github.io/soldoro/img/pozioneFuoco.png", `La bruciatura infligge ${burnDamage} danni al nemico!`);
         playSound('fiamma');
-        
-        messageQueue.push(`La bruciatura infligge ${burnDamage} danni al nemico!`);
-        await new Promise(resolve => processMessageQueue(resolve));
         
         updateBattleUI(); 
 
@@ -1681,7 +1754,7 @@ function handleHideAttempt(enemy) {
         startInitiativePhase(true);
     } else {
         activeBattleState.roundPhase = 'mainPlayer';
-        startInitiativePhase(false);
+        startCombatRound();
     }
 }
 
@@ -1691,6 +1764,7 @@ function handleHideAttempt(enemy) {
     battleModal.style.display = 'none';
     
     document.querySelectorAll('#initiativeModal .battle-unit').forEach(el => el.classList.remove('highlight-winner'));
+    initiativeActionContainer.innerHTML = '';
 
     let combatant1, combatant2;
     if (isSupportRound) {
@@ -1711,23 +1785,23 @@ function handleHideAttempt(enemy) {
     initiativePlayerDice.textContent = '-';
     initiativeEnemyDice.textContent = '-';
     initiativeResult.textContent = '';
-    initiativeModal.style.display = 'block';
-    initiativeRollBtn.style.display = 'block';
-    initiativeRollBtn.disabled = false;
-    
-    usePotionInitiativeBtn.style.display = 'none';
-    if (!isSupportRound) {
-        const usablePotions = combatant1.inventory.filter(p => p.type === 'heal' || p.type === 'energy');
-        if (usablePotions.length > 0) {
-            usePotionInitiativeBtn.style.display = 'block';
-            usePotionInitiativeBtn.disabled = false;
-            usePotionInitiativeBtn.onclick = () => openInitiativePotionSelect();
-        }
-    }
 
-    initiativeRollBtn.onclick = () => {
-        initiativeRollBtn.disabled = true;
-        usePotionInitiativeBtn.style.display = 'none';
+    const rollBtn = document.createElement('button');
+    rollBtn.id = 'initiativeRollBtn';
+    rollBtn.textContent = 'Lancia i dadi';
+    initiativeActionContainer.appendChild(rollBtn);
+
+    const usePotionBtn = document.createElement('button');
+    usePotionBtn.textContent = 'Usa Pozione';
+    usePotionBtn.disabled = combatant1.inventory.filter(p => p.type === 'heal' || p.type === 'energy').length === 0;
+    usePotionBtn.onclick = () => openBattlePotionSelect(combatant1, true);
+    initiativeActionContainer.appendChild(usePotionBtn);
+
+    initiativeModal.style.display = 'block';
+
+    rollBtn.onclick = () => {
+        rollBtn.disabled = true;
+        usePotionBtn.disabled = true;
         
         animateAndRoll(initiativePlayerDice, 6, 0, (roll1) => {
             animateAndRoll(initiativeEnemyDice, 6, 0, (roll2) => {
@@ -1799,10 +1873,9 @@ function handleHideAttempt(enemy) {
             specialAbilitiesContainer.appendChild(doubleAttackBtn);
             
             const usePotionBattleBtn = document.createElement('button');
-            usePotionBattleBtn.textContent = 'Usa Pozione';
-            usePotionBattleBtn.onclick = () => openBattlePotionSelect(attacker);
-            const hasDamagePotions = attacker.inventory.some(p => (p.type === 'fire' || p.type === 'ice') && p.quantity > 0);
-            usePotionBattleBtn.disabled = !hasDamagePotions;
+            usePotionBattleBtn.textContent = 'Usa Pozione Offensiva';
+            usePotionBattleBtn.onclick = () => openBattlePotionSelect(attacker, false, true);
+            usePotionBattleBtn.disabled = attacker.inventory.filter(p => p.type === 'fire' || p.type === 'ice').length === 0;
             usePotionBattleBtn.style.flexBasis = '100%';
             specialAbilitiesContainer.appendChild(usePotionBattleBtn);
             
@@ -1815,10 +1888,9 @@ function handleHideAttempt(enemy) {
             }
         } else { // Alleato attaccante
             const usePotionBattleBtn = document.createElement('button');
-            usePotionBattleBtn.textContent = 'Usa Pozione';
-            usePotionBattleBtn.onclick = () => openBattlePotionSelect(attacker);
-            const hasDamagePotions = attacker.inventory.some(p => (p.type === 'fire' || p.type === 'ice') && p.quantity > 0);
-            usePotionBattleBtn.disabled = !hasDamagePotions;
+            usePotionBattleBtn.textContent = 'Usa Pozione Offensiva';
+            usePotionBattleBtn.onclick = () => openBattlePotionSelect(attacker, false, true);
+            usePotionBattleBtn.disabled = attacker.inventory.filter(p => p.type === 'fire' || p.type === 'ice').length === 0;
             specialAbilitiesContainer.appendChild(usePotionBattleBtn);
         }
         
@@ -2091,7 +2163,7 @@ function handleHideAttempt(enemy) {
     const cellInfo = visitedCells.get(String(combatant.position));
     if (cellInfo) cellInfo.defeated = true;
 
-    updateDiscoveriesLog();
+    updatePlayerStatusLog();
     const closeBtn = document.createElement('button');
     closeBtn.textContent = 'Continua...';
     closeBtn.onclick = async () => {
@@ -2122,17 +2194,10 @@ function handleHideAttempt(enemy) {
   }
 
   function updatePlayerActions() {
-      playerActions.innerHTML = '';
-      const diceButton = document.createElement('button');
-      diceButton.id = 'diceRollBtn';
-      diceButton.textContent = 'Tira dado';
-      diceButton.onclick = rollDice;
-      playerActions.appendChild(diceButton);
+      const diceButton = document.getElementById('diceRollBtn');
+      diceButton.disabled = false;
       
-      hideTradeButton();
-      if (numPlayers > 1 && players.length > 1 && players[0].position === players[1].position) {
-        showTradeButton();
-      }
+      updateTradeInventoryButton();
 
       if (activeBattleState) {
           diceButton.disabled = true;
@@ -2166,7 +2231,7 @@ function handleHideAttempt(enemy) {
       }
   }
 
-  async function attemptIntervention() {
+async function attemptIntervention() {
     allyChoiceActions.innerHTML = '';
     const ally = players[currentPlayerIndex];
     const battleCellNum = activeBattleState.battleCellNum;
@@ -2282,9 +2347,18 @@ function handleHideAttempt(enemy) {
         p.enemiesDefeated = 0;
         p.isCursed = p.isCursed || false; 
         p.shadowSlayerBonus = p.shadowSlayerBonus || 0; 
-        p.activeQuests = p.activeQuests || []; 
-        addItemToInventory(p, { name: "Pozione (+5 PF)", value: 5, type: "heal", iconUrl: "https://ste388.github.io/soldoro/img/pozione.png" });
-        addItemToInventory(p, { name: "Fiala di Energia", value: 5, type: "energy", iconUrl: 'https://ste388.github.io/soldoro/img/pozione.png' });
+        p.activeQuests = p.activeQuests || [];
+        
+        if (p.class === 'Mago') {
+            for(let i=0; i<3; i++) addItemToInventory(p, { name: "Pozione Fuoco", type: "fire", iconUrl: "https://ste388.github.io/soldoro/img/pozioneFuoco.png" });
+            for(let i=0; i<2; i++) addItemToInventory(p, { name: "Pozione Ghiaccio", type: "ice", iconUrl: "https://ste388.github.io/soldoro/img/pozioneGhiaccio.png" });
+            addItemToInventory(p, { name: "Elisir di Energia", type: 'energy', value: 999, iconUrl: 'https://ste388.github.io/soldoro/img/elisirEnergia.png' });
+            addItemToInventory(p, { name: "Fiala di Energia", value: 5, type: "energy", iconUrl: 'https://ste388.github.io/soldoro/img/pozione.png' });
+            addItemToInventory(p, { name: "Pozione (+10 PF)", value: 10, type: "heal", iconUrl: "https://ste388.github.io/soldoro/img/pozione.png" });
+        } else {
+            addItemToInventory(p, { name: "Pozione (+5 PF)", value: 5, type: "heal", iconUrl: "https://ste388.github.io/soldoro/img/pozione.png" });
+            addItemToInventory(p, { name: "Fiala di Energia", value: 5, type: "energy", iconUrl: 'https://ste388.github.io/soldoro/img/pozione.png' });
+        }
       });
 
       visitedCells = new Map(); enemiesDefeatedCount = 0; discoveryCounter = 1; isFinalBossAppeared = false; gasEffect = { active: false, newCellsVisited: 0 }; shadows = []; spawnedShadows = new Set(); messageQueue = [];
@@ -2292,11 +2366,14 @@ function handleHideAttempt(enemy) {
       placeDiscoveries(); buildBoard();
       const firstPlayer = players[0]; const startCell = board.querySelector(`[data-cell-number="${firstPlayer.position}"]`);
       await processCellLogic(startCell);
-      updateLayout(); updatePlayerInfo(); updateDiscoveriesLog(); charForm.style.display = 'none';
+      updateLayout(); updatePlayerInfo(); updatePlayerStatusLog(); charForm.style.display = 'none';
+      updatePlayerActions();
   }
   
   function promptForNewGame() {
-      resetMessages(); board.innerHTML = ''; discoveriesLog.textContent = ''; players = []; currentPlayerIndex = 0; activeBattleState = null; isFinalBossAppeared = false; updatePlayerInfo(); diceRes.textContent = '-'; updatePlayerActions();
+      resetMessages(); board.innerHTML = ''; playerStatusLog.textContent = ''; players = []; currentPlayerIndex = 0; activeBattleState = null; isFinalBossAppeared = false; updatePlayerInfo(); diceRes.textContent = '-';
+      document.getElementById('diceRollBtn').style.display = 'block';
+      updatePlayerActions();
       tradeModal.style.display = 'none';
       stopSound('background');
       stopSound('finalBackground');
@@ -2315,7 +2392,7 @@ function handleHideAttempt(enemy) {
 
   function saveGame() {
       if (players.length === 0) { alert("Nessun gioco da salvare. Inizia una nuova partita prima."); return; }
-      const gameState = { players, currentPlayerIndex, numPlayers, enemiesDefeatedCount, discoveryCounter, isFinalBossAppeared, visitedCells: Array.from(visitedCells.entries()), enemyMap, bonusMap, potionMap, prisonerMap, altarMap, fountainMap, fountainState, gasTrapPositions: Array.from(gasTrapPositions), gasActivatedPositions: Array.from(gasActivatedPositions), holePositions: Array.from(holePositions), gasEffect, shadows, spawnedShadows: Array.from(spawnedShadows), prisonerQuests, activeBattleState, usedEnemyImages: { orchetto: Array.from(usedEnemyImages.orchetto), orco: Array.from(usedEnemyImages.orco), troll: Array.from(usedEnemyImages.troll) } };
+      const gameState = { players, currentPlayerIndex, numPlayers, enemiesDefeatedCount, discoveryCounter, isFinalBossAppeared, visitedCells: Array.from(visitedCells.entries()), enemyMap, bonusMap, potionMap, prisonerMap, altarMap, fountainMap, fountainState, gasTrapPositions: Array.from(gasTrapPositions), gasActivatedPositions: Array.from(gasActivatedPositions), holePositions: Array.from(holePositions), gasEffect, shadows, spawnedShadows: Array.from(spawnedShadows), prisonerQuests, activeBattleState, usedEnemyImages: { orchetto: Array.from(usedEnemyImages.orchetto), orco: Array.from(usedEnemyImages.orco), troll: Array.from(usedEnemyImages.troll) }, elfThief, elfThiefCell };
       localStorage.setItem('dungeon72Save', JSON.stringify(gameState)); alert('Partita salvata!'); loadGameBtn.style.display = 'block';
   }
 
@@ -2325,8 +2402,10 @@ function handleHideAttempt(enemy) {
       const savedState = JSON.parse(savedStateJSON);
       players = savedState.players; currentPlayerIndex = savedState.currentPlayerIndex; numPlayers = savedState.numPlayers; enemiesDefeatedCount = savedState.enemiesDefeatedCount; discoveryCounter = savedState.discoveryCounter; isFinalBossAppeared = savedState.isFinalBossAppeared; visitedCells = new Map(savedState.visitedCells);
       enemyMap = savedState.enemyMap; bonusMap = savedState.bonusMap; potionMap = savedState.potionMap; prisonerMap = savedState.prisonerMap; altarMap = savedState.altarMap; fountainMap = savedState.fountainMap; fountainState = savedState.fountainState; gasTrapPositions = new Set(savedState.gasTrapPositions); gasActivatedPositions = new Set(savedState.gasActivatedPositions); holePositions = new Set(savedState.holePositions); gasEffect = savedState.gasEffect; shadows = savedState.shadows; spawnedShadows = new Set(savedState.spawnedShadows); prisonerQuests = savedState.prisonerQuests; activeBattleState = savedState.activeBattleState;
+      elfThief = savedState.elfThief || { active: false, position: -1 };
+      elfThiefCell = savedState.elfThiefCell || -1;
       if (savedState.usedEnemyImages) { usedEnemyImages = { orchetto: new Set(savedState.usedEnemyImages.orchetto), orco: new Set(savedState.usedEnemyImages.orco), troll: new Set(savedState.usedEnemyImages.troll) }; } else { usedEnemyImages = { orchetto: new Set(), orco: new Set(), troll: new Set() }; }
-      messageQueue = []; buildBoard(); updateLayout(); updatePlayerInfo(); updateDiscoveriesLog(); resetMessages(); charForm.style.display = 'none'; playerCountModal.style.display = 'none';
+      messageQueue = []; buildBoard(); updateLayout(); updatePlayerInfo(); updatePlayerStatusLog(); resetMessages(); charForm.style.display = 'none'; playerCountModal.style.display = 'none';
       if (activeBattleState) { setBattleMode(true); startCombatRound(); }
       else { 
         if(isFinalBossAppeared) {
@@ -2341,84 +2420,40 @@ function handleHideAttempt(enemy) {
       alert('Partita caricata!');
   }
 
-  function updateLayout() { const discoveriesLog = document.getElementById('discoveriesLog'); const leftColumn = document.getElementById('left'); const centerColumn = document.getElementById('center-column'); const isDesktop = window.innerWidth > 1024; if (isDesktop) { if (discoveriesLog.parentElement !== leftColumn) { leftColumn.appendChild(discoveriesLog); } } else { if (discoveriesLog.parentElement !== centerColumn) { centerColumn.appendChild(discoveriesLog); } } }
+  function updateLayout() { updateTradeInventoryButton(); }
   
-  function openBattlePotionSelect(player) {
-    if (!activeBattleState || !player) return;
-    battlePotionList.innerHTML = '';
-    const damagePotions = player.inventory.filter(p => (p.type === 'fire' || p.type === 'ice') && p.quantity > 0);
-    
-    if (damagePotions.length === 0) return;
-    
-    damagePotions.forEach(potion => { 
-        const btn = document.createElement('button'); 
-        btn.textContent = `${potion.name} (x${potion.quantity})`;
-        btn.onclick = () => { 
-            battlePotionSelectModal.style.display = 'none';
-            usePotionInBattle(potion, player); 
-        }; 
-        battlePotionList.appendChild(btn); 
-    });
-    battlePotionSelectModal.style.display = 'block';
-  }
+  function openBattlePotionSelect(player, isInitiative = false, offensiveOnly = false) {
+      if (!player) return;
+      battlePotionList.innerHTML = '';
+      
+      let potionsToShow = player.inventory.filter(p => p.quantity > 0);
+      if (isInitiative) {
+          potionsToShow = potionsToShow.filter(p => p.type === 'heal' || p.type === 'energy');
+      } else if (offensiveOnly) {
+          potionsToShow = potionsToShow.filter(p => p.type === 'fire' || p.type === 'ice');
+      }
 
-  function openInitiativePotionSelect() {
-    if (!activeBattleState) return;
-    const character = players[activeBattleState.primaryCombatantIndex];
-    battlePotionList.innerHTML = '';
-    const usablePotions = character.inventory.filter(p => p.type === 'heal' || p.type === 'energy');
-    
-    if (usablePotions.length === 0) return;
-    
-    usablePotions.forEach(potion => {
-        const btn = document.createElement('button');
-        btn.textContent = `${potion.name} (x${potion.quantity})`;
-        btn.onclick = () => {
-            battlePotionSelectModal.style.display = 'none';
-            usePotionInInitiative(potion);
-        };
-        battlePotionList.appendChild(btn);
-    });
-    battlePotionSelectModal.style.display = 'block';
+      if (potionsToShow.length === 0) {
+          battlePotionSelectModal.style.display = 'none';
+          if(isInitiative) initiativeModal.style.display = 'block';
+          else battleModal.style.display = 'flex';
+          return;
+      }
+      
+      potionsToShow.forEach(potion => { 
+          const btn = document.createElement('button'); 
+          btn.textContent = `${potion.name} (x${potion.quantity})`;
+          btn.onclick = () => { 
+              battlePotionSelectModal.style.display = 'none';
+              usePotionInBattle(potion, player, isInitiative); 
+          }; 
+          battlePotionList.appendChild(btn); 
+      });
+      battlePotionSelectModal.style.display = 'block';
   }
   
-  function usePotionInInitiative(potion){
-    if (!activeBattleState) return;
-    const character = players[activeBattleState.primaryCombatantIndex];
-    
-    potion.quantity--;
-    playSound('drink');
-    let logMessage = '';
-    if (potion.type === 'heal') {
-        const oldHp = character.hp;
-        character.hp = Math.min(character.hp + potion.value, character.maxHP);
-        const healedAmount = character.hp - oldHp;
-        logMessage = `${character.name} usa ${potion.name} e recupera ${healedAmount} PF!`;
-    } else if (potion.type === 'energy') {
-        const oldEnergy = character.energy;
-        character.energy = Math.min(character.energy + potion.value, character.maxEnergy);
-        const gainedAmount = character.energy - oldEnergy;
-        logMessage = `${character.name} usa ${potion.name} e recupera ${gainedAmount} Energia!`;
-    }
-    
-    if (potion.quantity <= 0) {
-        character.inventory = character.inventory.filter(p => p.name !== potion.name || p.quantity > 0);
-    }
-    
-    updatePlayerInfo();
-    updateDiscoveriesLog();
-    initiativePlayerStats.textContent = `PF: ${character.hp} | Energia: ${character.energy}`;
-    
-    messageQueue.push(logMessage);
-    processMessageQueue();
-
-    const hasMorePotions = character.inventory.filter(p => (p.type === 'heal' || p.type === 'energy') && p.quantity > 0).length > 0;
-    usePotionInitiativeBtn.disabled = !hasMorePotions;
-    if (!hasMorePotions) usePotionInitiativeBtn.style.display = 'none';
-  }
-  
-  function usePotionInBattle(potion, player) {
-    if (!activeBattleState || !player) return;
+  function usePotionInBattle(potion, player, isInitiative = false) {
+    if (!player || (isInitiative === false && !activeBattleState)) return;
     
     potion.quantity--;
     if (potion.quantity <= 0) {
@@ -2432,18 +2467,30 @@ function handleHideAttempt(enemy) {
             const oldHp = player.hp; 
             player.hp = Math.min(player.hp + potion.value, player.maxHP); 
             const healedAmount = player.hp - oldHp; 
-            resultMessage = `${player.name} recupera ${healedAmount} PF! Ora ha ${player.hp} PF.`; 
+            resultMessage = `${player.name} recupera ${healedAmount} PF!`; 
         } else {
             const oldEnergy = player.energy; 
-            player.energy = Math.min(player.energy + potion.value, player.maxEnergy);
+            player.energy = Math.min(player.energy + (potion.value === 999 ? player.maxEnergy : potion.value), player.maxEnergy);
             const gainedAmount = player.energy - oldEnergy; 
             resultMessage = `${player.name} recupera ${gainedAmount} Energia!`;
         }
-        updateBattleUI();
-        updateDiscoveriesLog();
+        
         messageQueue.push(resultMessage);
-        processMessageQueue(finalizePhase);
+        
+        if(isInitiative) {
+            processMessageQueue(() => {
+                initiativePlayerStats.textContent = `PF: ${player.hp} | Energia: ${player.energy}`;
+                initiativeModal.style.display = 'block';
+            });
+        } else {
+            updateBattleUI();
+            updatePlayerStatusLog();
+            processMessageQueue(() => setTimeout(finalizePhase, 300));
+        }
+
     } else if (potion.type === 'fire' || potion.type === 'ice') {
+         if(isInitiative) return; 
+         
          potionDamageModal.style.display = 'block';
          potionDamageTitle.textContent = `Usa ${potion.name}`;
          potionDamageDice.textContent = '-';
@@ -2468,7 +2515,6 @@ function handleHideAttempt(enemy) {
                          enemy.effects = enemy.effects || [];
                          enemy.effects = enemy.effects.filter(e => e.type !== 'burn');
                          enemy.effects.push({ type: 'burn', damage: [3, 2] });
-                         resultText += `\nIl nemico sta andando a fuoco!`;
                      } else if (potion.type === 'ice') {
                          const heroAttackRoll = Math.floor(Math.random() * (player.hasSpecialSword ? 12 : player.attackDie) + 1) + getAttackBonus(player, enemy.isShadow);
                          playSound('hit');
@@ -2476,34 +2522,96 @@ function handleHideAttempt(enemy) {
                          enemy.hp -= heroAttackRoll;
                          resultText += `\nColpo extra da ${heroAttackRoll} danni!`;
                      }
-                     updateDiscoveriesLog();
+                     updatePlayerStatusLog();
                      updateBattleUI();
                      messageQueue.push(resultText);
-                     processMessageQueue(finalizePhase);
+                     processMessageQueue(() => setTimeout(finalizePhase, 300));
                  }
              }, 100);
          }
     }
   }
 
-  function showTradeButton() {
-    let tradeBtn = document.getElementById('tradeBtn');
-    if (!tradeBtn) {
-        tradeBtn = document.createElement('button');
-        tradeBtn.id = 'tradeBtn';
-        tradeBtn.textContent = 'Scambia Oggetti';
-        tradeBtn.onclick = openTradeModal;
-        stickyControls.appendChild(tradeBtn);
+  function updateTradeInventoryButton() {
+    const isTradePossible = numPlayers > 1 && players.length > 1 && players[0].position === players[1].position && !activeBattleState;
+    if (isTradePossible) {
+        tradeInventoryBtn.textContent = 'Scambia Oggetti';
+        tradeInventoryBtn.onclick = openTradeModal;
+    } else {
+        tradeInventoryBtn.textContent = 'Inventario';
+        tradeInventoryBtn.onclick = openInventoryModal;
     }
-    tradeBtn.style.display = 'inline-block';
   }
 
-  function hideTradeButton() {
-    const tradeBtn = document.getElementById('tradeBtn');
-    if (tradeBtn) {
-        tradeBtn.style.display = 'none';
+  function openInventoryModal() {
+    const player = players[currentPlayerIndex];
+    if (!player) return;
+
+    inventoryList.innerHTML = '';
+
+    const allItems = [
+        ...player.inventory,
+        ...player.bonuses,
+        ...(player.hasSpecialSword ? [{ name: 'Spada Speciale', iconUrl: 'https://ste388.github.io/soldoro/img/elsa.png' }] : [])
+    ];
+
+    if (allItems.length === 0) {
+        inventoryList.innerHTML = '<li>Il tuo inventario è vuoto.</li>';
+    } else {
+        allItems.forEach(item => {
+            const li = document.createElement('li');
+            const description = ITEM_DESCRIPTIONS[item.name] ? ` [${ITEM_DESCRIPTIONS[item.name]}]` : '';
+            li.textContent = item.name + (item.quantity > 1 ? ` (x${item.quantity})` : '') + description;
+            
+            if ((item.type === 'heal' || item.type === 'energy') && !activeBattleState) {
+                const useBtn = document.createElement('button');
+                useBtn.textContent = 'Usa';
+                useBtn.className = 'use-item-btn';
+                useBtn.onclick = () => useItemFromInventory(item.name);
+                li.appendChild(useBtn);
+            }
+            
+            inventoryList.appendChild(li);
+        });
     }
+
+    inventoryModal.style.display = 'flex';
   }
+  
+  function useItemFromInventory(itemName) {
+      const player = players[currentPlayerIndex];
+      const item = player.inventory.find(i => i.name === itemName);
+
+      if (!item || !(item.type === 'heal' || item.type === 'energy')) return;
+
+      playSound('drink');
+      let resultMessage = '';
+
+      if (item.type === 'heal') {
+          const oldHp = player.hp;
+          player.hp = Math.min(player.hp + item.value, player.maxHP);
+          const healedAmount = player.hp - oldHp;
+          resultMessage = `${player.name} recupera ${healedAmount} PF!`;
+      } else if (item.type === 'energy') {
+          const oldEnergy = player.energy;
+          player.energy = Math.min(player.energy + (item.value === 999 ? player.maxEnergy : item.value), player.maxEnergy);
+          const gainedAmount = player.energy - oldEnergy;
+          resultMessage = `${player.name} recupera ${gainedAmount} Energia!`;
+      }
+      
+      item.quantity--;
+      if (item.quantity <= 0) {
+          player.inventory = player.inventory.filter(i => i.name !== itemName || i.quantity > 0);
+      }
+
+      inventoryModal.style.display = 'none'; 
+      messageQueue.push(resultMessage);
+      processMessageQueue(() => {
+        updatePlayerInfo();
+        updatePlayerStatusLog();
+      });
+  }
+
 
   function openTradeModal() {
     if(numPlayers < 2) return;
@@ -2524,7 +2632,8 @@ function handleHideAttempt(enemy) {
     allItems1.forEach(item => {
         if(item.name === GEM_DOOR.name) return;
         const li = document.createElement('li');
-        li.textContent = item.name + (item.quantity > 1 ? ` (x${item.quantity})` : '');
+        const description = ITEM_DESCRIPTIONS[item.name] ? ` [${ITEM_DESCRIPTIONS[item.name]}]` : '';
+        li.textContent = item.name + (item.quantity > 1 ? ` (x${item.quantity})` : '') + description;
         li.dataset.itemName = item.name;
         li.dataset.isPotion = !!item.quantity;
         li.dataset.player = 0;
@@ -2534,7 +2643,8 @@ function handleHideAttempt(enemy) {
     allItems2.forEach(item => {
         if(item.name === GEM_DOOR.name) return;
         const li = document.createElement('li');
-        li.textContent = item.name + (item.quantity > 1 ? ` (x${item.quantity})` : '');
+        const description = ITEM_DESCRIPTIONS[item.name] ? ` [${ITEM_DESCRIPTIONS[item.name]}]` : '';
+        li.textContent = item.name + (item.quantity > 1 ? ` (x${item.quantity})` : '') + description;
         li.dataset.itemName = item.name;
         li.dataset.isPotion = !!item.quantity;
         li.dataset.player = 1;
@@ -2625,7 +2735,7 @@ function handleHideAttempt(enemy) {
       }
 
       updateTradeInventories();
-      updateDiscoveriesLog();
+      updatePlayerStatusLog();
   }
 
   function handleTradeSelection(e) {
@@ -2646,13 +2756,21 @@ function handleHideAttempt(enemy) {
   player2InventoryList.addEventListener('click', handleTradeSelection);
   toPlayer1Btn.addEventListener('click', () => { if(selectedTradeItem && selectedTradeItem.dataset.player === '1') transferItem(0); });
   toPlayer2Btn.addEventListener('click', () => { if(selectedTradeItem && selectedTradeItem.dataset.player === '0') transferItem(1); });
-  closeTradeBtn.addEventListener('click', () => { tradeModal.style.display = 'none'; updateDiscoveriesLog(); });
+  closeTradeBtn.addEventListener('click', () => { tradeModal.style.display = 'none'; updatePlayerStatusLog(); });
+  closeInventoryBtn.addEventListener('click', () => { inventoryModal.style.display = 'none'; });
   
   newGameBtn.addEventListener('click', promptForNewGame);
   saveGameBtn.addEventListener('click', saveGame);
   loadGameBtn.addEventListener('click', loadGame);
   cancelCharBtn.addEventListener('click', () => { charForm.style.display = 'none'; });
-  closeBattlePotionSelectBtn.addEventListener('click', () => { battlePotionSelectModal.style.display = 'none'; });
+  messageModalOkBtn.addEventListener('click', () => messageModal.style.display = 'none');
+  closeBattlePotionSelectBtn.addEventListener('click', () => { 
+    battlePotionSelectModal.style.display = 'none';
+    const isInitiativePhase = initiativeModal.style.display === 'block';
+    if (!isInitiativePhase) {
+        battleModal.style.display = 'flex';
+    }
+  });
 
   document.getElementById('playerCountConfirmBtn').addEventListener('click', () => {
     numPlayers = parseInt(document.getElementById('playerCountSelect').value);
@@ -2695,6 +2813,7 @@ function handleHideAttempt(enemy) {
       window.addEventListener('click', initAudio, { once: true });
       window.addEventListener('touchstart', initAudio, { once: true });
 
+      document.getElementById('diceRollBtn').addEventListener('click', rollDice);
       wireCellListeners();
       if (localStorage.getItem('dungeon72Save')) { loadGameBtn.style.display = 'block'; }
       window.addEventListener('resize', updateLayout);
