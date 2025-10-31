@@ -1723,30 +1723,8 @@ function handleHideAttempt(enemy) {
     startCombatRound();
   }
 
-  async function startCombatRound() {
+  function startCombatRound() {
     if (!activeBattleState) return;
-
-    const enemy = activeBattleState.enemy;
-    const burnEffect = enemy.effects?.find(e => e.type === 'burn');
-
-    if (burnEffect && burnEffect.damage && burnEffect.damage.length > 0) {
-        const burnDamage = burnEffect.damage.shift(); 
-        enemy.hp -= burnDamage;
-
-        await showEventModal("Danno da Bruciatura", "https://ste388.github.io/soldoro/img/pozioneFuoco.png", `La bruciatura infligge ${burnDamage} danni al nemico!`);
-        playSound('fiamma');
-        
-        updateBattleUI(); 
-
-        if (enemy.hp <= 0) {
-            endBattleVictoriously();
-            return;
-        }
-
-        if (burnEffect.damage.length === 0) {
-            enemy.effects = enemy.effects.filter(e => e.type !== 'burn');
-        }
-    }
     
     if (activeBattleState.roundPhase === 'mainPlayer') {
         startInitiativePhase(false);
@@ -1756,10 +1734,10 @@ function handleHideAttempt(enemy) {
         activeBattleState.roundPhase = 'mainPlayer';
         startCombatRound();
     }
-}
+  }
 
 
-  function startInitiativePhase(isSupportRound) {
+  async function startInitiativePhase(isSupportRound) {
     if (!activeBattleState) return;
     battleModal.style.display = 'none';
     
@@ -1799,36 +1777,58 @@ function handleHideAttempt(enemy) {
 
     initiativeModal.style.display = 'block';
 
-    rollBtn.onclick = () => {
+    rollBtn.onclick = async () => {
         rollBtn.disabled = true;
         usePotionBtn.disabled = true;
         
         animateAndRoll(initiativePlayerDice, 6, 0, (roll1) => {
-            animateAndRoll(initiativeEnemyDice, 6, 0, (roll2) => {
-                setTimeout(() => {
-                    const winner = roll1 >= roll2 ? combatant1 : combatant2;
-                    initiativeResult.textContent = `${winner.name} ha l'iniziativa!`;
-                    
-                    if (winner === combatant1) {
-                        initiativePlayerName.closest('.battle-unit').classList.add('highlight-winner');
-                    } else {
-                        initiativeEnemyName.closest('.battle-unit').classList.add('highlight-winner');
-                    }
-                    
-                    setTimeout(() => {
-                        initiativeModal.style.display = 'none';
-                        let attacker = winner;
-                        let defender = (attacker === combatant1) ? combatant2 : combatant1;
-                        prepareAttackPhase(attacker, defender, isSupportRound);
-                    }, 2000);
-                }, 2000); 
+            animateAndRoll(initiativeEnemyDice, 6, 0, async (roll2) => {
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                const winner = roll1 >= roll2 ? combatant1 : combatant2;
+                initiativeResult.textContent = `${winner.name} ha l'iniziativa!`;
+                
+                if (winner === combatant1) {
+                    initiativePlayerName.closest('.battle-unit').classList.add('highlight-winner');
+                } else {
+                    initiativeEnemyName.closest('.battle-unit').classList.add('highlight-winner');
+                }
+                
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                initiativeModal.style.display = 'none';
+                let attacker = winner;
+                let defender = (attacker === combatant1) ? combatant2 : combatant1;
+                await prepareAttackPhase(attacker, defender, isSupportRound);
             });
         });
     };
   }
 
-  function prepareAttackPhase(attacker, defender, isSupportRound) {
+  async function prepareAttackPhase(attacker, defender, isSupportRound) {
     if (!activeBattleState) return;
+    
+    const enemy = activeBattleState.enemy;
+    const burnEffect = enemy.effects?.find(e => e.type === 'burn');
+
+    if (burnEffect && burnEffect.damage && burnEffect.damage.length > 0) {
+        const burnDamage = burnEffect.damage.shift(); 
+        enemy.hp -= burnDamage;
+        playSound('fiamma');
+        
+        messageQueue.push(`La bruciatura infligge ${burnDamage} danni al nemico!`);
+        await new Promise(resolve => processMessageQueue(resolve));
+        
+        updateBattleUI(); 
+
+        if (enemy.hp <= 0) {
+            endBattleVictoriously();
+            return;
+        }
+
+        if (burnEffect.damage.length === 0) {
+            enemy.effects = enemy.effects.filter(e => e.type !== 'burn');
+        }
+    }
     
     battleModal.style.display = 'flex';
     updateBattleUI();
@@ -2792,6 +2792,8 @@ async function attemptIntervention() {
             hp += 10; 
             energy = 5;
             maxEnergy = 12;
+        } else if (charClass === 'Mago') {
+            maxEnergy = 5;
         }
 
         players[creatingPlayerIndex] = {
