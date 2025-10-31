@@ -1848,6 +1848,27 @@ function handleHideAttempt(enemy) {
             resolveAttack(attacker, defender); 
         };
         battleActionContainer.appendChild(attackBtn);
+
+        const cost = attacker.class === 'Guerriero' ? 4 : 5;
+        const powerStrikeBtn = document.createElement('button');
+        powerStrikeBtn.id = 'powerStrikeBtn';
+        powerStrikeBtn.title = 'Un attacco che non può essere parato';
+        powerStrikeBtn.textContent = `Colpo Potente (${cost})`;
+        powerStrikeBtn.onclick = () => { if (attacker.energy >= cost) { attacker.energy -= cost; activeAbility = 'powerStrike'; resolveAttack(attacker, defender); } };
+        specialAbilitiesContainer.appendChild(powerStrikeBtn);
+
+        const doubleAttackBtn = document.createElement('button');
+        doubleAttackBtn.id = 'doubleAttackBtn';
+        doubleAttackBtn.title = 'Esegui due tiri di attacco in un turno';
+        doubleAttackBtn.textContent = `Doppio Attacco (${cost})`;
+        doubleAttackBtn.onclick = () => { if (attacker.energy >= cost) { attacker.energy -= cost; activeAbility = 'doubleAttack'; resolveAttack(attacker, defender); } };
+        specialAbilitiesContainer.appendChild(doubleAttackBtn);
+        
+        const usePotionBattleBtn = document.createElement('button');
+        usePotionBattleBtn.textContent = 'Usa Pozione Offensiva';
+        usePotionBattleBtn.onclick = () => openBattlePotionSelect(attacker, false, true);
+        usePotionBattleBtn.disabled = attacker.inventory.filter(p => p.type === 'fire' || p.type === 'ice').length === 0;
+        specialAbilitiesContainer.appendChild(usePotionBattleBtn);
         
         if (!isSupportRound) {
             if (!defender.isShadow && !defender.isBoss) {
@@ -1856,28 +1877,6 @@ function handleHideAttempt(enemy) {
                 escapeBtn.onclick = attemptEscape;
                 battleActionContainer.appendChild(escapeBtn);
             }
-
-            const cost = attacker.class === 'Guerriero' ? 4 : 5;
-            const powerStrikeBtn = document.createElement('button');
-            powerStrikeBtn.id = 'powerStrikeBtn';
-            powerStrikeBtn.title = 'Un attacco che non può essere parato';
-            powerStrikeBtn.textContent = `Colpo Potente (${cost})`;
-            powerStrikeBtn.onclick = () => { if (attacker.energy >= cost) { attacker.energy -= cost; activeAbility = 'powerStrike'; resolveAttack(attacker, defender); } };
-            specialAbilitiesContainer.appendChild(powerStrikeBtn);
-
-            const doubleAttackBtn = document.createElement('button');
-            doubleAttackBtn.id = 'doubleAttackBtn';
-            doubleAttackBtn.title = 'Esegui due tiri di attacco in un turno';
-            doubleAttackBtn.textContent = `Doppio Attacco (${cost})`;
-            doubleAttackBtn.onclick = () => { if (attacker.energy >= cost) { attacker.energy -= cost; activeAbility = 'doubleAttack'; resolveAttack(attacker, defender); } };
-            specialAbilitiesContainer.appendChild(doubleAttackBtn);
-            
-            const usePotionBattleBtn = document.createElement('button');
-            usePotionBattleBtn.textContent = 'Usa Pozione Offensiva';
-            usePotionBattleBtn.onclick = () => openBattlePotionSelect(attacker, false, true);
-            usePotionBattleBtn.disabled = attacker.inventory.filter(p => p.type === 'fire' || p.type === 'ice').length === 0;
-            usePotionBattleBtn.style.flexBasis = '100%';
-            specialAbilitiesContainer.appendChild(usePotionBattleBtn);
             
             if (numPlayers > 1 && !activeBattleState.isAllyJoined && !activeBattleState.helpRequested) {
                 const askHelpBtn = document.createElement('button');
@@ -1886,12 +1885,6 @@ function handleHideAttempt(enemy) {
                 askHelpBtn.onclick = askForHelp;
                 specialAbilitiesContainer.appendChild(askHelpBtn);
             }
-        } else { // Alleato attaccante
-            const usePotionBattleBtn = document.createElement('button');
-            usePotionBattleBtn.textContent = 'Usa Pozione Offensiva';
-            usePotionBattleBtn.onclick = () => openBattlePotionSelect(attacker, false, true);
-            usePotionBattleBtn.disabled = attacker.inventory.filter(p => p.type === 'fire' || p.type === 'ice').length === 0;
-            specialAbilitiesContainer.appendChild(usePotionBattleBtn);
         }
         
         updateEnergyUI();
