@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+​<!DOCTYPE html>
 <html lang="it">
 <head>
   <meta charset="UTF-8">
@@ -984,7 +984,7 @@
               else if (info.altar) { const img = document.createElement('img'); img.src = info.altar.iconUrl; img.className = 'item-marker'; content.appendChild(img); }
               else if (info.bonus && info.bonus.iconUrl) { const img = document.createElement('img'); img.src = info.bonus.iconUrl; img.className = 'item-marker'; content.appendChild(img); }
               else if (info.potion && info.potion.iconUrl) { const img = document.createElement('img'); img.src = info.potion.iconUrl; img.className = 'item-marker'; content.appendChild(img); }
-              else if (i === elfThiefCell) { const img = document.createElement('img'); img.src = ELF_THIEF.iconUrl; img.className = 'item-marker'; content.appendChild(img); }
+            //  else if (i === elfThiefCell) { const img = document.createElement('img'); img.src = ELF_THIEF.iconUrl; img.className = 'item-marker'; content.appendChild(img); }
               else { content.textContent = i; }
               if (info.enemy && !info.defeated) content.appendChild(Object.assign(document.createElement('div'), { className: 'enemy-marker' }));
               if (info.bonus && info.bonus.name === GEM_DOOR.name) cellDiv.classList.add('gem-door-marker');
@@ -1423,7 +1423,7 @@
     }
 }
   
-  async function endTurnSequence() {
+ async function endTurnSequence() {
       if (activeBattleState) return;
       updateTradeInventoryButton();
       let battleStarted = false;
@@ -1481,6 +1481,51 @@
 
       if (shadows.some(s => s.hp > 0)) {
           shadowActionDisplay.style.display = 'block';
+          
+          // GESTIONE DANNO DA BRUCIATURA - AGGIUNTO
+          for (let i = shadows.length - 1; i >= 0; i--) {
+              const shadow = shadows[i];
+              if (shadow.hp > 0 && shadow.burning && shadow.burning > 0) {
+                  shadowTurnName.textContent = shadow.name;
+                  shadowDiceRes.textContent = '🔥';
+                  
+                  const burnDamage = 2;
+                  shadow.hp -= burnDamage;
+                  shadow.burning--;
+                  
+                  playSound('fire');
+                  messageQueue.push(`${shadow.name} subisce ${burnDamage} danni da bruciatura! (${shadow.burning} turni rimasti)`);
+                  await new Promise(resolve => processMessageQueue(resolve));
+                  await new Promise(resolve => setTimeout(resolve, 800));
+                  
+                  // Controlla se l'ombra è morta per la bruciatura
+                  if (shadow.hp <= 0) {
+                      playSound('shadowDeath');
+                      messageQueue.push(`${shadow.name} è morta per le fiamme!`);
+                      await new Promise(resolve => processMessageQueue(resolve));
+                      
+                      // Determina il loot
+                      const loot = determineLoot();
+                      if (loot) {
+                          const existingItem = players[currentPlayerIndex].inventory.find(item => item.name === loot.name);
+                          if (existingItem && existingItem.quantity !== undefined) {
+                              existingItem.quantity++;
+                          } else {
+                              players[currentPlayerIndex].inventory.push(loot);
+                          }
+                          messageQueue.push(`Hai trovato: ${loot.name}!`);
+                          await new Promise(resolve => processMessageQueue(resolve));
+                      }
+                      
+                      // Rimuovi l'ombra morta
+                      shadows.splice(i, 1);
+                      buildBoard();
+                      await new Promise(resolve => setTimeout(resolve, 500));
+                  }
+              }
+          }
+          
+          // MOVIMENTO OMBRE RIMASTE
           for (const shadow of shadows) {
               if (shadow.hp > 0) {
                   await new Promise(resolve => setTimeout(resolve, 1000));
@@ -1513,6 +1558,7 @@
           endTurnAndSwitchPlayer();
       }
   }
+
 
   function endTurnAndSwitchPlayer() {
       if (numPlayers > 1) {
@@ -1726,15 +1772,63 @@ function handleHideAttempt(enemy) {
   function startCombatRound() {
     if (!activeBattleState) return;
     
-    if (activeBattleState.roundPhase === 'mainPlayer') {
-        startInitiativePhase(false);
-    } else if (activeBattleState.roundPhase === 'ally' && activeBattleState.isAllyJoined) {
-        startInitiativePhase(true);
+    const enemy = activeBattleState.enemy;
+    
+    // GESTIONE BRUCIATURA (sistema effects con array [3, 2])
+    const burnEffect = enemy.effects?.find(e => e.type === 'burn');
+    if (burnEffect && burnEffect.damage && burnEffect.damage.length > 0) {
+        const burnDamage = burnEffect.damage.shift(); // Prende il primo valore (3, poi 2)
+        enemy.hp -= burnDamage;
+        
+        playSound('fiamma');
+        
+        if (burnEffect.damage.length > 0) {
+            messageQueue.push(`${enemy.name} subisce ${burnDamage} danni da bruciatura! (${burnEffect.damage.length} turni rimasti)`);
+        } else {
+            messageQueue.push(`${enemy.name} subisce ${burnDamage} danni da bruciatura!`);
+        }
+        
+        processMessageQueue(() => {
+            // Controlla se il nemico muore per la bruciatura
+            if (enemy.hp <= 0) {
+                playSound('shadowDeath');
+                messageQueue.push(`${enemy.name} è morto per le fiamme!`);
+                processMessageQueue(() => {
+                    endBattleVictoriously();
+                });
+                return;
+            }
+            
+            // Rimuovi l'effetto se non ci sono più danni da applicare
+            if (burnEffect.damage.length === 0) {
+                enemy.effects = enemy.effects.filter(e => e.type !== 'burn');
+            }
+            
+            // Continua con il round normale dopo 800ms
+            setTimeout(() => {
+                proceedWithNormalRound();
+            }, 800);
+        });
     } else {
-        activeBattleState.roundPhase = 'mainPlayer';
-        startCombatRound();
+        // Se non c'è bruciatura, procedi normalmente
+        proceedWithNormalRound();
     }
-  }
+    
+    function proceedWithNormalRound() {
+        if (!activeBattleState) return;
+        
+        if (activeBattleState.roundPhase === 'mainPlayer') {
+            startInitiativePhase(false);
+        } else if (activeBattleState.roundPhase === 'ally' && activeBattleState.isAllyJoined) {
+            startInitiativePhase(true);
+        } else {
+            activeBattleState.roundPhase = 'mainPlayer';
+            startCombatRound();
+        }
+    }
+}
+
+
 
 
   async function startInitiativePhase(isSupportRound) {
