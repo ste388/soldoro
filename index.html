@@ -15,19 +15,7 @@
 <link rel="manifest" href="./manifest.json">
 <meta name="theme-color" content="#3b82f6">
 
-  <script>
-
- if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function() {
-      navigator.serviceWorker.register('./service-worker.js').then(function(registration) {
-        console.log('ServiceWorker registration successful with scope: ', registration.scope);
-      }, function(err) {
-        console.log('ServiceWorker registration failed: ', err);
-      });
-    });
-  }
-  </script>
-  
+ 
   <style>
     body { 
       background-image: url('https://ste388.github.io/soldoro/img/sfondo.png');
@@ -429,6 +417,8 @@
       <button id="itemFoundCloseBtn">Chiudi</button>
   </div>
 
+  <script>
+  
   // --- Gestione Suoni ---
   const sounds = {
     dice: new Audio('https://ste388.github.io/soldoro/fx/dadi.mp3'),
@@ -666,6 +656,8 @@
     "Scudo di ferro": "+1 DIF", "Elmo": "+1 DIF", "Corazza": "+1 DIF", "Elsa migliorata": "+1 ATT", "Guanti rinforzati": "+1 ATT", "Stivali": "+1 ATT"
   };
 
+    
+
   // ---- STATO DEL GIOCO ----
   let players = [];
   let currentPlayerIndex = 0;
@@ -682,7 +674,17 @@
   let activeBattleState = null;
   let activeAbility = null;
   let selectedTradeItem = null;
-  
+
+ if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+      navigator.serviceWorker.register('./service-worker.js').then(function(registration) {
+        console.log('ServiceWorker registration successful with scope: ', registration.scope);
+      }, function(err) {
+        console.log('ServiceWorker registration failed: ', err);
+      });
+    });
+  }
+    
   // ---- FUNZIONI PRINCIPALI ----
   function triggerScreenShake() { document.body.classList.add('shake'); setTimeout(() => document.body.classList.remove('shake'), 500); }
   
@@ -2935,6 +2937,7 @@ async function attemptIntervention() {
 </script>
 </body>
 </html>
+
 
 
 
