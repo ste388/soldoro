@@ -1,23 +1,12 @@
 {
   "name": "Soldoro - Dungeon 72 Celle",
   "short_name": "Soldoro",
-  "description": "Gioco GDR creato da me",
-  
-  // Dove l'app dovrebbe iniziare quando viene lanciata dalla schermata Home
-  "start_url": "./index.html",
-  
-  // Il modo in cui l'app appare: "standalone" la fa sembrare una vera app, senza barra del browser
+  "description": "Un gioco di ruolo da tavolo in solitario o in compagnia, dove l'obiettivo è trovare il Boss finale e distruggerlo, cercando di salvare più prigionieri possibili.",
+  "start_url": ".",
+  "scope": ".",
   "display": "standalone",
-  
-  // Colore della barra di stato del sistema operativo (corrisponde al blue-600 usato nel tuo HTML)
+  "background_color": "#1a1915",
   "theme_color": "#3b82f6",
-  
-  // Colore di sfondo visualizzato durante il caricamento
-  "background_color": "#ffffff",
-  
-  // Definizione delle Icone
-  // ASSOLUTAMENTE FONDAMENTALE: Queste icone DEVONO essere presenti nella cartella /icons/
-  // AGGIUNTO IL PUNTO PRIMA DELLA SBARRA: "./icons/" per un percorso relativo più robusto
   "icons": [
     {
       "src": "./icons/icon-192x192.png",
