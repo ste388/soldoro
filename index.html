@@ -432,26 +432,6 @@
   </div>
 <script>
 
-	// =======================================================================
-  // REGISTRAZIONE PWA (Service Worker)
-  // =======================================================================
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      // CORREZIONE: Uso del percorso relativo './' per risolvere l'errore del protocollo URL
-      // NOTA: il percorso per service-worker.js è ancora valido se si trova nella stessa directory
-      navigator.serviceWorker.register('./service-worker.js')
-        .then(registration => {
-          console.log('Service Worker registrato con successo:', registration.scope);
-          // Non aggiorniamo lo stato qui per non confondere l'utente
-        })
-        .catch(error => {
-          console.error('Registrazione Service Worker fallita:', error);
-          updateStatus("ATTENZIONE: Registrazione PWA fallita. L'icona potrebbe non essere corretta.", "error");
-        });
-    });
-  }
-
-  
   // --- Gestione Suoni ---
   const sounds = {
     dice: new Audio('https://ste388.github.io/soldoro/fx/dadi.mp3'),
@@ -2958,4 +2938,5 @@ async function attemptIntervention() {
 </script>
 </body>
 </html>
+
 
