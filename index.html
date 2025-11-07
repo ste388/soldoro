@@ -669,6 +669,26 @@
     "Scudo di ferro": "+1 DIF", "Elmo": "+1 DIF", "Corazza": "+1 DIF", "Elsa migliorata": "+1 ATT", "Guanti rinforzati": "+1 ATT", "Stivali": "+1 ATT"
   };
 
+	// =======================================================================
+  // REGISTRAZIONE PWA (Service Worker)
+  // =======================================================================
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      // CORREZIONE: Uso del percorso relativo './' per risolvere l'errore del protocollo URL
+      // NOTA: il percorso per service-worker.js è ancora valido se si trova nella stessa directory
+      navigator.serviceWorker.register('./service-worker.js')
+        .then(registration => {
+          console.log('Service Worker registrato con successo:', registration.scope);
+          // Non aggiorniamo lo stato qui per non confondere l'utente
+        })
+        .catch(error => {
+          console.error('Registrazione Service Worker fallita:', error);
+          updateStatus("ATTENZIONE: Registrazione PWA fallita. L'icona potrebbe non essere corretta.", "error");
+        });
+    });
+  }
+
+  
   // ---- STATO DEL GIOCO ----
   let players = [];
   let currentPlayerIndex = 0;
@@ -2938,5 +2958,6 @@ async function attemptIntervention() {
 </script>
 </body>
 </html>
+
 
 
