@@ -1,13 +1,12 @@
-// Service Worker per PWA Timbrature
+// Service Worker per PWA Soldoro
 const CACHE_NAME = 'Soldoro-Dungeon72Celle'; // Incrementato il nome della cache per forzare l'aggiornamento
 const urlsToCache = [
-  './', // L'HTML principale (risoluzione root)
-  './index.html', // <--- AGGIORNATO: ora si chiama index.html
+  './',
+  './index.html',
   './manifest.json',
-  // Aggiungere qui i percorsi esatti delle icone (devono esistere!)
-  // '/icons/icon-192x192.png', 
-  // '/icons/icon-512x512.png',
-  // ... e tutte le altre icone e risorse importanti
+  './icons/icon-192x192.png',
+  './icons/icon-512x512.png',
+  './icons/maskable-icon-512x512.png'
 ];
 
 // Installa e Cache
@@ -65,3 +64,4 @@ self.addEventListener('activate', event => {
   );
 
 });
+
