@@ -1,5 +1,5 @@
 // Service Worker per PWA Timbrature
-const CACHE_NAME = 'Soldoro - Dungeon 72 Celle'; // Incrementato il nome della cache per forzare l'aggiornamento
+const CACHE_NAME = 'Soldoro-Dungeon72Celle'; // Incrementato il nome della cache per forzare l'aggiornamento
 const urlsToCache = [
   './', // L'HTML principale (risoluzione root)
   './index.html', // <--- AGGIORNATO: ora si chiama index.html
@@ -63,4 +63,5 @@ self.addEventListener('activate', event => {
       );
     })
   );
+
 });
