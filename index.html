@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap" rel="stylesheet">
-  
+  <link rel="manifest" href="./manifest.json">
 
   <style>
     body { 
@@ -410,6 +410,17 @@
       <button id="itemFoundCloseBtn">Chiudi</button>
   </div>
 <script>
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('./service-worker.js').then(function(registration) {
+      console.log('ServiceWorker registration successful with scope: ', registration.scope);
+    }, function(err) {
+      console.log('ServiceWorker registration failed: ', err);
+    });
+  });
+}
+
   // --- Gestione Suoni ---
   const sounds = {
     dice: new Audio('https://ste388.github.io/soldoro/fx/dadi.mp3'),
@@ -2916,3 +2927,4 @@ async function attemptIntervention() {
 </script>
 </body>
 </html>
+
