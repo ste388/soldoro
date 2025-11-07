@@ -20,7 +20,7 @@
   // AGGIUNTO IL PUNTO PRIMA DELLA SBARRA: "./icons/" per un percorso relativo più robusto
   "icons": [
     {
-            "src": "./icons/icon-192x192.png",
+      "src": "./icons/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
@@ -36,4 +36,5 @@
       "purpose": "maskable"
     }
   ]
+
 }
